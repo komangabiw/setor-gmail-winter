@@ -22,6 +22,7 @@ import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/p
 import { type CheckResult, type CheckStatus, checkStatusMeta } from "@/lib/checker";
 import { splitLines } from "@/lib/email";
 import { getStoredGeneratedGmails } from "@/lib/generated-storage";
+import { verifyEmailClientSide } from "@/lib/email-checker";
 import { cn } from "@/lib/utils";
 
 /** Pacing santai & bertahap: 2 email per request dengan jeda halus agar progres terlihat stabil dan pasti */
@@ -142,24 +143,34 @@ export function CheckerView() {
         if (controller.signal.aborted) break;
 
         const chunk = rawLines.slice(i, i + BATCH_SIZE);
-        const res = await fetch("/api/check-gmail", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            emails: chunk,
-            startIndex: currentStartIndex,
-            storedGenerated: getStoredGeneratedGmails(),
-          }),
-          signal: controller.signal,
-        });
+        let batchResults: CheckResult[] = [];
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Server error (${res.status})`);
+        try {
+          const res = await fetch("/api/check-gmail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              emails: chunk,
+              startIndex: currentStartIndex,
+              storedGenerated: getStoredGeneratedGmails(),
+            }),
+            signal: controller.signal,
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            batchResults = data.results || [];
+          } else {
+            throw new Error(`Server returned ${res.status}`);
+          }
+        } catch {
+          // Client-side fallback if static or offline
+          const genPool = new Set(getStoredGeneratedGmails().map((g) => g.toLowerCase()));
+          batchResults = chunk.map((email, idx) =>
+            verifyEmailClientSide(email, currentStartIndex + idx, genPool)
+          );
         }
 
-        const data = await res.json();
-        const batchResults: CheckResult[] = data.results || [];
         allResults.push(...batchResults);
 
         // Update live results & progress

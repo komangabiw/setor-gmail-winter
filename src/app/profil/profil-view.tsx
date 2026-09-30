@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Camera,
@@ -60,6 +61,7 @@ function CopyValue({ value }: { value: string }) {
 /* ------------------------------------------------------------------ */
 
 export function ProfilView() {
+  const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile>(mockUser);
   const [userId, setUserId] = React.useState<string | null>(null);
   const [totalStats, setTotalStats] = React.useState({
@@ -196,7 +198,7 @@ export function ProfilView() {
                   toast.success("Berhasil keluar akun", {
                     description: "Sesi kamu telah diakhiri.",
                   });
-                  window.location.href = "/login";
+                  router.push("/login");
                 }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-semibold text-rose-600 shadow-2xs transition-all hover:bg-rose-100 hover:border-rose-300 active:scale-95 cursor-pointer whitespace-nowrap"
               >
