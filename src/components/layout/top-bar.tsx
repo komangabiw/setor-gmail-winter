@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Mail, MessageCircle, History } from "lucide-react";
-import { mockUser } from "@/lib/mock-data";
+import { Mail, MessageCircle } from "lucide-react";
 
 export function TopBar() {
   return (
@@ -33,30 +32,19 @@ export function TopBar() {
           </div>
         </Link>
 
-        {/* Right actions: Riwayat & Saluran WA */}
+        {/* Right action: Saluran WA */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/riwayat"
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-3 py-1.5 text-[0.76rem] font-semibold text-ink-800 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
-            title="Riwayat Setoran"
+          <a
+            href="https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3.5 py-1.5 text-[0.76rem] font-semibold text-ink-800 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
           >
-            <History className="size-3.5 text-slate-500" />
-            <span className="hidden xs:inline sm:inline">Riwayat</span>
-          </Link>
-
-          {mockUser.whatsappChannelUrl && (
-            <a
-              href={mockUser.whatsappChannelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3.5 py-1.5 text-[0.76rem] font-semibold text-ink-800 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
-            >
-              <span className="flex size-4.5 items-center justify-center rounded-full border border-sky-400 text-sky-500">
-                <MessageCircle className="size-2.5" />
-              </span>
-              <span>Saluran WA</span>
-            </a>
-          )}
+            <span className="flex size-4.5 items-center justify-center rounded-full border border-sky-400 text-sky-500">
+              <MessageCircle className="size-2.5" />
+            </span>
+            <span>Saluran WA</span>
+          </a>
         </div>
       </div>
     </header>

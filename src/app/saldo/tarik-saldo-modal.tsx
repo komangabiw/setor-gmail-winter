@@ -5,9 +5,7 @@ import { toast } from "sonner";
 import {
   Banknote,
   BanknoteArrowUp,
-  Info,
   LoaderCircle,
-  Smartphone,
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
@@ -15,7 +13,6 @@ import {
 import { Modal, ModalCloseButton } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { mockWallet } from "@/lib/mock-data";
 import { cn, formatIDR } from "@/lib/utils";
 import {
   EWALLET_CONFIGS,
@@ -43,17 +40,17 @@ interface TarikSaldoModalProps {
 export function TarikSaldoModal({
   open,
   onClose,
-  balance = mockWallet.balance,
-  minimum = mockWallet.minimumWithdrawal,
+  balance = 0,
+  minimum = 5000,
   initialMethod = "DANA",
   onSuccess,
 }: TarikSaldoModalProps) {
   const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>(initialMethod);
   const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>({
-    DANA: mockWallet.danaNumber,
-    OVO: mockWallet.danaNumber,
-    GOPAY: mockWallet.danaNumber,
-    SHOPEEPAY: mockWallet.danaNumber,
+    DANA: "",
+    OVO: "",
+    GOPAY: "",
+    SHOPEEPAY: "",
   });
   const [isLoading, setIsLoading] = React.useState(false);
 

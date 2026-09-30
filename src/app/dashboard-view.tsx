@@ -19,21 +19,22 @@ import {
   Tag,
   Sparkles,
   Target,
-  Info,
   type LucideIcon,
 } from "lucide-react";
 import { Card, SectionHeading } from "@/components/ui/card";
-import { StatBox, StatusBadge } from "@/components/ui/status";
+import { StatBox } from "@/components/ui/status";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
 import { RulesModal } from "./setor/rules-modal";
 import { TarikSaldoModal } from "./saldo/tarik-saldo-modal";
 import {
-  mockUser,
-  mockWallet,
   quickMenuItems,
-  summaryStats,
   type QuickMenuIconName,
 } from "@/lib/mock-data";
+import {
+  getCurrentAuthUser,
+  fetchUserWallet,
+  fetchUserDeposits,
+} from "@/lib/supabase";
 import { cn, formatIDR } from "@/lib/utils";
 
 const iconMap: Record<QuickMenuIconName, LucideIcon> = {
@@ -88,17 +89,50 @@ const quickMenuThemes: Record<
 export function DashboardView() {
   const [rulesOpen, setRulesOpen] = React.useState(false);
   const [tarikModalOpen, setTarikModalOpen] = React.useState(false);
+  const [balance, setBalance] = React.useState(0);
+  const [minimum, setMinimum] = React.useState(5000);
+  const [stats, setStats] = React.useState({
+    diterima: 0,
+    pending: 0,
+    ditolak: 0,
+    harga: 4500,
+  });
 
-  const balance = mockWallet.balance;
-  const minimum = mockWallet.minimumWithdrawal;
-  const reached = balance >= minimum;
-  const percent = Math.min((balance / minimum) * 100, 100);
-  const remaining = Math.max(minimum - balance, 0);
+  const loadRealData = React.useCallback(async () => {
+    try {
+      const user = await getCurrentAuthUser();
+      if (user) {
+        const [wRes, dRes] = await Promise.all([
+          fetchUserWallet(user.id),
+          fetchUserDeposits(user.id),
+        ]);
+        if (!wRes.isFallback) {
+          setBalance(wRes.balance);
+          setMinimum(wRes.minimumWithdrawal);
+        }
+        if (!dRes.isFallback) {
+          const deps = dRes.deposits;
+          setStats({
+            diterima: deps.filter((d) => d.status === "diterima").length,
+            pending: deps.filter((d) => d.status === "pending" || d.status === "dicek").length,
+            ditolak: deps.filter((d) => d.status === "ditolak").length,
+            harga: 4500,
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load dashboard data:", e);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadRealData();
+  }, [loadRealData]);
 
   const handleMenuClick = (label: string, href: string) => {
     if (href.startsWith("/")) return;
-    toast.info(`Mock: menu "${label}" belum tersedia`, {
-      description: "Halaman ini akan dibuat pada tahap berikutnya.",
+    toast.info(`Menu "${label}"`, {
+      description: "Fitur sedang dalam proses integrasi.",
     });
   };
 
@@ -137,7 +171,7 @@ export function DashboardView() {
               <div className="mt-3.5 flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-700">
                   <Tag className="size-3.5" aria-hidden="true" />
-                  Harga / Gmail: {formatIDR(summaryStats.harga)}
+                  Harga / Gmail: {formatIDR(stats.harga)}
                 </div>
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/90 bg-white/80 px-3 py-1.5 text-[0.75rem] font-semibold text-ink-700">
                   <Target className="size-3.5 text-sky-500" aria-hidden="true" />
@@ -205,25 +239,25 @@ export function DashboardView() {
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4">
           <StatBox
             label="Diterima"
-            value={summaryStats.diterima}
+            value={stats.diterima}
             tone="success"
             icon={<CircleCheck className="size-4" aria-hidden="true" />}
           />
           <StatBox
             label="Pending"
-            value={summaryStats.pending}
+            value={stats.pending}
             tone="warning"
             icon={<Clock className="size-4" aria-hidden="true" />}
           />
           <StatBox
             label="Ditolak"
-            value={summaryStats.ditolak}
+            value={stats.ditolak}
             tone="danger"
             icon={<CircleX className="size-4" aria-hidden="true" />}
           />
           <StatBox
             label="Harga"
-            value={formatIDR(summaryStats.harga)}
+            value={formatIDR(stats.harga)}
             tone="info"
             icon={<Tag className="size-4" aria-hidden="true" />}
           />
@@ -307,16 +341,11 @@ export function DashboardView() {
         </div>
       </Reveal>
 
-      <p className="mt-6 text-center text-[0.68rem] text-ink-400">
-        <StatusBadge tone="info" dot pulse>
-          Mock data — tampilan saja
-        </StatusBadge>
-      </p>
-
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <TarikSaldoModal
         open={tarikModalOpen}
         onClose={() => setTarikModalOpen(false)}
+        onSuccess={loadRealData}
         balance={balance}
         minimum={minimum}
       />

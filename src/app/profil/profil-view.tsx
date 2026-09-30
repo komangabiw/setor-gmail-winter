@@ -13,7 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
-import { mockDeposits, mockUser, type UserProfile } from "@/lib/mock-data";
+import { type UserProfile } from "@/lib/mock-data";
 import {
   getCurrentAuthUser,
   fetchUserProfile,
@@ -60,15 +60,25 @@ function CopyValue({ value }: { value: string }) {
 /* View                                                                */
 /* ------------------------------------------------------------------ */
 
+const defaultProfile: UserProfile = {
+  name: "Pengguna",
+  email: "-",
+  uid: "-",
+  role: "User",
+  danaNumber: "-",
+  joinedAt: "-",
+  passwordChangedAt: "Belum pernah",
+};
+
 export function ProfilView() {
   const router = useRouter();
-  const [userProfile, setUserProfile] = React.useState<UserProfile>(mockUser);
+  const [userProfile, setUserProfile] = React.useState<UserProfile>(defaultProfile);
   const [userId, setUserId] = React.useState<string | null>(null);
   const [totalStats, setTotalStats] = React.useState({
-    total: mockDeposits.length,
-    diterima: mockDeposits.filter((d) => d.status === "diterima").length,
-    pending: mockDeposits.filter((d) => d.status === "pending" || d.status === "dicek").length,
-    ditolak: mockDeposits.filter((d) => d.status === "ditolak").length,
+    total: 0,
+    diterima: 0,
+    pending: 0,
+    ditolak: 0,
   });
   const [avatarImage, setAvatarImage] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -293,7 +303,7 @@ export function ProfilView() {
                   NOMOR DANA
                 </p>
                 <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-800">
-                  {userProfile.danaNumber ?? "081386249421"}
+                  {userProfile.danaNumber || "-"}
                 </p>
               </div>
 
@@ -303,7 +313,7 @@ export function ProfilView() {
                   TANGGAL GABUNG
                 </p>
                 <p className="mt-0.5 text-[0.84rem] font-semibold text-ink-800">
-                  {userProfile.joinedAt ?? "24 September 2024"}
+                  {userProfile.joinedAt || "-"}
                 </p>
               </div>
             </div>

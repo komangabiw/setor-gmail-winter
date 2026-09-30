@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   Wallet,
   Smartphone,
-  Banknote,
   BanknoteArrowDown,
   BanknoteArrowUp,
   Gift,
@@ -15,21 +14,17 @@ import {
   LoaderCircle,
   ArrowUpRight,
   Target,
-  Info,
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
   type LucideIcon,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status";
 import { PageShell, PageHeader, Reveal, EmptyState } from "@/components/layout/page-shell";
 import {
-  mockTransactions,
-  mockWallet,
-  mockWithdrawals,
   type TransactionRecord,
   type WithdrawalRecord,
   type WithdrawalStatus,
@@ -175,14 +170,18 @@ function TransactionRow({ record, index }: { record: TransactionRecord; index: n
 export function SaldoView() {
   const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>("DANA");
   const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>({
-    DANA: mockWallet.danaNumber,
-    OVO: mockWallet.danaNumber,
-    GOPAY: mockWallet.danaNumber,
-    SHOPEEPAY: mockWallet.danaNumber,
+    DANA: "",
+    OVO: "",
+    GOPAY: "",
+    SHOPEEPAY: "",
   });
-  const [wallet, setWallet] = React.useState(mockWallet);
-  const [withdrawals, setWithdrawals] = React.useState<WithdrawalRecord[]>(mockWithdrawals);
-  const [transactions, setTransactions] = React.useState<TransactionRecord[]>(mockTransactions);
+  const [wallet, setWallet] = React.useState({
+    balance: 0,
+    minimumWithdrawal: 5000,
+    danaNumber: "",
+  });
+  const [withdrawals, setWithdrawals] = React.useState<WithdrawalRecord[]>([]);
+  const [transactions, setTransactions] = React.useState<TransactionRecord[]>([]);
   const [userId, setUserId] = React.useState<string | null>(null);
 
   // Status tersimpan per metode, hanya bernilai true setelah tombol Simpan diklik

@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, StatBox } from "@/components/ui/status";
 import { PageShell, PageHeader, Reveal, EmptyState } from "@/components/layout/page-shell";
 import {
-  mockDeposits,
   timeRanges,
   type DepositRecord,
   type DepositStatus,
@@ -139,7 +138,7 @@ function DepositRow({ record, index }: { record: DepositRecord; index: number })
 /* ------------------------------------------------------------------ */
 
 export function RiwayatView() {
-  const [deposits, setDeposits] = React.useState<DepositRecord[]>(mockDeposits);
+  const [deposits, setDeposits] = React.useState<DepositRecord[]>([]);
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState<StatusFilter>("semua");
   const [range, setRange] = React.useState<TimeRange>("today");
@@ -150,12 +149,12 @@ export function RiwayatView() {
         const user = await getCurrentAuthUser();
         if (user) {
           const res = await fetchUserDeposits(user.id);
-          if (!res.isFallback && res.deposits.length > 0) {
+          if (!res.isFallback) {
             setDeposits(res.deposits);
           }
         }
       } catch (err) {
-        console.warn("Supabase fetchUserDeposits error (fallback active):", err);
+        console.warn("Supabase fetchUserDeposits error:", err);
       }
     })();
   }, []);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, History, Wallet, User, Send, ShieldCheck } from "lucide-react";
+import { Home, History, Wallet, User, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -13,7 +13,7 @@ type NavItem = {
 
 const leftItems: NavItem[] = [
   { href: "/", label: "Beranda", icon: Home },
-  { href: "/checker", label: "Checker", icon: ShieldCheck },
+  { href: "/riwayat", label: "Riwayat", icon: History },
 ];
 
 const rightItems: NavItem[] = [

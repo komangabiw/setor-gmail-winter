@@ -7,7 +7,7 @@ import { StatusBadge, type Tone } from "@/components/ui/status";
 import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
 import { CreateReportModal } from "./create-report-modal";
 import { cn, formatDateTime } from "@/lib/utils";
-import { mockReports, type ReportStatus, type ReportTicket } from "@/lib/mock-data";
+import { type ReportStatus, type ReportTicket } from "@/lib/mock-data";
 import { getCurrentAuthUser, fetchUserTickets } from "@/lib/supabase";
 
 const statusMeta: Record<ReportStatus, { label: string; tone: Tone }> = {
@@ -17,7 +17,7 @@ const statusMeta: Record<ReportStatus, { label: string; tone: Tone }> = {
 };
 
 export function LaporanView() {
-  const [reports, setReports] = React.useState<ReportTicket[]>(mockReports);
+  const [reports, setReports] = React.useState<ReportTicket[]>([]);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
 
@@ -27,9 +27,11 @@ export function LaporanView() {
         const user = await getCurrentAuthUser();
         if (user) {
           const res = await fetchUserTickets(user.id);
-          if (!res.isFallback && res.tickets.length > 0) {
+          if (!res.isFallback) {
             setReports(res.tickets);
-            setSelectedId(res.tickets[0].id);
+            if (res.tickets.length > 0) {
+              setSelectedId(res.tickets[0].id);
+            }
           }
         }
       } catch (err) {

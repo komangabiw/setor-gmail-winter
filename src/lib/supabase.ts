@@ -1,18 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 import {
-  mockUser,
-  mockWallet,
-  mockDeposits,
-  mockWithdrawals,
-  mockTransactions,
-  mockReports,
   type UserProfile,
   type DepositRecord,
   type WithdrawalRecord,
   type TransactionRecord,
   type ReportTicket,
 } from "./mock-data";
-import { getStoredSubmittedGmails, getStoredEWalletData } from "./generated-storage";
+import { getStoredEWalletData } from "./generated-storage";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -50,6 +44,17 @@ export async function getCurrentAuthUser() {
   }
 }
 
+const defaultEmptyProfile: UserProfile = {
+  name: "Pengguna",
+  email: "-",
+  uid: "-",
+  role: "User",
+  danaNumber: "-",
+  joinedAt: "-",
+  passwordChangedAt: "Belum pernah",
+  whatsappChannelUrl: "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
+};
+
 /* ------------------------------------------------------------------ */
 /* 1. Profile & Settings Helpers                                      */
 /* ------------------------------------------------------------------ */
@@ -58,54 +63,57 @@ export async function fetchUserProfile(userId?: string): Promise<{
   profile: UserProfile;
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return { profile: mockUser, isFallback: true };
-  }
-
   try {
-    let targetUid = userId;
-    if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
-    }
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
 
     if (!targetUid) {
-      return { profile: mockUser, isFallback: true };
+      return { profile: defaultEmptyProfile, isFallback: true };
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", targetUid)
-      .maybeSingle();
-
-    if (error || !data) {
-      return { profile: mockUser, isFallback: true };
+    let profileData: Record<string, any> | null = null;
+    if (isSupabaseConfigured) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", targetUid)
+        .maybeSingle();
+      profileData = data;
     }
+
+    const realName =
+      profileData?.name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      user?.email?.split("@")[0] ||
+      "Pengguna";
+    const realEmail = profileData?.email || user?.email || "-";
+    const realDate = profileData?.created_at || user?.created_at;
 
     const profile: UserProfile = {
-      uid: data.id,
-      name: data.name || mockUser.name,
-      email: data.email || mockUser.email,
-      role: (data.role as UserProfile["role"]) || "User",
-      avatarUrl: data.avatar_url || undefined,
-      whatsappChannelUrl: data.whatsapp_channel_url || mockUser.whatsappChannelUrl,
-      danaNumber: data.dana_number || mockUser.danaNumber,
-      joinedAt: data.created_at
-        ? new Date(data.created_at).toLocaleDateString("id-ID", {
+      uid: targetUid,
+      name: realName,
+      email: realEmail,
+      role: (profileData?.role as UserProfile["role"]) || "User",
+      avatarUrl: profileData?.avatar_url || user?.user_metadata?.avatar_url || undefined,
+      whatsappChannelUrl:
+        profileData?.whatsapp_channel_url || "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
+      danaNumber: profileData?.dana_number || "-",
+      joinedAt: realDate
+        ? new Date(realDate).toLocaleDateString("id-ID", {
             day: "numeric",
             month: "long",
             year: "numeric",
           })
-        : mockUser.joinedAt,
-      passwordChangedAt: data.password_changed_at
-        ? new Date(data.password_changed_at).toLocaleDateString("id-ID")
+        : "-",
+      passwordChangedAt: profileData?.password_changed_at
+        ? new Date(profileData.password_changed_at).toLocaleDateString("id-ID")
         : "Belum pernah",
     };
 
     return { profile, isFallback: false };
   } catch {
-    return { profile: mockUser, isFallback: true };
+    return { profile: defaultEmptyProfile, isFallback: true };
   }
 }
 
@@ -144,63 +152,56 @@ export async function fetchUserWallet(userId?: string): Promise<{
   danaNumber: string;
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return {
-      balance: mockWallet.balance,
-      minimumWithdrawal: mockWallet.minimumWithdrawal,
-      danaNumber: mockWallet.danaNumber,
-      isFallback: true,
-    };
-  }
-
   try {
-    let targetUid = userId;
-    if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
-    }
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
 
     if (!targetUid) {
       return {
-        balance: mockWallet.balance,
-        minimumWithdrawal: mockWallet.minimumWithdrawal,
-        danaNumber: mockWallet.danaNumber,
+        balance: 0,
+        minimumWithdrawal: 5000,
+        danaNumber: "",
         isFallback: true,
       };
     }
 
-    const { data: walletData, error: walletErr } = await supabase
-      .from("wallets")
-      .select("balance, minimum_withdrawal")
-      .eq("user_id", targetUid)
-      .maybeSingle();
+    let walletBalance = 0;
+    let minWithdrawal = 5000;
+    let danaNum = "";
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("dana_number")
-      .eq("id", targetUid)
-      .maybeSingle();
+    if (isSupabaseConfigured) {
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("balance, minimum_withdrawal")
+        .eq("user_id", targetUid)
+        .maybeSingle();
 
-    if (walletErr || !walletData) {
-      return {
-        balance: mockWallet.balance,
-        minimumWithdrawal: mockWallet.minimumWithdrawal,
-        danaNumber: profileData?.dana_number || mockWallet.danaNumber,
-        isFallback: true,
-      };
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("dana_number")
+        .eq("id", targetUid)
+        .maybeSingle();
+
+      if (walletData) {
+        walletBalance = Number(walletData.balance) || 0;
+        minWithdrawal = Number(walletData.minimum_withdrawal) || 5000;
+      }
+      if (profileData?.dana_number) {
+        danaNum = profileData.dana_number;
+      }
     }
 
     return {
-      balance: Number(walletData.balance) || 0,
-      minimumWithdrawal: Number(walletData.minimum_withdrawal) || 5000,
-      danaNumber: profileData?.dana_number || mockWallet.danaNumber,
+      balance: walletBalance,
+      minimumWithdrawal: minWithdrawal,
+      danaNumber: danaNum,
       isFallback: false,
     };
   } catch {
     return {
-      balance: mockWallet.balance,
-      minimumWithdrawal: mockWallet.minimumWithdrawal,
-      danaNumber: mockWallet.danaNumber,
+      balance: 0,
+      minimumWithdrawal: 5000,
+      danaNumber: "",
       isFallback: true,
     };
   }
@@ -293,19 +294,16 @@ export async function fetchUserDeposits(userId?: string): Promise<{
   deposits: DepositRecord[];
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return { deposits: mockDeposits, isFallback: true };
-  }
-
   try {
-    let targetUid = userId;
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
+
     if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
+      return { deposits: [], isFallback: true };
     }
 
-    if (!targetUid) {
-      return { deposits: mockDeposits, isFallback: true };
+    if (!isSupabaseConfigured) {
+      return { deposits: [], isFallback: true };
     }
 
     const { data, error } = await supabase
@@ -314,11 +312,11 @@ export async function fetchUserDeposits(userId?: string): Promise<{
       .eq("user_id", targetUid)
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      return { deposits: mockDeposits, isFallback: true };
+    if (error) {
+      return { deposits: [], isFallback: true };
     }
 
-    const deposits: DepositRecord[] = data.map((d) => ({
+    const deposits: DepositRecord[] = (data || []).map((d) => ({
       id: d.id,
       gmail: d.gmail,
       status: d.status as DepositRecord["status"],
@@ -331,7 +329,7 @@ export async function fetchUserDeposits(userId?: string): Promise<{
 
     return { deposits, isFallback: false };
   } catch {
-    return { deposits: mockDeposits, isFallback: true };
+    return { deposits: [], isFallback: true };
   }
 }
 
@@ -391,19 +389,16 @@ export async function fetchUserWithdrawals(userId?: string): Promise<{
   withdrawals: WithdrawalRecord[];
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return { withdrawals: mockWithdrawals, isFallback: true };
-  }
-
   try {
-    let targetUid = userId;
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
+
     if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
+      return { withdrawals: [], isFallback: true };
     }
 
-    if (!targetUid) {
-      return { withdrawals: mockWithdrawals, isFallback: true };
+    if (!isSupabaseConfigured) {
+      return { withdrawals: [], isFallback: true };
     }
 
     const { data, error } = await supabase
@@ -412,11 +407,11 @@ export async function fetchUserWithdrawals(userId?: string): Promise<{
       .eq("user_id", targetUid)
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      return { withdrawals: mockWithdrawals, isFallback: true };
+    if (error) {
+      return { withdrawals: [], isFallback: true };
     }
 
-    const withdrawals: WithdrawalRecord[] = data.map((w) => ({
+    const withdrawals: WithdrawalRecord[] = (data || []).map((w) => ({
       id: w.id,
       amount: Number(w.amount),
       status: w.status as WithdrawalRecord["status"],
@@ -428,7 +423,7 @@ export async function fetchUserWithdrawals(userId?: string): Promise<{
 
     return { withdrawals, isFallback: false };
   } catch {
-    return { withdrawals: mockWithdrawals, isFallback: true };
+    return { withdrawals: [], isFallback: true };
   }
 }
 
@@ -512,19 +507,16 @@ export async function fetchUserTransactions(userId?: string): Promise<{
   transactions: TransactionRecord[];
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return { transactions: mockTransactions, isFallback: true };
-  }
-
   try {
-    let targetUid = userId;
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
+
     if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
+      return { transactions: [], isFallback: true };
     }
 
-    if (!targetUid) {
-      return { transactions: mockTransactions, isFallback: true };
+    if (!isSupabaseConfigured) {
+      return { transactions: [], isFallback: true };
     }
 
     const { data, error } = await supabase
@@ -533,11 +525,11 @@ export async function fetchUserTransactions(userId?: string): Promise<{
       .eq("user_id", targetUid)
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      return { transactions: mockTransactions, isFallback: true };
+    if (error) {
+      return { transactions: [], isFallback: true };
     }
 
-    const transactions: TransactionRecord[] = data.map((t) => ({
+    const transactions: TransactionRecord[] = (data || []).map((t) => ({
       id: t.id,
       type: t.type as TransactionRecord["type"],
       amount: Number(t.amount),
@@ -549,7 +541,7 @@ export async function fetchUserTransactions(userId?: string): Promise<{
 
     return { transactions, isFallback: false };
   } catch {
-    return { transactions: mockTransactions, isFallback: true };
+    return { transactions: [], isFallback: true };
   }
 }
 
@@ -561,19 +553,16 @@ export async function fetchUserTickets(userId?: string): Promise<{
   tickets: ReportTicket[];
   isFallback: boolean;
 }> {
-  if (!isSupabaseConfigured) {
-    return { tickets: mockReports, isFallback: true };
-  }
-
   try {
-    let targetUid = userId;
+    const user = await getCurrentAuthUser();
+    const targetUid = userId || user?.id;
+
     if (!targetUid) {
-      const user = await getCurrentAuthUser();
-      targetUid = user?.id;
+      return { tickets: [], isFallback: true };
     }
 
-    if (!targetUid) {
-      return { tickets: mockReports, isFallback: true };
+    if (!isSupabaseConfigured) {
+      return { tickets: [], isFallback: true };
     }
 
     const { data, error } = await supabase
@@ -586,11 +575,11 @@ export async function fetchUserTickets(userId?: string): Promise<{
       .eq("user_id", targetUid)
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      return { tickets: mockReports, isFallback: true };
+    if (error) {
+      return { tickets: [], isFallback: true };
     }
 
-    const tickets: ReportTicket[] = data.map((t) => {
+    const tickets: ReportTicket[] = (data || []).map((t) => {
       const replies = Array.isArray(t.ticket_replies)
         ? t.ticket_replies.map((r: { id: string; sender_type: string; message: string; created_at: string }) => ({
             id: r.id,
@@ -615,7 +604,7 @@ export async function fetchUserTickets(userId?: string): Promise<{
 
     return { tickets, isFallback: false };
   } catch {
-    return { tickets: mockReports, isFallback: true };
+    return { tickets: [], isFallback: true };
   }
 }
 

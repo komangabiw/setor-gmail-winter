@@ -1,4 +1,3 @@
-import { mockUser, mockDeposits } from "@/lib/mock-data";
 import { isSetorGeneratedPattern } from "@/lib/generator-names";
 
 export type CheckStatus = "live" | "die" | "invalid";
@@ -23,12 +22,7 @@ export function normalizeGmail(email: string): string {
   return `${username}@${domain}`;
 }
 
-const KNOWN_LIVE_EMAILS = new Set<string>([
-  normalizeGmail(mockUser.email),
-  ...mockDeposits
-    .filter((d) => d.status === "diterima" || d.status === "dicek")
-    .map((d) => normalizeGmail(d.gmail)),
-]);
+const KNOWN_LIVE_EMAILS = new Set<string>();
 
 export function validateGmailSyntax(email: string): {
   valid: boolean;

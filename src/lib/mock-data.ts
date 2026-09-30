@@ -11,15 +11,14 @@ export type UserProfile = {
 };
 
 export const mockUser: UserProfile = {
-  name: "I Komang Abimanyu",
-  email: "komangabi26@gmail.com",
-  uid: "69c78f55-4f25-4126-b3cc-c47c57381151",
+  name: "Pengguna",
+  email: "-",
+  uid: "-",
   role: "User",
-  danaNumber: "081386249421",
+  danaNumber: "-",
   joinedAt: "-",
   passwordChangedAt: "Belum pernah",
-  whatsappChannelUrl:
-    "https://www.whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
+  whatsappChannelUrl: "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
 };
 
 export type SetorCategory = {
@@ -73,66 +72,7 @@ export type DepositRecord = {
   note?: string;
 };
 
-/**
- * Fixed reference clock for every mock timestamp.
- *
- * Deriving the fixtures from `Date.now()` meant the server stamped one minute
- * and the browser stamped another for the same row, so React threw a hydration
- * mismatch on /saldo and /riwayat. Anchoring every offset to a single constant
- * keeps the server and client output byte-identical.
- * Bump `MOCK_NOW` to re-age the demo data.
- */
-const MOCK_NOW = new Date("2026-09-26T09:00:00.000Z").getTime();
-
-/** ISO timestamp `hours` before the fixed mock clock. */
-function hoursAgo(hours: number): string {
-  return new Date(MOCK_NOW - hours * 60 * 60 * 1000).toISOString();
-}
-
-export const mockDeposits: DepositRecord[] = [
-  {
-    id: "d-001",
-    gmail: "setor001@gmail.com",
-    status: "diterima",
-    amount: 4500,
-    category: "good",
-    createdAt: hoursAgo(2),
-    updatedAt: hoursAgo(1.5),
-  },
-  {
-    id: "d-002",
-    gmail: "setor002@gmail.com",
-    status: "pending",
-    amount: 4500,
-    category: "good",
-    createdAt: hoursAgo(5),
-  },
-  {
-    id: "d-003",
-    gmail: "setor003@gmail.com",
-    status: "dicek",
-    amount: 3000,
-    category: "bebas",
-    createdAt: hoursAgo(8),
-  },
-  {
-    id: "d-004",
-    gmail: "setor004@gmail.com",
-    status: "ditolak",
-    amount: 4500,
-    category: "good",
-    createdAt: hoursAgo(24),
-    note: "Tidak sesuai rules",
-  },
-  {
-    id: "d-005",
-    gmail: "setor005@gmail.com",
-    status: "diterima",
-    amount: 4500,
-    category: "good",
-    createdAt: hoursAgo(26),
-  },
-];
+export const mockDeposits: DepositRecord[] = [];
 
 export type WithdrawalStatus = "diproses" | "berhasil" | "ditolak";
 
@@ -159,85 +99,12 @@ export type TransactionRecord = {
 export const mockWallet = {
   balance: 0,
   minimumWithdrawal: 5000,
-  danaNumber: "081234567890",
+  danaNumber: "",
 };
 
-export const mockWithdrawals: WithdrawalRecord[] = [
-  {
-    id: "w-001",
-    amount: 5000,
-    status: "berhasil",
-    method: "DANA",
-    accountNumber: "081234567890",
-    createdAt: hoursAgo(30),
-    updatedAt: hoursAgo(29),
-  },
-  {
-    id: "w-002",
-    amount: 2000,
-    status: "diproses",
-    method: "DANA",
-    accountNumber: "081234567890",
-    createdAt: hoursAgo(0.5),
-  },
-  {
-    id: "w-003",
-    amount: 7500,
-    status: "ditolak",
-    method: "DANA",
-    accountNumber: "081234567890",
-    createdAt: hoursAgo(8),
-    updatedAt: hoursAgo(7),
-  },
-  {
-    id: "w-004",
-    amount: 3000,
-    status: "diproses",
-    method: "DANA",
-    accountNumber: "081234567890",
-    createdAt: hoursAgo(52),
-    updatedAt: hoursAgo(50),
-  },
-];
+export const mockWithdrawals: WithdrawalRecord[] = [];
 
-export const mockTransactions: TransactionRecord[] = [
-  {
-    id: "t-001",
-    type: "deposit",
-    amount: 4500,
-    title: "Setoran Gmail Good",
-    description: "setor001@gmail.com",
-    createdAt: hoursAgo(2),
-    status: "success",
-  },
-  {
-    id: "t-002",
-    type: "deposit",
-    amount: 4500,
-    title: "Setoran Gmail Good",
-    description: "setor005@gmail.com",
-    createdAt: hoursAgo(26),
-    status: "success",
-  },
-  {
-    id: "t-003",
-    type: "withdrawal",
-    amount: 5000,
-    title: "Penarikan Saldo",
-    description: "DANA 081234567890",
-    createdAt: hoursAgo(30),
-    status: "success",
-  },
-  {
-    id: "t-004",
-    type: "bonus",
-    amount: 15000,
-    title: "Bonus Referral",
-    description: "Misi 20 teman selesai",
-    createdAt: hoursAgo(50),
-    status: "success",
-  },
-];
+export const mockTransactions: TransactionRecord[] = [];
 
 export type QuickMenuIconName =
   | "send"
