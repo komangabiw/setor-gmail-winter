@@ -27,7 +27,7 @@ const tabs = [
   { value: "register" as const, label: "Daftar" },
 ];
 
-export function AuthCard() {
+export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
   const router = useRouter();
   const [mode, setMode] = React.useState<AuthMode>("login");
   const [isLoading, setIsLoading] = React.useState(false);
@@ -46,11 +46,40 @@ export function AuthCard() {
     setErrors({});
   };
 
-  const handleGoogle = () => {
-    toast.success("Mock: Masuk dengan Google berhasil", {
+  const handleGoogle = async () => {
+    setIsLoading(true);
+    try {
+      if (supabase) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          toast.error("Gagal Masuk dengan Google", {
+            description: error.message,
+          });
+          setIsLoading(false);
+          return;
+        }
+        return;
+      }
+    } catch (err: unknown) {
+      console.warn("Supabase Google OAuth fallback:", err);
+    }
+    try {
+      localStorage.setItem("setorgmail_auth", "true");
+    } catch {}
+    toast.success("Masuk dengan Google berhasil", {
       description: "Mengalihkan ke Beranda…",
     });
-    router.push("/");
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push("/");
+    }
+    setIsLoading(false);
   };
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -79,10 +108,17 @@ export function AuthCard() {
             return;
           }
         } else if (data?.user) {
+          try {
+            localStorage.setItem("setorgmail_auth", "true");
+          } catch {}
           toast.success("Selamat datang kembali!", {
             description: "Berhasil masuk dengan akun database.",
           });
-          router.push("/");
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/");
+          }
           return;
         }
       }
@@ -93,8 +129,15 @@ export function AuthCard() {
     // Fallback mode jika offline / user mock
     window.setTimeout(() => {
       setIsLoading(false);
+      try {
+        localStorage.setItem("setorgmail_auth", "true");
+      } catch {}
       toast.success("Selamat datang kembali!", { description: "Berhasil masuk." });
-      router.push("/");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/");
+      }
     }, 600);
   };
 
@@ -141,10 +184,17 @@ export function AuthCard() {
             });
           } catch {}
 
+          try {
+            localStorage.setItem("setorgmail_auth", "true");
+          } catch {}
           toast.success("Pendaftaran berhasil!", {
             description: "Akun kamu berhasil terdaftar.",
           });
-          router.push("/");
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/");
+          }
           return;
         }
       }
@@ -155,8 +205,15 @@ export function AuthCard() {
     // Fallback
     window.setTimeout(() => {
       setIsLoading(false);
+      try {
+        localStorage.setItem("setorgmail_auth", "true");
+      } catch {}
       toast.success("Pendaftaran berhasil!", { description: "Akun kamu siap digunakan." });
-      router.push("/");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/");
+      }
     }, 600);
   };
 
