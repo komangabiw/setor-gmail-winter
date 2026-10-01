@@ -58,6 +58,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   leftIcon?: React.ReactNode;
   trailingSlot?: React.ReactNode;
+  trailing?: React.ReactNode;
   containerClassName?: string;
 }
 
@@ -71,6 +72,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       error,
       leftIcon,
       trailingSlot,
+      trailing,
       id,
       required,
       type = "text",
@@ -88,6 +90,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         hint={hint}
         error={error}
         required={required}
+        trailing={trailing}
         className={containerClassName}
       >
         <div className="relative">
@@ -124,7 +127,7 @@ Input.displayName = "Input";
 export type PasswordInputProps = Omit<InputProps, "type" | "trailingSlot">;
 
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, containerClassName, id, label, hint, error, leftIcon, required, ...props }, ref) => {
+  ({ className, containerClassName, id, label, hint, error, leftIcon, trailing, required, ...props }, ref) => {
     const generatedId = React.useId();
     const inputId = id ?? generatedId;
     const [visible, setVisible] = React.useState(false);
@@ -136,6 +139,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
         hint={hint}
         error={error}
         required={required}
+        trailing={trailing}
         className={containerClassName}
       >
         <div className="relative">

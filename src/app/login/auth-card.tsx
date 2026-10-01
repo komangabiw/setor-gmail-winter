@@ -230,13 +230,22 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
       />
 
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12 lg:justify-center lg:py-16">
-        {/* Brand header */}
-        <div className="animate-fade-up mb-7 text-center">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-400 to-brand-600 shadow-float">
-            <Mail className="size-8 text-white" strokeWidth={2.2} aria-hidden="true" />
+        {/* Brand header matching TopBar Gambar 1 */}
+        <div className="animate-fade-up mb-7 flex items-center justify-center gap-2.5">
+          <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-md shadow-sky-500/20">
+            <Mail className="size-4.5 sm:size-5 stroke-[2.2]" aria-hidden="true" />
+          </span>
+          <div className="flex items-baseline gap-1.5 text-lg sm:text-xl tracking-tight">
+            <span className="font-black text-slate-900 tracking-tight">
+              SETOR GMAIL
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-400 lowercase">
+              by
+            </span>
+            <span className="font-black tracking-tight bg-gradient-to-r from-sky-500 via-sky-600 to-brand-600 bg-clip-text text-transparent">
+              Winter
+            </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink-900">Setor Gmail</h1>
-          <p className="mt-1 text-[0.85rem] font-medium text-sky-600">Setor Gmail Winter</p>
         </div>
 
         {/* Floating auth card */}
@@ -249,9 +258,9 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
               className="mb-6"
             />
 
-            <div className="mb-5">
+            <div className="mb-4">
               <GoogleButton onClick={handleGoogle} />
-              <Divider />
+              <Divider label="atau" />
             </div>
 
             {mode === "login" ? (
@@ -271,24 +280,21 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
 
                 <PasswordInput
                   label="Password"
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => toast.info("Link Lupa Kata Sandi ditekan")}
+                      className="text-[0.75rem] font-semibold text-sky-600 hover:text-sky-700 transition-colors"
+                    >
+                      Lupa Kata Sandi?
+                    </button>
+                  }
                   autoComplete="current-password"
                   placeholder="••••••••"
                   leftIcon={<Lock className="size-[1.05rem]" aria-hidden="true" />}
                   value={loginForm.password}
                   error={errors.password}
                   onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
-                  hint={
-                    <span className="flex w-full items-center justify-between gap-2">
-                      <span>Gunakan password akun kamu</span>
-                      <button
-                        type="button"
-                        onClick={() => toast.info("Mock: link Lupa Kata Sandi ditekan")}
-                        className="shrink-0 font-semibold text-sky-600 transition-colors hover:text-sky-700"
-                      >
-                        Lupa Kata Sandi?
-                      </button>
-                    </span>
-                  }
                 />
 
                 <Button
