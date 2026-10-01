@@ -113,10 +113,10 @@ export function getStoredEWalletData(): StoredEWalletData {
   const fallback: StoredEWalletData = {
     defaultMethod: "DANA",
     accounts: {
-      DANA: "081234567890",
-      OVO: "081234567890",
-      GOPAY: "081234567890",
-      SHOPEEPAY: "081234567890",
+      DANA: "",
+      OVO: "",
+      GOPAY: "",
+      SHOPEEPAY: "",
     },
   };
   if (typeof window === "undefined") return fallback;
@@ -125,11 +125,16 @@ export function getStoredEWalletData(): StoredEWalletData {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") {
+        const rawAccounts = (parsed.accounts || {}) as Record<string, string>;
+        const cleanAccounts: Record<string, string> = {};
+        for (const [k, v] of Object.entries(rawAccounts)) {
+          cleanAccounts[k] = v === "081234567890" ? "" : (typeof v === "string" ? v : "");
+        }
         return {
           defaultMethod: parsed.defaultMethod || "DANA",
           accounts: {
             ...fallback.accounts,
-            ...(parsed.accounts || {}),
+            ...cleanAccounts,
           },
         };
       }

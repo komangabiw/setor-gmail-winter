@@ -49,9 +49,11 @@ export default function RootLayout({
         <AppChrome>{children}</AppChrome>
         <Toaster
           position="top-center"
+          theme="dark"
           toastOptions={{
             className:
-              "!rounded-2xl !border-slate-200 !shadow-card !text-[0.85rem] !font-medium",
+              "!rounded-2xl !border-slate-800 !bg-slate-900/95 !backdrop-blur-md !text-white !shadow-2xl !text-[0.86rem] !font-medium",
+            descriptionClassName: "!text-slate-300 !text-[0.76rem]",
           }}
         />
       </body>

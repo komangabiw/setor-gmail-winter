@@ -11,7 +11,7 @@ import {
   Save,
   CircleCheck,
   Clock,
-  LoaderCircle,
+  ReceiptText,
   ArrowUpRight,
   Target,
   AlertTriangle,
@@ -385,7 +385,8 @@ export function SaldoView() {
                     Pilih E-Wallet
                   </label>
                 </div>
-                <span className="text-[0.72rem] text-ink-500 font-medium">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/90 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-800 shadow-2xs">
+                  <span className="size-1.5 rounded-full bg-amber-500" />
                   Gopay dan Ovo pajak transfer 1000
                 </span>
               </div>
@@ -584,7 +585,7 @@ function TransactionList({ items }: { items: TransactionRecord[] }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        icon={<LoaderCircle className="size-6" aria-hidden="true" />}
+        icon={<ReceiptText className="size-7 text-sky-600" strokeWidth={1.8} aria-hidden="true" />}
         title="Belum ada transaksi"
         description="Semua aktivitas saldo akan tercatat di sini."
       />

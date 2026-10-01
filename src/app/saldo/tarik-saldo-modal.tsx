@@ -238,7 +238,8 @@ export function TarikSaldoModal({
             <label className="text-[0.76rem] font-bold text-ink-900">
               Pilih E-Wallet
             </label>
-            <span className="text-[0.72rem] text-ink-500 font-medium">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/90 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-800 shadow-2xs">
+              <span className="size-1.5 rounded-full bg-amber-500" />
               Gopay dan Ovo pajak transfer 1000
             </span>
           </div>
