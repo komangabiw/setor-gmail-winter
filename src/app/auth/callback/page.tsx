@@ -11,16 +11,67 @@ function CallbackHandler() {
   React.useEffect(() => {
     (async () => {
       try {
-        if (supabase) {
-          // 1. If code parameter exists in URL search params (PKCE flow)
-          const params = new URLSearchParams(window.location.search);
-          const code = params.get("code");
-          if (code) {
-            await supabase.auth.exchangeCodeForSession(code);
-          } else {
-            // 2. If access_token in hash fragment or session already stored
-            await supabase.auth.getSession();
+        const params = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+        const idToken = params.get("id_token") || hashParams.get("id_token");
+        const code = params.get("code") || hashParams.get("code");
+        const email = params.get("email") || hashParams.get("email");
+
+        // 1. Direct Google Auth ID token session creation
+        if (idToken && supabase) {
+          try {
+            const { data, error } = await supabase.auth.signInWithIdToken({
+              provider: "google",
+              token: idToken,
+            });
+            if (data?.session) {
+              try {
+                localStorage.setItem("setorgmail_auth", "true");
+              } catch {}
+              router.replace("/");
+              return;
+            }
+            if (error) {
+              console.warn("Supabase signInWithIdToken error:", error);
+            }
+          } catch (e) {
+            console.warn("signInWithIdToken exception:", e);
           }
+        }
+
+        // 2. PKCE code exchange if code parameter exists
+        if (code && supabase) {
+          try {
+            const { data } = await supabase.auth.exchangeCodeForSession(code);
+            if (data?.session) {
+              try {
+                localStorage.setItem("setorgmail_auth", "true");
+              } catch {}
+              router.replace("/");
+              return;
+            }
+          } catch (e) {
+            console.warn("exchangeCodeForSession exception:", e);
+          }
+        }
+
+        // 3. Check existing session or email confirmation
+        if (supabase) {
+          const { data } = await supabase.auth.getSession();
+          if (data?.session) {
+            try {
+              localStorage.setItem("setorgmail_auth", "true");
+            } catch {}
+            router.replace("/");
+            return;
+          }
+        }
+
+        if (email) {
+          try {
+            localStorage.setItem("setorgmail_auth", "true");
+          } catch {}
         }
       } catch (err) {
         console.warn("Auth callback processing error:", err);
