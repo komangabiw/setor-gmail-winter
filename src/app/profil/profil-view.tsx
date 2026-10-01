@@ -7,23 +7,40 @@ import {
   Camera,
   Trash2,
   LogOut,
-  Trophy,
   User,
   Copy,
   Check,
   Mail,
   Calendar,
-  ShieldCheck,
   KeyRound,
+  Gift,
+  UserPlus,
+  BadgeCheck,
+  CircleDollarSign,
+  Ticket,
+  Link2,
+  Info,
+  Users,
 } from "lucide-react";
-import { PageShell, Reveal } from "@/components/layout/page-shell";
-import { type UserProfile } from "@/lib/mock-data";
-import { supabase } from "@/lib/supabase";
+import { EmptyState, PageShell, Reveal } from "@/components/layout/page-shell";
+import { Card, CardContent, SectionHeading } from "@/components/ui/card";
+import { StatBox, StatusBadge } from "@/components/ui/status";
+import { Tabs } from "@/components/ui/tabs";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserProfile } from "@/context/user-profile-context";
+import { supabase } from "@/lib/supabase";
+import { formatIDR, formatDateTime } from "@/lib/utils";
+import {
+  mockBonusHistory,
+  mockReferralHistory,
+  referralMission,
+  type BonusRecord,
+  type ReferralRecord,
+} from "@/lib/mock-data";
 
 /* ------------------------------------------------------------------ */
-/* Copy helper                                                         */
+/* Copy UID Helper                                                    */
 /* ------------------------------------------------------------------ */
 
 function CopyValue({ value }: { value: string }) {
@@ -57,24 +74,152 @@ function CopyValue({ value }: { value: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* View                                                                */
+/* Referral Sub-components                                            */
 /* ------------------------------------------------------------------ */
 
-const defaultProfile: UserProfile = {
-  name: "Pengguna",
-  email: "-",
-  uid: "-",
-  role: "User",
-  danaNumber: "-",
-  joinedAt: "-",
-  passwordChangedAt: "Belum pernah",
-};
+type ReferralTab = "referral" | "bonus";
+
+const REFERRAL_TABS: { value: ReferralTab; label: string; icon: React.ReactNode }[] = [
+  { value: "referral", label: "Riwayat Referral", icon: <Users className="size-3.5" aria-hidden="true" /> },
+  { value: "bonus", label: "Riwayat Bonus", icon: <Gift className="size-3.5" aria-hidden="true" /> },
+];
+
+function BannerStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/15 px-2.5 py-2.5 backdrop-blur-sm">
+      <dt className="text-[0.6rem] font-semibold tracking-wide text-white/70 uppercase">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-[0.82rem] font-bold text-white tabular-nums md:text-[0.9rem]">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function CopyField({
+  icon,
+  label,
+  value,
+  mono = false,
+  copyLabel,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+  copyLabel: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <span className="text-[0.78rem] font-medium text-ink-700">{label}</span>
+      <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/60 p-2 pl-3.5">
+        <span className="shrink-0 text-ink-400">{icon}</span>
+        <span
+          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-ink-800 ${
+            mono ? "font-mono tracking-widest" : ""
+          }`}
+          title={value}
+        >
+          {value}
+        </span>
+        <CopyButton value={value} label={copyLabel} copiedLabel="Tersalin" />
+      </div>
+    </div>
+  );
+}
+
+function ReferralList({ records }: { records: ReferralRecord[] }) {
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        icon={<Users className="size-6" aria-hidden="true" />}
+        title="Belum ada referral"
+        description="Bagikan kode atau link Referralmu untuk mulai mengundang teman."
+        compact
+      />
+    );
+  }
+
+  return (
+    <ul className="space-y-2.5">
+      {records.map((record) => (
+        <li
+          key={record.id}
+          className="flex items-center gap-3 rounded-2xl border border-slate-200/90 p-3.5"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+            <UserPlus className="size-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[0.82rem] font-semibold text-ink-800">
+              {record.name}
+            </p>
+            <p className="truncate text-[0.68rem] text-ink-500">
+              {record.email} · {formatDateTime(record.joinedAt)}
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-[0.8rem] font-bold text-ink-900 tabular-nums">
+              {formatIDR(record.reward)}
+            </p>
+            <StatusBadge tone={record.status === "berhasil" ? "success" : "warning"}>
+              {record.status === "berhasil" ? "Berhasil" : "Menunggu"}
+            </StatusBadge>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function BonusList({ records }: { records: BonusRecord[] }) {
+  if (records.length === 0) {
+    return (
+      <EmptyState
+        icon={<Gift className="size-6" aria-hidden="true" />}
+        title="Belum ada bonus"
+        description="Bonus akan masuk setelah misi referral kamu selesai."
+        compact
+      />
+    );
+  }
+
+  return (
+    <ul className="space-y-2.5">
+      {records.map((record) => (
+        <li
+          key={record.id}
+          className="flex items-center gap-3 rounded-2xl border border-emerald-200/90 bg-emerald-50/50 p-3.5"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white">
+            <CircleDollarSign className="size-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[0.82rem] font-semibold text-ink-800">
+              {record.label}
+            </p>
+            <p className="text-[0.68rem] text-ink-500">
+              {formatDateTime(record.createdAt)}
+            </p>
+          </div>
+          <span className="shrink-0 text-[0.85rem] font-bold text-emerald-700 tabular-nums">
+            +{formatIDR(record.amount)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Main ProfilView                                                    */
+/* ------------------------------------------------------------------ */
 
 export function ProfilView() {
   const router = useRouter();
   const {
     userProfile,
-    stats: totalStats,
     avatarImage,
     isLoading,
     updateAvatar,
@@ -82,8 +227,24 @@ export function ProfilView() {
   } = useUserProfile();
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [referralTab, setReferralTab] = React.useState<ReferralTab>("referral");
 
   const firstLetter = (userProfile.name || "P").trim().charAt(0).toUpperCase() || "P";
+
+  // Derive unique referral code & invite link based on user's profile
+  const userReferralCode =
+    userProfile.uid && userProfile.uid !== "-"
+      ? userProfile.uid.slice(0, 8).toUpperCase()
+      : referralMission.code;
+
+  const userInviteLink =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/login?ref=${userReferralCode}`
+      : referralMission.link;
+
+  const mission = referralMission;
+  const progress = Math.min(100, Math.round((mission.successful / mission.target) * 100));
+  const remaining = Math.max(mission.target - mission.successful, 0);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -132,7 +293,7 @@ export function ProfilView() {
         aria-label="Upload foto profil"
       />
 
-      <div className="space-y-4 pt-4 sm:pt-6">
+      <div className="space-y-5 pt-4 sm:pt-6">
         {/* Card 1: Main Profile Card */}
         <Reveal delay={40}>
           <section className="relative overflow-hidden rounded-3xl border border-sky-100/90 bg-white p-4.5 shadow-card sm:p-5.5">
@@ -313,97 +474,134 @@ export function ProfilView() {
           </section>
         </Reveal>
 
-        {/* Card 2: Statistik Total */}
-        <Reveal delay={80}>
-          <section className="rounded-3xl border border-sky-100/90 bg-white p-5 shadow-card sm:p-6">
-            <div className="flex items-center gap-2.5 text-ink-900">
-              <span className="flex size-8 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
-                <Trophy className="size-4" />
-              </span>
-              <div>
-                <h3 className="text-[0.92rem] font-bold text-ink-900">Statistik Total</h3>
-                <p className="text-[0.72rem] text-ink-500">Rekap seluruh aktivitas setor</p>
-              </div>
-            </div>
+        {/* Section 2: Program Referral (Integrated into Profile) */}
+        <Reveal delay={80} className="space-y-4">
+          <SectionHeading
+            title="Program Referral"
+            subtitle="Undang teman dan dapatkan bonus saldo"
+            icon={<Gift className="size-4" aria-hidden="true" />}
+            action={
+              <StatusBadge tone="info" dot pulse>
+                Aktif
+              </StatusBadge>
+            }
+          />
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {/* Total Setoran */}
-              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-sky-200/80 bg-sky-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                {isLoading ? (
-                  <div className="flex flex-col items-center py-0.5 w-full">
-                    <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-7 w-12 mt-1.5" />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-[0.68rem] font-bold tracking-wider text-sky-800 uppercase text-center">
-                      Total Setoran
-                    </p>
-                    <p className="mt-1 text-2xl font-black text-sky-700 tabular-nums sm:text-3xl text-center">
-                      {totalStats.total}
-                    </p>
-                  </>
-                )}
-              </div>
+          {/* Misi Referral: Gradient Mission Banner + Progress */}
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-sky-600 to-brand-700 p-5 shadow-card md:p-6">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-white/15 blur-3xl"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-white/10 blur-2xl"
+            />
 
-              {/* Diterima */}
-              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                {isLoading ? (
-                  <div className="flex flex-col items-center py-0.5 w-full">
-                    <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-7 w-12 mt-1.5" />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-[0.68rem] font-bold tracking-wider text-emerald-800 uppercase text-center">
-                      Diterima
-                    </p>
-                    <p className="mt-1 text-2xl font-black text-emerald-600 tabular-nums sm:text-3xl text-center">
-                      {totalStats.diterima}
-                    </p>
-                  </>
-                )}
+            <div className="relative space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm">
+                  <Gift className="size-5" strokeWidth={2.2} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[0.66rem] font-bold tracking-[0.16em] text-white/75 uppercase">
+                    {mission.headline}
+                  </p>
+                  <h2 className="mt-1 text-base leading-snug font-bold tracking-tight text-white sm:text-lg">
+                    {mission.title}
+                  </h2>
+                </div>
               </div>
 
-              {/* Ditolak */}
-              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                {isLoading ? (
-                  <div className="flex flex-col items-center py-0.5 w-full">
-                    <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-7 w-12 mt-1.5" />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-[0.68rem] font-bold tracking-wider text-rose-800 uppercase text-center">
-                      Ditolak
-                    </p>
-                    <p className="mt-1 text-2xl font-black text-rose-600 tabular-nums sm:text-3xl text-center">
-                      {totalStats.ditolak}
-                    </p>
-                  </>
-                )}
-              </div>
+              {/* Progress bar */}
+              <div className="space-y-2">
+                <div
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Progres misi referral"
+                  className="h-2.5 w-full overflow-hidden rounded-full bg-white/25"
+                >
+                  <div
+                    className="h-full rounded-full bg-white transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    style={{ width: `${Math.max(progress, 4)}%` }}
+                  />
+                </div>
 
-              {/* Pending */}
-              <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                {isLoading ? (
-                  <div className="flex flex-col items-center py-0.5 w-full">
-                    <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-7 w-12 mt-1.5" />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-[0.68rem] font-bold tracking-wider text-amber-800 uppercase text-center">
-                      Pending
-                    </p>
-                    <p className="mt-1 text-2xl font-black text-amber-600 tabular-nums sm:text-3xl text-center">
-                      {totalStats.pending}
-                    </p>
-                  </>
-                )}
+                <dl className="grid grid-cols-3 gap-2">
+                  <BannerStat label="Progres Bonus" value={`${mission.successful}/${mission.target}`} />
+                  <BannerStat label="Sisa" value={`${remaining} Teman`} />
+                  <BannerStat label="Bonus" value={formatIDR(mission.reward)} />
+                </dl>
               </div>
             </div>
           </section>
+
+          {/* Statistik Referral */}
+          <div className="grid grid-cols-3 gap-2.5 md:gap-3.5">
+            <StatBox
+              label="Total Diundang"
+              value={mission.invited}
+              tone="info"
+              icon={<UserPlus className="size-3.5" aria-hidden="true" />}
+            />
+            <StatBox
+              label="Referral Berhasil"
+              value={mission.successful}
+              tone="success"
+              icon={<BadgeCheck className="size-3.5" aria-hidden="true" />}
+            />
+            <StatBox
+              label="Bonus Diterima"
+              value={formatIDR(mission.bonusReceived)}
+              tone="warning"
+              icon={<CircleDollarSign className="size-3.5" aria-hidden="true" />}
+            />
+          </div>
+
+          {/* Kode Referral & Link Undangan */}
+          <Card>
+            <CardContent className="space-y-3.5 p-4 sm:p-5 md:p-6">
+              <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/70 p-3.5">
+                <Info className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden="true" />
+                <p className="text-[0.73rem] leading-relaxed text-sky-900">
+                  {mission.requirement}
+                </p>
+              </div>
+
+              <CopyField
+                icon={<Ticket className="size-4" aria-hidden="true" />}
+                label="Kode Referral Kamu"
+                value={userReferralCode}
+                mono
+                copyLabel="Salin"
+              />
+              <CopyField
+                icon={<Link2 className="size-4" aria-hidden="true" />}
+                label="Link Undangan Kamu"
+                value={userInviteLink}
+                copyLabel="Salin"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Riwayat Referral & Riwayat Bonus */}
+          <Card>
+            <CardContent className="space-y-4 p-4 sm:p-5 md:p-6">
+              <Tabs
+                items={REFERRAL_TABS}
+                value={referralTab}
+                onValueChange={(val) => setReferralTab(val as ReferralTab)}
+              />
+
+              {referralTab === "referral" ? (
+                <ReferralList records={mockReferralHistory} />
+              ) : (
+                <BonusList records={mockBonusHistory} />
+              )}
+            </CardContent>
+          </Card>
         </Reveal>
       </div>
     </PageShell>

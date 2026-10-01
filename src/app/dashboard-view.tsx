@@ -284,7 +284,7 @@ export function DashboardView() {
       <Reveal delay={180} className="mt-7">
         <SectionHeading
           title="Menu Cepat"
-          subtitle="Akses fitur utama"
+          subtitle="Akses fitur utama saja"
           icon={<Sparkles className="size-4" aria-hidden="true" />}
         />
         {/* Quick menu card wrapper */}

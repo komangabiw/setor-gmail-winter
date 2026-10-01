@@ -12,8 +12,9 @@ import {
   CircleX,
   ScanSearch,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card, SectionHeading } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, StatBox } from "@/components/ui/status";
 import { PageShell, PageHeader, Reveal, EmptyState } from "@/components/layout/page-shell";
@@ -272,9 +273,14 @@ export function RiwayatView() {
         </div>
       </Reveal>
 
-      {/* Summary */}
-      <Reveal delay={160} className="mt-5">
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 md:gap-4">
+      {/* Ringkasan status */}
+      <Reveal delay={160} className="mt-6">
+        <SectionHeading
+          title="Ringkasan Status"
+          subtitle="Pantau aktivitas setoran kamu"
+          icon={<ShieldCheck className="size-4" aria-hidden="true" />}
+        />
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 md:gap-4">
           {isDepositsLoading ? (
             <>
               {[1, 2, 3, 4].map((i) => (
