@@ -126,7 +126,7 @@ export const quickMenuItems: QuickMenuItem[] = [
   { key: "rules", label: "Rules", action: "rules", iconName: "scale" },
   { key: "checker", label: "Checker", href: "/checker", iconName: "shield-check" },
   { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", iconName: "trophy" },
-  { key: "referral", label: "Referral", href: "/profil", iconName: "gift" },
+  { key: "referral", label: "Referral", href: "/profil#referral", iconName: "gift" },
   { key: "laporan", label: "Laporan", href: "/laporan", iconName: "file-text" },
 ];
 

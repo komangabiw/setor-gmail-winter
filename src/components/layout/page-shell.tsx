@@ -31,13 +31,16 @@ export function Reveal({
   children,
   delay = 0,
   className,
+  id,
 }: {
   children: React.ReactNode;
   delay?: number;
   className?: string;
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       className={cn("animate-fade-up", className)}
       style={{ animationDelay: `${delay}ms` }}
     >

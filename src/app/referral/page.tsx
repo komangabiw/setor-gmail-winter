@@ -8,7 +8,7 @@ export default function ReferralPage() {
   const router = useRouter();
 
   React.useEffect(() => {
-    router.replace("/profil");
+    router.replace("/profil#referral");
   }, [router]);
 
   return (

@@ -229,6 +229,19 @@ export function ProfilView() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [referralTab, setReferralTab] = React.useState<ReferralTab>("referral");
 
+  // Auto-scroll to #referral if navigated with hash
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#referral") {
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById("referral");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
+      return () => window.clearTimeout(timer);
+    }
+  }, []);
+
   const firstLetter = (userProfile.name || "P").trim().charAt(0).toUpperCase() || "P";
 
   // Derive unique referral code & invite link based on user's profile
@@ -472,7 +485,7 @@ export function ProfilView() {
         </Reveal>
 
         {/* Section 2: Program Referral (Integrated into Profile) */}
-        <Reveal delay={80} className="space-y-4">
+        <Reveal delay={80} id="referral" className="space-y-4 scroll-mt-20">
           <SectionHeading
             title="Program Referral"
             subtitle="Undang teman dan dapatkan bonus saldo"
