@@ -184,12 +184,12 @@ export function SaldoView() {
   const [transactions, setTransactions] = React.useState<TransactionRecord[]>([]);
   const [userId, setUserId] = React.useState<string | null>(null);
 
-  // Status tersimpan per metode, hanya bernilai true setelah tombol Simpan diklik
-  const [savedMethods, setSavedMethods] = React.useState<Record<EWalletMethod, boolean>>({
-    DANA: false,
-    SHOPEEPAY: false,
-    GOPAY: false,
-    OVO: false,
+  // Status nomor e-wallet yang tersimpan di database/storage
+  const [persistedAccounts, setPersistedAccounts] = React.useState<Record<EWalletMethod, string>>({
+    DANA: "",
+    SHOPEEPAY: "",
+    GOPAY: "",
+    OVO: "",
   });
   const [isSaving, setIsSaving] = React.useState(false);
   const [tab, setTab] = React.useState<TabValue>("transaksi");
@@ -235,6 +235,7 @@ export function SaldoView() {
             ...prev,
             ...cleanAccounts,
           }));
+          setPersistedAccounts(cleanAccounts);
         }
         if (!wdRes.isFallback) {
           setWithdrawals(wdRes.withdrawals);
@@ -268,6 +269,7 @@ export function SaldoView() {
         ...prev,
         ...cleanStored,
       }));
+      setPersistedAccounts(cleanStored);
     }
   }, []);
 
@@ -278,7 +280,9 @@ export function SaldoView() {
   const config = EWALLET_CONFIGS[selectedMethod];
   const currentNumber = accountNumbers[selectedMethod] || "";
   const phoneValid = /^08\d{8,11}$/.test(currentNumber.trim());
-  const isSaved = phoneValid && Boolean(savedMethods[selectedMethod]);
+  const persistedNumber = (persistedAccounts[selectedMethod] || "").trim();
+  // Status tombol tersimpan aktif jika nomor valid, database memiliki nomor tersimpan, dan nomor input sama persis dengan database
+  const isSaved = phoneValid && Boolean(persistedNumber) && currentNumber.trim() === persistedNumber;
 
   const hasStartedTyping = currentNumber.length > 0;
   const isPrefixInvalid = hasStartedTyping && !currentNumber.startsWith("08");
@@ -291,15 +295,17 @@ export function SaldoView() {
       ...prev,
       [selectedMethod]: capped,
     }));
-    // Reset status tersimpan saat mengedit nomor
-    setSavedMethods((prev) => ({
-      ...prev,
-      [selectedMethod]: false,
-    }));
   };
 
   const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSaved) {
+      toast.info(`Nomor ${config.name} sudah tersimpan`, {
+        description: `Nomor ${currentNumber} sudah aktif tersimpan di akun Anda.`,
+      });
+      return;
+    }
 
     if (!currentNumber.startsWith("08")) {
       toast.error(`Nomor ${config.name} tidak valid`, {
@@ -337,9 +343,9 @@ export function SaldoView() {
         console.warn("Supabase save ewallet error:", err);
       } finally {
         setIsSaving(false);
-        setSavedMethods((prev) => ({
+        setPersistedAccounts((prev) => ({
           ...prev,
-          [selectedMethod]: true,
+          [selectedMethod]: currentNumber.trim(),
         }));
         toast.success(`Pengaturan ${config.name} tersimpan!`, {
           description: `Nomor: ${currentNumber} ditetapkan sebagai E-Wallet utama.`,

@@ -18,13 +18,9 @@ import {
 } from "lucide-react";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
 import { type UserProfile } from "@/lib/mock-data";
-import {
-  getCurrentAuthUser,
-  fetchUserProfile,
-  updateUserProfile,
-  fetchUserDeposits,
-  supabase,
-} from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUserProfile } from "@/context/user-profile-context";
 
 /* ------------------------------------------------------------------ */
 /* Copy helper                                                         */
@@ -76,56 +72,18 @@ const defaultProfile: UserProfile = {
 
 export function ProfilView() {
   const router = useRouter();
-  const [userProfile, setUserProfile] = React.useState<UserProfile>(defaultProfile);
-  const [userId, setUserId] = React.useState<string | null>(null);
-  const [totalStats, setTotalStats] = React.useState({
-    total: 0,
-    diterima: 0,
-    pending: 0,
-    ditolak: 0,
-  });
-  const [avatarImage, setAvatarImage] = React.useState<string | null>(null);
+  const {
+    userProfile,
+    stats: totalStats,
+    avatarImage,
+    isLoading,
+    updateAvatar,
+    deleteAvatar,
+  } = useUserProfile();
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Load avatar and real profile from Supabase
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem("user_profile_avatar");
-      if (saved) setAvatarImage(saved);
-    } catch {}
-
-    (async () => {
-      try {
-        const user = await getCurrentAuthUser();
-        if (user) {
-          setUserId(user.id);
-          const [pRes, dRes] = await Promise.all([
-            fetchUserProfile(user.id),
-            fetchUserDeposits(user.id),
-          ]);
-          if (!pRes.isFallback) {
-            setUserProfile(pRes.profile);
-            if (pRes.profile.avatarUrl) {
-              setAvatarImage(pRes.profile.avatarUrl);
-            }
-          }
-          if (!dRes.isFallback) {
-            const deps = dRes.deposits;
-            setTotalStats({
-              total: deps.length,
-              diterima: deps.filter((d) => d.status === "diterima").length,
-              pending: deps.filter((d) => d.status === "pending" || d.status === "dicek").length,
-              ditolak: deps.filter((d) => d.status === "ditolak").length,
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("Supabase profile load error (fallback used):", err);
-      }
-    })();
-  }, []);
-
-  const firstLetter = userProfile.name.trim().charAt(0).toUpperCase() || "I";
+  const firstLetter = (userProfile.name || "P").trim().charAt(0).toUpperCase() || "P";
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,29 +104,17 @@ export function ProfilView() {
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const dataUrl = reader.result as string;
-      setAvatarImage(dataUrl);
-      try {
-        localStorage.setItem("user_profile_avatar", dataUrl);
-      } catch {}
-      if (userId) {
-        updateUserProfile(userId, { avatar_url: dataUrl });
-      }
+      await updateAvatar(dataUrl);
       toast.success("Foto profil berhasil diperbarui");
     };
     reader.readAsDataURL(file);
     e.target.value = "";
   };
 
-  const handleDeletePhoto = () => {
-    setAvatarImage(null);
-    try {
-      localStorage.removeItem("user_profile_avatar");
-    } catch {}
-    if (userId) {
-      updateUserProfile(userId, { avatar_url: "" });
-    }
+  const handleDeletePhoto = async () => {
+    await deleteAvatar();
     toast.success("Foto profil berhasil dihapus", {
       description: "Tampilan kembali ke abjad depan nama kamu.",
     });
@@ -215,6 +161,11 @@ export function ProfilView() {
                       await supabase.auth.signOut();
                     }
                   } catch {}
+                  try {
+                    localStorage.removeItem("setorgmail_cached_profile_v1");
+                    localStorage.removeItem("setorgmail_cached_stats_v1");
+                    localStorage.removeItem("user_profile_avatar");
+                  } catch {}
                   toast.success("Berhasil keluar akun", {
                     description: "Sesi kamu telah diakhiri.",
                   });
@@ -229,56 +180,65 @@ export function ProfilView() {
 
             {/* Area Foto Profil & Identitas User */}
             <div className="relative mt-2 flex flex-col items-center text-center">
-              {/* Avatar circle with image or initial fallback & camera button */}
-              <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-200/60">
-                {avatarImage ? (
-                  <img
-                    src={avatarImage}
-                    alt={userProfile.name}
-                    className="size-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                    {firstLetter}
-                  </span>
-                )}
-
-                {/* Camera upload icon button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  aria-label="Upload foto profil"
-                  title="Upload / ganti foto profil"
-                  className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-white bg-sky-500 text-white shadow-xs hover:bg-sky-600 active:scale-90 transition-all cursor-pointer"
-                >
-                  <Camera className="size-3" />
-                </button>
-              </div>
-
-              {/* Nama user */}
-              <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-slate-900">
-                {userProfile.name}
-              </h2>
-
-              {avatarImage && (
-                <div className="mt-2 flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-2.5 py-0.5 text-[0.72rem] font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 cursor-pointer"
-                  >
-                    <Camera className="size-3 text-sky-600" />
-                    <span>Ganti Foto</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeletePhoto}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
-                  >
-                    <Trash2 className="size-3 text-rose-500" />
-                    <span>Hapus</span>
-                  </button>
+              {isLoading ? (
+                <div className="flex flex-col items-center">
+                  <Skeleton className="size-16 sm:size-18 rounded-full" />
+                  <Skeleton className="h-5 w-36 mt-2 rounded-lg" />
                 </div>
+              ) : (
+                <>
+                  {/* Avatar circle with image or initial fallback & camera button */}
+                  <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-200/60">
+                    {avatarImage ? (
+                      <img
+                        src={avatarImage}
+                        alt={userProfile.name}
+                        className="size-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                        {firstLetter}
+                      </span>
+                    )}
+
+                    {/* Camera upload icon button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      aria-label="Upload foto profil"
+                      title="Upload / ganti foto profil"
+                      className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-white bg-sky-500 text-white shadow-xs hover:bg-sky-600 active:scale-90 transition-all cursor-pointer"
+                    >
+                      <Camera className="size-3" />
+                    </button>
+                  </div>
+
+                  {/* Nama user */}
+                  <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                    {userProfile.name}
+                  </h2>
+
+                  {avatarImage && (
+                    <div className="mt-2 flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-2.5 py-0.5 text-[0.72rem] font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 cursor-pointer"
+                      >
+                        <Camera className="size-3 text-sky-600" />
+                        <span>Ganti Foto</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeletePhoto}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
+                      >
+                        <Trash2 className="size-3 text-rose-500" />
+                        <span>Hapus</span>
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -286,47 +246,74 @@ export function ProfilView() {
             <div className="relative mt-4 space-y-2.5">
               {/* Baris 1: UID Card */}
               <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:border-sky-200">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
-                    <KeyRound className="size-3 text-sky-500" />
-                    <span>UID Pengguna</span>
+                {isLoading ? (
+                  <div className="space-y-1.5 py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-24" />
+                    <Skeleton className="h-4 w-52 sm:w-72" />
                   </div>
-                  <p className="mt-0.5 truncate font-mono text-[0.82rem] font-semibold text-slate-800">
-                    {userProfile.uid}
-                  </p>
-                </div>
-                <CopyValue value={userProfile.uid} />
+                ) : (
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                        <KeyRound className="size-3 text-sky-500" />
+                        <span>UID Pengguna</span>
+                      </div>
+                      <p className="mt-0.5 truncate font-mono text-[0.82rem] font-semibold text-slate-800">
+                        {userProfile.uid}
+                      </p>
+                    </div>
+                    <CopyValue value={userProfile.uid} />
+                  </>
+                )}
               </div>
 
               {/* Baris 2: EMAIL & TANGGAL GABUNG */}
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {/* Email */}
                 <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
-                    <Mail className="size-3 text-sky-500" />
-                    <span>Email Terdaftar</span>
-                  </div>
-                  <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-slate-800">
-                    {userProfile.email}
-                  </p>
+                  {isLoading ? (
+                    <div className="space-y-1.5 py-0.5">
+                      <Skeleton className="h-2.5 w-24" />
+                      <Skeleton className="h-4 w-44" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                        <Mail className="size-3 text-sky-500" />
+                        <span>Email Terdaftar</span>
+                      </div>
+                      <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-slate-800">
+                        {userProfile.email}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Tanggal Gabung */}
                 <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
-                    <Calendar className="size-3 text-sky-500" />
-                    <span>Tanggal Bergabung</span>
-                  </div>
-                  <p className="mt-0.5 text-[0.82rem] font-semibold text-slate-800">
-                    {userProfile.joinedAt || "-"}
-                  </p>
+                  {isLoading ? (
+                    <div className="space-y-1.5 py-0.5">
+                      <Skeleton className="h-2.5 w-28" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                        <Calendar className="size-3 text-sky-500" />
+                        <span>Tanggal Bergabung</span>
+                      </div>
+                      <p className="mt-0.5 text-[0.82rem] font-semibold text-slate-800">
+                        {userProfile.joinedAt || "-"}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           </section>
         </Reveal>
 
-        {/* Card 2: Statistik Total (Ditaruh tepat di bawah profil, teks & angka ditengah/center) */}
+        {/* Card 2: Statistik Total */}
         <Reveal delay={80}>
           <section className="rounded-3xl border border-sky-100/90 bg-white p-5 shadow-card sm:p-6">
             <div className="flex items-center gap-2.5 text-ink-900">
@@ -342,42 +329,78 @@ export function ProfilView() {
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {/* Total Setoran */}
               <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-sky-200/80 bg-sky-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                <p className="text-[0.68rem] font-bold tracking-wider text-sky-800 uppercase text-center">
-                  Total Setoran
-                </p>
-                <p className="mt-1 text-2xl font-black text-sky-700 tabular-nums sm:text-3xl text-center">
-                  {totalStats.total}
-                </p>
+                {isLoading ? (
+                  <div className="flex flex-col items-center py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-16" />
+                    <Skeleton className="h-7 w-12 mt-1.5" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[0.68rem] font-bold tracking-wider text-sky-800 uppercase text-center">
+                      Total Setoran
+                    </p>
+                    <p className="mt-1 text-2xl font-black text-sky-700 tabular-nums sm:text-3xl text-center">
+                      {totalStats.total}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Diterima */}
               <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                <p className="text-[0.68rem] font-bold tracking-wider text-emerald-800 uppercase text-center">
-                  Diterima
-                </p>
-                <p className="mt-1 text-2xl font-black text-emerald-600 tabular-nums sm:text-3xl text-center">
-                  {totalStats.diterima}
-                </p>
+                {isLoading ? (
+                  <div className="flex flex-col items-center py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-16" />
+                    <Skeleton className="h-7 w-12 mt-1.5" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[0.68rem] font-bold tracking-wider text-emerald-800 uppercase text-center">
+                      Diterima
+                    </p>
+                    <p className="mt-1 text-2xl font-black text-emerald-600 tabular-nums sm:text-3xl text-center">
+                      {totalStats.diterima}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Ditolak */}
               <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                <p className="text-[0.68rem] font-bold tracking-wider text-rose-800 uppercase text-center">
-                  Ditolak
-                </p>
-                <p className="mt-1 text-2xl font-black text-rose-600 tabular-nums sm:text-3xl text-center">
-                  {totalStats.ditolak}
-                </p>
+                {isLoading ? (
+                  <div className="flex flex-col items-center py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-16" />
+                    <Skeleton className="h-7 w-12 mt-1.5" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[0.68rem] font-bold tracking-wider text-rose-800 uppercase text-center">
+                      Ditolak
+                    </p>
+                    <p className="mt-1 text-2xl font-black text-rose-600 tabular-nums sm:text-3xl text-center">
+                      {totalStats.ditolak}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Pending */}
               <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-                <p className="text-[0.68rem] font-bold tracking-wider text-amber-800 uppercase text-center">
-                  Pending
-                </p>
-                <p className="mt-1 text-2xl font-black text-amber-600 tabular-nums sm:text-3xl text-center">
-                  {totalStats.pending}
-                </p>
+                {isLoading ? (
+                  <div className="flex flex-col items-center py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-16" />
+                    <Skeleton className="h-7 w-12 mt-1.5" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[0.68rem] font-bold tracking-wider text-amber-800 uppercase text-center">
+                      Pending
+                    </p>
+                    <p className="mt-1 text-2xl font-black text-amber-600 tabular-nums sm:text-3xl text-center">
+                      {totalStats.pending}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </section>

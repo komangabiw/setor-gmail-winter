@@ -13,16 +13,10 @@ import {
   FileText,
   ChevronRight,
   Send,
-  CircleCheck,
-  Clock,
-  CircleX,
-  Tag,
   Sparkles,
-  Target,
   type LucideIcon,
 } from "lucide-react";
 import { Card, SectionHeading } from "@/components/ui/card";
-import { StatBox } from "@/components/ui/status";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
 import { RulesModal } from "./setor/rules-modal";
 import { TarikSaldoModal } from "./saldo/tarik-saldo-modal";
@@ -33,9 +27,10 @@ import {
 import {
   getCurrentAuthUser,
   fetchUserWallet,
-  fetchUserDeposits,
 } from "@/lib/supabase";
 import { cn, formatIDR } from "@/lib/utils";
+import { useUserProfile } from "@/context/user-profile-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const iconMap: Record<QuickMenuIconName, LucideIcon> = {
   send: Send,
@@ -91,33 +86,16 @@ export function DashboardView() {
   const [tarikModalOpen, setTarikModalOpen] = React.useState(false);
   const [balance, setBalance] = React.useState(0);
   const [minimum, setMinimum] = React.useState(5000);
-  const [stats, setStats] = React.useState({
-    diterima: 0,
-    pending: 0,
-    ditolak: 0,
-    harga: 4500,
-  });
+  const { stats: userStats, isLoading: isStatsLoading } = useUserProfile();
 
   const loadRealData = React.useCallback(async () => {
     try {
       const user = await getCurrentAuthUser();
       if (user) {
-        const [wRes, dRes] = await Promise.all([
-          fetchUserWallet(user.id),
-          fetchUserDeposits(user.id),
-        ]);
+        const wRes = await fetchUserWallet(user.id);
         if (!wRes.isFallback) {
           setBalance(wRes.balance);
           setMinimum(wRes.minimumWithdrawal);
-        }
-        if (!dRes.isFallback) {
-          const deps = dRes.deposits;
-          setStats({
-            diterima: deps.filter((d) => d.status === "diterima").length,
-            pending: deps.filter((d) => d.status === "pending" || d.status === "dicek").length,
-            ditolak: deps.filter((d) => d.status === "ditolak").length,
-            harga: 4500,
-          });
         }
       }
     } catch (e) {
@@ -168,14 +146,10 @@ export function DashboardView() {
                 </span>
               </div>
 
-              <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-700">
-                  <Tag className="size-3.5" aria-hidden="true" />
-                  Harga / Gmail: {formatIDR(stats.harga)}
-                </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/90 bg-white/80 px-3 py-1.5 text-[0.75rem] font-semibold text-ink-700">
-                  <Target className="size-3.5 text-sky-500" aria-hidden="true" />
-                  Min. Tarik: {formatIDR(minimum)}
+              {/* Harga / Gmail tanpa ikon dan tanpa badge Min. Tarik */}
+              <div className="mt-3.5 flex items-center">
+                <div className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-700">
+                  Harga / Gmail: Rp4.500
                 </div>
               </div>
 
@@ -229,38 +203,89 @@ export function DashboardView() {
         </Reveal>
       </div>
 
-      {/* Status summary — sits directly under the hero, above Menu Cepat */}
+      {/* Status summary — sama persis dengan tabel statistik di tab Profil (Total Setoran, Diterima, Ditolak, Pending) */}
       <Reveal delay={140} className="mt-5">
         <SectionHeading
           title="Ringkasan Status"
           subtitle="Pantau aktivitas setoran kamu"
           icon={<ShieldCheck className="size-4" aria-hidden="true" />}
         />
-        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4">
-          <StatBox
-            label="Diterima"
-            value={stats.diterima}
-            tone="success"
-            icon={<CircleCheck className="size-4" aria-hidden="true" />}
-          />
-          <StatBox
-            label="Pending"
-            value={stats.pending}
-            tone="warning"
-            icon={<Clock className="size-4" aria-hidden="true" />}
-          />
-          <StatBox
-            label="Ditolak"
-            value={stats.ditolak}
-            tone="danger"
-            icon={<CircleX className="size-4" aria-hidden="true" />}
-          />
-          <StatBox
-            label="Harga"
-            value={formatIDR(stats.harga)}
-            tone="info"
-            icon={<Tag className="size-4" aria-hidden="true" />}
-          />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Total Setoran */}
+          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-sky-200/80 bg-sky-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
+            {isStatsLoading ? (
+              <div className="flex flex-col items-center py-0.5 w-full">
+                <Skeleton className="h-2.5 w-16" />
+                <Skeleton className="h-7 w-12 mt-1.5" />
+              </div>
+            ) : (
+              <>
+                <p className="text-[0.68rem] font-bold tracking-wider text-sky-800 uppercase text-center">
+                  Total Setoran
+                </p>
+                <p className="mt-1 text-2xl font-black text-sky-700 tabular-nums sm:text-3xl text-center">
+                  {userStats.total}
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Diterima */}
+          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
+            {isStatsLoading ? (
+              <div className="flex flex-col items-center py-0.5 w-full">
+                <Skeleton className="h-2.5 w-16" />
+                <Skeleton className="h-7 w-12 mt-1.5" />
+              </div>
+            ) : (
+              <>
+                <p className="text-[0.68rem] font-bold tracking-wider text-emerald-800 uppercase text-center">
+                  Diterima
+                </p>
+                <p className="mt-1 text-2xl font-black text-emerald-600 tabular-nums sm:text-3xl text-center">
+                  {userStats.diterima}
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Ditolak */}
+          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
+            {isStatsLoading ? (
+              <div className="flex flex-col items-center py-0.5 w-full">
+                <Skeleton className="h-2.5 w-16" />
+                <Skeleton className="h-7 w-12 mt-1.5" />
+              </div>
+            ) : (
+              <>
+                <p className="text-[0.68rem] font-bold tracking-wider text-rose-800 uppercase text-center">
+                  Ditolak
+                </p>
+                <p className="mt-1 text-2xl font-black text-rose-600 tabular-nums sm:text-3xl text-center">
+                  {userStats.ditolak}
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Pending */}
+          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
+            {isStatsLoading ? (
+              <div className="flex flex-col items-center py-0.5 w-full">
+                <Skeleton className="h-2.5 w-16" />
+                <Skeleton className="h-7 w-12 mt-1.5" />
+              </div>
+            ) : (
+              <>
+                <p className="text-[0.68rem] font-bold tracking-wider text-amber-800 uppercase text-center">
+                  Pending
+                </p>
+                <p className="mt-1 text-2xl font-black text-amber-600 tabular-nums sm:text-3xl text-center">
+                  {userStats.pending}
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </Reveal>
 

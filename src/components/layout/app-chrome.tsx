@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { UserProfileProvider } from "@/context/user-profile-context";
 
 const PUBLIC_ROUTES = ["/login", "/auth/callback"];
 
@@ -91,7 +92,7 @@ export function AppChrome({
   const showNav = !isAuthScreen;
 
   return (
-    <>
+    <UserProfileProvider>
       {showNav && <TopBar />}
       {children}
       <div
@@ -102,6 +103,6 @@ export function AppChrome({
       >
         {showNav && <BottomNav />}
       </div>
-    </>
+    </UserProfileProvider>
   );
 }
