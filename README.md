@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Setor Gmail Winter
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3ECF8E?style=flat&logo=supabase)](https://supabase.com/)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat&logo=cloudflare)](https://pages.cloudflare.com/)
+[![OWASP Secured](https://img.shields.io/badge/OWASP-Top%2010%20Compliant-shield?style=flat&color=brightgreen)](#-security--hardening)
 
-First, run the development server:
+**Setor Gmail Winter** adalah platform web modern untuk layanan setor akun Gmail secara aman, cepat, dan transparan. Dibangun dengan performa tinggi, optimasi caching global, proteksi anti-fraud, dan enkripsi tingkat tinggi berbasis standar OWASP Top 10.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🇲🇨 Bahasa Indonesia
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### ✨ Fitur Utama
+- **Autentikasi Aman:** Login praktis via Google OAuth & Supabase Auth.
+- **Setor Gmail & Tracking Realtime:** Pemrosesan status setoran (Pending, Di Cek, Diterima, Ditolak) secara transparan.
+- **Manajemen E-Wallet & Penarikan Saldo:** Pengelolaan akun DANA, OVO, GoPay, ShopeePay dengan validasi nomor otomatis.
+- **Program Referral & Bonus:** Misi ajak teman dengan skema tracking bonus dan kode referral unik di halaman Profil.
+- **Keamanan OWASP Top 10 & Anti-Fraud:** Proteksi transaksi atomic (Anti-Double Spending), rate-limiting penarikan saldo, verifikasi webhook signature, dan security headers.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🛠️ Tech Stack
+- **Framework:** Next.js (App Router, React 19)
+- **Database & Auth:** Supabase (PostgreSQL, Row Level Security, RPC Atomic Functions)
+- **Deployment & Edge:** Cloudflare Pages & Cloudflare Workers
+- **Styling & UI:** Tailwind CSS, Lucide Icons, Skeleton Loaders
+- **Security & Validation:** Zod Schema Validation, OWASP Hardening, Custom Security Headers
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🇬🇧 English
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### ✨ Key Features
+- **Secure Authentication:** Seamless login via Google OAuth & Supabase Auth.
+- **Gmail Deposit & Realtime Tracking:** Transparent status tracking (Pending, Checking, Approved, Rejected).
+- **E-Wallet & Withdrawal Management:** Manage DANA, OVO, GoPay, and ShopeePay accounts with automated validation.
+- **Referral Program & Bonuses:** Invite friends mission with unique referral codes and bonus tracking built into the Profile section.
+- **OWASP Top 10 Security & Anti-Fraud:** Atomic transaction processing (Anti-Double Spending), withdrawal rate-limiting, webhook signature verification, and HTTP security headers.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🛠️ Tech Stack
+- **Framework:** Next.js (App Router, React 19)
+- **Database & Auth:** Supabase (PostgreSQL, Row Level Security, RPC Atomic Functions)
+- **Deployment & Edge:** Cloudflare Pages & Cloudflare Workers
+- **Styling & UI:** Tailwind CSS, Lucide Icons, Skeleton Loaders
+- **Security & Validation:** Zod Schema Validation, OWASP Hardening, Custom Security Headers
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛡️ Security & Hardening
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proyek ini telah melalui audit dan hardening keamanan komprehensif:
+- **A01 & A07 (Access Control & Auth):** Verifikasi sesi pengguna server-side via `supabase.auth.getUser()` untuk mencegah IDOR.
+- **A02 (Secrets Protection):** Enkripsi kunci rahasia dan pengisolasian `SUPABASE_SERVICE_ROLE_KEY` pada Server-Side saja.
+- **A03 (Input Sanitization):** Sanitasi input teks dari XSS/Injeksi dan validasi tipe data ketat via Zod.
+- **A04 (Anti-Double Spending):** Pemotongan saldo *atomic* di PostgreSQL database level untuk mencegah *race conditions*.
+- **A10 & Fraud Protection:** Verifikasi token pada webhook payment gateway (Flip) & pembatasan frekuensi penarikan saldo (max 3x / 24 jam).
+
+---
+
+## 🚀 Getting Started (Development)
+
+1. **Clone repository:**
+   ```bash
+   git clone https://github.com/komangabiw/setor-gmail-winter.git
+   cd setor-gmail-winter
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Setup environment variables:**
+   Buat file `.env.local` dan isi kredensial Supabase serta Telegram:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+   TELEGRAM_CHAT_ID=your_telegram_chat_id
+   ```
+
+4. **Jalankan development server:**
+   ```bash
+   npm run dev
+   ```

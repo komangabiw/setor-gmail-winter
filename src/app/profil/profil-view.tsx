@@ -403,72 +403,69 @@ export function ProfilView() {
               )}
             </div>
 
-            {/* Info Grid: UID full width, lalu EMAIL & TANGGAL GABUNG bersebelahan */}
-            <div className="relative mt-4 space-y-2.5">
-              {/* Baris 1: UID Card */}
-              <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:border-sky-200">
+            {/* Info Grid: 3 Kolom Sejajar (UID, EMAIL, TANGGAL GABUNG) */}
+            <div className="relative mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {/* Kolom 1: UID Card */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
                 {isLoading ? (
                   <div className="space-y-1.5 py-0.5 w-full">
-                    <Skeleton className="h-2.5 w-24" />
-                    <Skeleton className="h-4 w-52 sm:w-72" />
+                    <Skeleton className="h-2.5 w-20" />
+                    <Skeleton className="h-4 w-full" />
                   </div>
                 ) : (
                   <>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-1.5">
                       <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
                         <KeyRound className="size-3 text-sky-500" />
                         <span>UID Pengguna</span>
                       </div>
-                      <p className="mt-0.5 truncate font-mono text-[0.82rem] font-semibold text-slate-800">
-                        {userProfile.uid}
-                      </p>
+                      <CopyValue value={userProfile.uid} />
                     </div>
-                    <CopyValue value={userProfile.uid} />
+                    <p className="mt-1 break-all font-mono text-[11px] leading-relaxed font-semibold text-slate-800">
+                      {userProfile.uid}
+                    </p>
                   </>
                 )}
               </div>
 
-              {/* Baris 2: EMAIL & TANGGAL GABUNG */}
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {/* Email */}
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  {isLoading ? (
-                    <div className="space-y-1.5 py-0.5">
-                      <Skeleton className="h-2.5 w-24" />
-                      <Skeleton className="h-4 w-44" />
+              {/* Kolom 2: Email Card */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+                {isLoading ? (
+                  <div className="space-y-1.5 py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-24" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                      <Mail className="size-3 text-sky-500" />
+                      <span>Email Terdaftar</span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
-                        <Mail className="size-3 text-sky-500" />
-                        <span>Email Terdaftar</span>
-                      </div>
-                      <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-slate-800">
-                        {userProfile.email}
-                      </p>
-                    </>
-                  )}
-                </div>
+                    <p className="mt-1 break-all text-[11px] sm:text-xs leading-relaxed font-semibold text-slate-800">
+                      {userProfile.email}
+                    </p>
+                  </>
+                )}
+              </div>
 
-                {/* Tanggal Gabung */}
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  {isLoading ? (
-                    <div className="space-y-1.5 py-0.5">
-                      <Skeleton className="h-2.5 w-28" />
-                      <Skeleton className="h-4 w-32" />
+              {/* Kolom 3: Tanggal Bergabung */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+                {isLoading ? (
+                  <div className="space-y-1.5 py-0.5 w-full">
+                    <Skeleton className="h-2.5 w-24" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                      <Calendar className="size-3 text-sky-500" />
+                      <span>Tanggal Bergabung</span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
-                        <Calendar className="size-3 text-sky-500" />
-                        <span>Tanggal Bergabung</span>
-                      </div>
-                      <p className="mt-0.5 text-[0.82rem] font-semibold text-slate-800">
-                        {userProfile.joinedAt || "-"}
-                      </p>
-                    </>
-                  )}
-                </div>
+                    <p className="mt-1 text-[11px] sm:text-xs leading-relaxed font-semibold text-slate-800">
+                      {userProfile.joinedAt || "-"}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </section>
@@ -544,19 +541,16 @@ export function ProfilView() {
               label="Total Diundang"
               value={mission.invited}
               tone="info"
-              icon={<UserPlus className="size-3.5" aria-hidden="true" />}
             />
             <StatBox
               label="Referral Berhasil"
               value={mission.successful}
               tone="success"
-              icon={<BadgeCheck className="size-3.5" aria-hidden="true" />}
             />
             <StatBox
               label="Bonus Diterima"
               value={formatIDR(mission.bonusReceived)}
               tone="warning"
-              icon={<CircleDollarSign className="size-3.5" aria-hidden="true" />}
             />
           </div>
 
