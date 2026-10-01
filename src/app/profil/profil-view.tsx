@@ -189,19 +189,19 @@ export function ProfilView() {
       <div className="space-y-4 pt-4 sm:pt-6">
         {/* Card 1: Main Profile Card */}
         <Reveal delay={40}>
-          <section className="relative overflow-hidden rounded-3xl border border-sky-100/90 bg-white p-5 shadow-card sm:p-7">
+          <section className="relative overflow-hidden rounded-3xl border border-sky-100/90 bg-white p-4.5 shadow-card sm:p-5.5">
             {/* Ambient subtle glow */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 size-80 rounded-full bg-gradient-to-b from-sky-200/40 via-sky-100/15 to-transparent blur-3xl"
+              className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 size-72 rounded-full bg-gradient-to-b from-sky-200/30 via-sky-100/10 to-transparent blur-3xl"
             />
 
             {/* Header: Corner Kiri (Profil) & Corner Kanan (Keluar Akun) */}
             <div className="relative flex items-center justify-between">
               {/* Corner Kiri: Profil */}
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-xs">
-                  <User className="size-4 stroke-[2.2]" />
+              <div className="flex items-center gap-2">
+                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-sky-500 text-white shadow-xs">
+                  <User className="size-3.5 stroke-[2.2]" />
                 </span>
                 <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Profil Akun</h3>
               </div>
@@ -220,17 +220,17 @@ export function ProfilView() {
                   });
                   router.push("/login");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/90 bg-rose-50/80 px-3.5 py-1.5 text-xs font-bold text-rose-600 shadow-2xs transition-all hover:bg-rose-100 active:scale-95 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/90 bg-rose-50/80 px-3 py-1 text-xs font-bold text-rose-600 shadow-2xs transition-all hover:bg-rose-100 active:scale-95 cursor-pointer whitespace-nowrap"
               >
-                <LogOut className="size-3.5 text-rose-500" />
+                <LogOut className="size-3 text-rose-500" />
                 <span>Keluar Akun</span>
               </button>
             </div>
 
             {/* Area Foto Profil & Identitas User */}
-            <div className="relative mt-3 flex flex-col items-center text-center">
+            <div className="relative mt-2 flex flex-col items-center text-center">
               {/* Avatar circle with image or initial fallback & camera button */}
-              <div className="relative flex size-20 sm:size-22 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-lg ring-4 ring-sky-200/60">
+              <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-200/60">
                 {avatarImage ? (
                   <img
                     src={avatarImage}
@@ -238,7 +238,7 @@ export function ProfilView() {
                     className="size-full rounded-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                  <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
                     {firstLetter}
                   </span>
                 )}
@@ -249,31 +249,23 @@ export function ProfilView() {
                   onClick={() => fileInputRef.current?.click()}
                   aria-label="Upload foto profil"
                   title="Upload / ganti foto profil"
-                  className="absolute bottom-0 right-0 flex size-7 items-center justify-center rounded-full border-2 border-white bg-sky-500 text-white shadow-md hover:bg-sky-600 active:scale-90 transition-all cursor-pointer"
+                  className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-white bg-sky-500 text-white shadow-xs hover:bg-sky-600 active:scale-90 transition-all cursor-pointer"
                 >
-                  <Camera className="size-3.5" />
+                  <Camera className="size-3" />
                 </button>
               </div>
 
               {/* Nama user */}
-              <h2 className="mt-3 text-lg sm:text-xl font-black tracking-tight text-slate-900">
+              <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-slate-900">
                 {userProfile.name}
               </h2>
 
-              {/* Role badge */}
-              <div className="mt-1.5 flex items-center justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/90 bg-sky-50 px-3 py-0.5 text-xs font-bold text-sky-700 shadow-2xs">
-                  <ShieldCheck className="size-3.5 text-sky-500" />
-                  Mitra Resmi Setor Gmail
-                </span>
-              </div>
-
               {avatarImage && (
-                <div className="mt-2.5 flex items-center justify-center gap-2">
+                <div className="mt-2 flex items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-2.5 py-0.5 text-[0.72rem] font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 cursor-pointer"
                   >
                     <Camera className="size-3 text-sky-600" />
                     <span>Ganti Foto</span>
@@ -281,7 +273,7 @@ export function ProfilView() {
                   <button
                     type="button"
                     onClick={handleDeletePhoto}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
                   >
                     <Trash2 className="size-3 text-rose-500" />
                     <span>Hapus</span>
@@ -290,16 +282,16 @@ export function ProfilView() {
               )}
             </div>
 
-            {/* Info Grid: UID full width, lalu EMAIL & TANGGAL GABUNG bersebelahan (tanpa NOMOR DANA) */}
-            <div className="relative mt-6 space-y-3">
+            {/* Info Grid: UID full width, lalu EMAIL & TANGGAL GABUNG bersebelahan */}
+            <div className="relative mt-4 space-y-2.5">
               {/* Baris 1: UID Card */}
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200/90 bg-gradient-to-r from-slate-50/80 via-white to-sky-50/30 p-4 transition-colors hover:border-sky-200">
+              <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:border-sky-200">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-wider text-slate-400 uppercase">
+                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
                     <KeyRound className="size-3 text-sky-500" />
                     <span>UID Pengguna</span>
                   </div>
-                  <p className="mt-1 truncate font-mono text-[0.85rem] font-semibold text-slate-800">
+                  <p className="mt-0.5 truncate font-mono text-[0.82rem] font-semibold text-slate-800">
                     {userProfile.uid}
                   </p>
                 </div>
@@ -307,25 +299,25 @@ export function ProfilView() {
               </div>
 
               {/* Baris 2: EMAIL & TANGGAL GABUNG */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {/* Email */}
-                <div className="rounded-2xl border border-slate-200/90 bg-slate-50/60 p-4 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  <div className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-wider text-slate-400 uppercase">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
                     <Mail className="size-3 text-sky-500" />
                     <span>Email Terdaftar</span>
                   </div>
-                  <p className="mt-1 truncate text-[0.85rem] font-semibold text-slate-800">
+                  <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-slate-800">
                     {userProfile.email}
                   </p>
                 </div>
 
                 {/* Tanggal Gabung */}
-                <div className="rounded-2xl border border-slate-200/90 bg-slate-50/60 p-4 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
-                  <div className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-wider text-slate-400 uppercase">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 px-3.5 py-2.5 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+                  <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
                     <Calendar className="size-3 text-sky-500" />
                     <span>Tanggal Bergabung</span>
                   </div>
-                  <p className="mt-1 text-[0.85rem] font-semibold text-slate-800">
+                  <p className="mt-0.5 text-[0.82rem] font-semibold text-slate-800">
                     {userProfile.joinedAt || "-"}
                   </p>
                 </div>

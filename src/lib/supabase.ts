@@ -234,22 +234,21 @@ export async function fetchSavedEWallets(userId?: string): Promise<{
       .eq("user_id", targetUid);
 
     if (error || !data || data.length === 0) {
-      return { accounts: local.accounts, defaultMethod: local.defaultMethod, isFallback: true };
+      return { accounts: local.accounts, defaultMethod: "DANA", isFallback: true };
     }
 
     const accounts: Record<string, string> = { ...local.accounts };
-    let defaultMethod = local.defaultMethod;
 
     data.forEach((row) => {
-      accounts[row.method] = row.account_number;
-      if (row.is_default) {
-        defaultMethod = row.method;
+      const num = typeof row.account_number === "string" ? row.account_number.trim() : "";
+      if (num && num !== "081234567890" && num !== "08123456789") {
+        accounts[row.method] = num;
       }
     });
 
-    return { accounts, defaultMethod, isFallback: false };
+    return { accounts, defaultMethod: "DANA", isFallback: false };
   } catch {
-    return { accounts: local.accounts, defaultMethod: local.defaultMethod, isFallback: true };
+    return { accounts: local.accounts, defaultMethod: "DANA", isFallback: true };
   }
 }
 

@@ -77,18 +77,18 @@ export function StatBox({
   return (
     <div
       className={cn(
-        "group flex flex-col gap-2 rounded-2xl border p-3.5 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md sm:p-4",
+        "group flex flex-col items-center justify-center text-center gap-1.5 rounded-2xl border p-3.5 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md sm:p-4",
         toneClasses[tone],
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-1.5">
-        <span className="text-[0.62rem] font-bold tracking-[0.08em] uppercase opacity-80">
+      <div className="flex items-center justify-center gap-1.5 text-center">
+        <span className="text-[0.66rem] font-bold tracking-[0.08em] uppercase opacity-85">
           {label}
         </span>
         {icon && <span className="opacity-70">{icon}</span>}
       </div>
-      <span className="text-lg leading-none font-bold tracking-tight tabular-nums sm:text-xl">
+      <span className="text-xl leading-none font-black tracking-tight tabular-nums sm:text-2xl text-center">
         {value}
       </span>
     </div>

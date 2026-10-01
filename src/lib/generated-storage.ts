@@ -128,10 +128,11 @@ export function getStoredEWalletData(): StoredEWalletData {
         const rawAccounts = (parsed.accounts || {}) as Record<string, string>;
         const cleanAccounts: Record<string, string> = {};
         for (const [k, v] of Object.entries(rawAccounts)) {
-          cleanAccounts[k] = v === "081234567890" ? "" : (typeof v === "string" ? v : "");
+          const s = typeof v === "string" ? v.trim() : "";
+          cleanAccounts[k] = (s === "081234567890" || s === "08123456789") ? "" : s;
         }
         return {
-          defaultMethod: parsed.defaultMethod || "DANA",
+          defaultMethod: "DANA",
           accounts: {
             ...fallback.accounts,
             ...cleanAccounts,

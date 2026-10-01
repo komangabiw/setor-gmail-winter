@@ -59,10 +59,24 @@ export function TarikSaldoModal({
     if (open) {
       const stored = getStoredEWalletData();
       if (stored) {
-        setSelectedMethod(initialMethod || stored.defaultMethod || "DANA");
+        setSelectedMethod(initialMethod || "DANA");
+        const cleanAccounts: Record<EWalletMethod, string> = {
+          DANA: "",
+          SHOPEEPAY: "",
+          GOPAY: "",
+          OVO: "",
+        };
+        if (stored.accounts) {
+          for (const [k, v] of Object.entries(stored.accounts)) {
+            const str = typeof v === "string" ? v.trim() : "";
+            if (str && str !== "081234567890" && str !== "08123456789") {
+              cleanAccounts[k as EWalletMethod] = str;
+            }
+          }
+        }
         setAccountNumbers((prev) => ({
           ...prev,
-          ...stored.accounts,
+          ...cleanAccounts,
         }));
       }
     }

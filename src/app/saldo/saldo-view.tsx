@@ -215,10 +215,25 @@ export function SaldoView() {
           });
         }
         if (!ewRes.isFallback) {
-          setSelectedMethod((ewRes.defaultMethod as EWalletMethod) || "DANA");
+          // Always keep default on DANA as requested
+          setSelectedMethod("DANA");
+          const cleanAccounts: Record<EWalletMethod, string> = {
+            DANA: "",
+            SHOPEEPAY: "",
+            GOPAY: "",
+            OVO: "",
+          };
+          if (ewRes.accounts) {
+            for (const [k, v] of Object.entries(ewRes.accounts)) {
+              const str = typeof v === "string" ? v.trim() : "";
+              if (str && str !== "081234567890" && str !== "08123456789") {
+                cleanAccounts[k as EWalletMethod] = str;
+              }
+            }
+          }
           setAccountNumbers((prev) => ({
             ...prev,
-            ...(ewRes.accounts as Record<EWalletMethod, string>),
+            ...cleanAccounts,
           }));
         }
         if (!wdRes.isFallback) {
@@ -234,10 +249,24 @@ export function SaldoView() {
     }
     const stored = getStoredEWalletData();
     if (stored) {
-      setSelectedMethod(stored.defaultMethod || "DANA");
+      setSelectedMethod("DANA");
+      const cleanStored: Record<EWalletMethod, string> = {
+        DANA: "",
+        SHOPEEPAY: "",
+        GOPAY: "",
+        OVO: "",
+      };
+      if (stored.accounts) {
+        for (const [k, v] of Object.entries(stored.accounts)) {
+          const str = typeof v === "string" ? v.trim() : "";
+          if (str && str !== "081234567890" && str !== "08123456789") {
+            cleanStored[k as EWalletMethod] = str;
+          }
+        }
+      }
       setAccountNumbers((prev) => ({
         ...prev,
-        ...stored.accounts,
+        ...cleanStored,
       }));
     }
   }, []);
