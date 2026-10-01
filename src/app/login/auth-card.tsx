@@ -49,36 +49,37 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
   const handleGoogle = async () => {
     setIsLoading(true);
     try {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-      const origin =
-        typeof window !== "undefined" && window.location.origin
-          ? window.location.origin
-          : "https://setorgmail.com";
-      const redirectUri = `${origin}/api/auth/callback/google`;
-
-      if (clientId) {
-        // Direct redirect to Google OAuth consent screen (NO .supabase.co redirect)
-        const scope = encodeURIComponent("openid email profile");
-        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-          clientId
-        )}&redirect_uri=${encodeURIComponent(
-          redirectUri
-        )}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-
-        window.location.href = googleAuthUrl;
+      if (supabase) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          toast.error("Gagal Masuk dengan Google", {
+            description: error.message,
+          });
+          setIsLoading(false);
+          return;
+        }
         return;
       }
-
-      // If client ID is configured on backend worker, navigate via /api/auth/google
-      window.location.assign(`${origin}/api/auth/google`);
-      return;
     } catch (err: unknown) {
-      console.warn("Direct Google OAuth error:", err);
-      toast.error("Gagal Masuk dengan Google", {
-        description: "Terjadi kesalahan saat menghubungkan ke Google.",
-      });
-      setIsLoading(false);
+      console.warn("Supabase Google OAuth fallback:", err);
     }
+    try {
+      localStorage.setItem("setorgmail_auth", "true");
+    } catch { }
+    toast.success("Masuk dengan Google berhasil", {
+      description: "Mengalihkan ke Beranda…",
+    });
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push("/");
+    }
+    setIsLoading(false);
   };
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -109,7 +110,7 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
         } else if (data?.user) {
           try {
             localStorage.setItem("setorgmail_auth", "true");
-          } catch {}
+          } catch { }
           toast.success("Selamat datang kembali!", {
             description: "Berhasil masuk dengan akun database.",
           });
@@ -130,7 +131,7 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
       setIsLoading(false);
       try {
         localStorage.setItem("setorgmail_auth", "true");
-      } catch {}
+      } catch { }
       toast.success("Selamat datang kembali!", { description: "Berhasil masuk." });
       if (onSuccess) {
         onSuccess();
@@ -181,11 +182,11 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
               user_id: data.user.id,
               balance: 0,
             });
-          } catch {}
+          } catch { }
 
           try {
             localStorage.setItem("setorgmail_auth", "true");
-          } catch {}
+          } catch { }
           toast.success("Pendaftaran berhasil!", {
             description: "Akun kamu berhasil terdaftar.",
           });
@@ -206,7 +207,7 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
       setIsLoading(false);
       try {
         localStorage.setItem("setorgmail_auth", "true");
-      } catch {}
+      } catch { }
       toast.success("Pendaftaran berhasil!", { description: "Akun kamu siap digunakan." });
       if (onSuccess) {
         onSuccess();
