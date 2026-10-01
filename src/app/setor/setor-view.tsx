@@ -28,6 +28,7 @@ import {
   saveStoredCheckStatusMap,
 } from "@/lib/generated-storage";
 import { getCurrentAuthUser, insertUserDeposits } from "@/lib/supabase";
+import { useUserProfile } from "@/context/user-profile-context";
 
 export interface SetoranCheckItem {
   index: number;
@@ -111,6 +112,7 @@ function generateBatch(count: number, existingPool?: Set<string>): string[] {
 
 export function SetorView() {
   const [emails, setEmails] = React.useState("");
+  const { refreshDeposits, refreshWallet } = useUserProfile();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
   const [rulesOpen, setRulesOpen] = React.useState(false);
@@ -571,6 +573,8 @@ export function SetorView() {
         console.warn("Supabase insert error (fallback used):", err);
       } finally {
         setIsSubmitting(false);
+        refreshDeposits();
+        refreshWallet();
 
         // Tandai akun LIVE sebagai sudah disetor
         const newSubmitted = new Set([...Array.from(submittedSet), ...liveEmailList]);

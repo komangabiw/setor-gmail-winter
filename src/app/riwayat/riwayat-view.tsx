@@ -23,8 +23,9 @@ import {
   type DepositStatus,
   type TimeRange,
 } from "@/lib/mock-data";
-import { getCurrentAuthUser, fetchUserDeposits } from "@/lib/supabase";
 import { cn, formatDateTime, formatIDR } from "@/lib/utils";
+import { useUserProfile } from "@/context/user-profile-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                           */
@@ -138,26 +139,10 @@ function DepositRow({ record, index }: { record: DepositRecord; index: number })
 /* ------------------------------------------------------------------ */
 
 export function RiwayatView() {
-  const [deposits, setDeposits] = React.useState<DepositRecord[]>([]);
+  const { deposits, isDepositsLoading } = useUserProfile();
   const [query, setQuery] = React.useState("");
   const [status, setStatus] = React.useState<StatusFilter>("semua");
   const [range, setRange] = React.useState<TimeRange>("today");
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const user = await getCurrentAuthUser();
-        if (user) {
-          const res = await fetchUserDeposits(user.id);
-          if (!res.isFallback) {
-            setDeposits(res.deposits);
-          }
-        }
-      } catch (err) {
-        console.warn("Supabase fetchUserDeposits error:", err);
-      }
-    })();
-  }, []);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -290,16 +275,51 @@ export function RiwayatView() {
       {/* Summary */}
       <Reveal delay={160} className="mt-5">
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 md:gap-4">
-          <StatBox label="Diterima" value={counts.diterima} tone="success" />
-          <StatBox label="Pending" value={counts.pending} tone="warning" />
-          <StatBox label="Di Cek" value={counts.dicek} tone="info" />
-          <StatBox label="Ditolak" value={counts.ditolak} tone="danger" />
+          {isDepositsLoading ? (
+            <>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-6 w-10 mt-2" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <StatBox label="Diterima" value={counts.diterima} tone="success" />
+              <StatBox label="Pending" value={counts.pending} tone="warning" />
+              <StatBox label="Di Cek" value={counts.dicek} tone="info" />
+              <StatBox label="Ditolak" value={counts.ditolak} tone="danger" />
+            </>
+          )}
         </div>
       </Reveal>
 
       {/* List */}
       <Reveal delay={200} className="mt-5">
-        {filtered.length > 0 ? (
+        {isDepositsLoading ? (
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3.5 w-32" />
+            </div>
+            <div className="divide-y divide-slate-100/90">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 md:px-6 md:py-4">
+                  <Skeleton className="size-10 md:size-11 rounded-2xl shrink-0" />
+                  <div className="flex-1 space-y-1.5 min-w-0">
+                    <Skeleton className="h-4 w-44" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : filtered.length > 0 ? (
           <Card className="overflow-hidden">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
               <p className="text-[0.8rem] font-semibold text-ink-800">Daftar Setoran</p>

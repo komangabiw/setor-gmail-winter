@@ -8,7 +8,8 @@ import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/p
 import { CreateReportModal } from "./create-report-modal";
 import { cn, formatDateTime } from "@/lib/utils";
 import { type ReportStatus, type ReportTicket } from "@/lib/mock-data";
-import { getCurrentAuthUser, fetchUserTickets } from "@/lib/supabase";
+import { useUserProfile } from "@/context/user-profile-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusMeta: Record<ReportStatus, { label: string; tone: Tone }> = {
   baru: { label: "Baru", tone: "info" },
@@ -17,33 +18,20 @@ const statusMeta: Record<ReportStatus, { label: string; tone: Tone }> = {
 };
 
 export function LaporanView() {
-  const [reports, setReports] = React.useState<ReportTicket[]>([]);
+  const { tickets: reports, isTicketsLoading, addTicketLocally } = useUserProfile();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
 
   React.useEffect(() => {
-    (async () => {
-      try {
-        const user = await getCurrentAuthUser();
-        if (user) {
-          const res = await fetchUserTickets(user.id);
-          if (!res.isFallback) {
-            setReports(res.tickets);
-            if (res.tickets.length > 0) {
-              setSelectedId(res.tickets[0].id);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Supabase fetch tickets error:", err);
-      }
-    })();
-  }, []);
+    if (reports.length > 0 && !selectedId) {
+      setSelectedId(reports[0].id);
+    }
+  }, [reports, selectedId]);
 
-  const selected = reports.find((report) => report.id === selectedId) ?? null;
+  const selected = reports.find((report) => report.id === selectedId) ?? (reports[0] || null);
 
   const handleCreated = (ticket: ReportTicket) => {
-    setReports((current) => [ticket, ...current]);
+    addTicketLocally(ticket);
     setSelectedId(ticket.id);
   };
 
@@ -97,7 +85,24 @@ export function LaporanView() {
                 )}
               </div>
 
-              {reports.length === 0 ? (
+              {isTicketsLoading ? (
+                <div className="space-y-2.5">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="rounded-2xl border border-slate-200/90 bg-white p-3.5 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-4 w-12 rounded-full" />
+                      </div>
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-3/4" />
+                      <div className="flex items-center gap-2 pt-1">
+                        <Skeleton className="h-2.5 w-16" />
+                        <Skeleton className="h-2.5 w-14" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : reports.length === 0 ? (
                 <EmptyState
                   compact
                   className="flex-1"
@@ -160,7 +165,24 @@ export function LaporanView() {
         <Reveal delay={90} className="h-full">
           <Card className="flex h-full min-h-[400px] flex-col">
             <CardContent className="flex flex-1 flex-col md:p-6">
-              {!selected ? (
+              {isTicketsLoading ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-3 w-36" />
+                  <div className="space-y-2 pt-2">
+                    <Skeleton className="h-3.5 w-full" />
+                    <Skeleton className="h-3.5 w-5/6" />
+                    <Skeleton className="h-3.5 w-4/6" />
+                  </div>
+                  <div className="pt-6 border-t border-slate-100 space-y-3">
+                    <Skeleton className="h-16 w-3/4 rounded-2xl" />
+                    <Skeleton className="h-16 w-3/4 rounded-2xl ml-auto" />
+                  </div>
+                </div>
+              ) : !selected ? (
                 <EmptyState
                   compact
                   className="flex-1"

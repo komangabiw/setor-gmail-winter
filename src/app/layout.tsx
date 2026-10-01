@@ -15,9 +15,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Setor Gmail Winter",
+  title: {
+    default: "Setor Gmail Winter - Setor Gmail Aman, Cepat & Trusted",
+    template: "%s | Setor Gmail Winter",
+  },
   description:
-    "Setor Gmail Winter. Setor Gmail dengan harga transparan, penarikan cepat via DANA.",
+    "Setor Gmail Winter. Setor Gmail dengan harga transparan, penarikan cepat via DANA, GoPay, OVO, ShopeePay.",
   applicationName: "Setor Gmail",
   appleWebApp: {
     capable: true,

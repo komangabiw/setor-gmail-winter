@@ -84,28 +84,13 @@ const quickMenuThemes: Record<
 export function DashboardView() {
   const [rulesOpen, setRulesOpen] = React.useState(false);
   const [tarikModalOpen, setTarikModalOpen] = React.useState(false);
-  const [balance, setBalance] = React.useState(0);
-  const [minimum, setMinimum] = React.useState(5000);
-  const { stats: userStats, isLoading: isStatsLoading } = useUserProfile();
-
-  const loadRealData = React.useCallback(async () => {
-    try {
-      const user = await getCurrentAuthUser();
-      if (user) {
-        const wRes = await fetchUserWallet(user.id);
-        if (!wRes.isFallback) {
-          setBalance(wRes.balance);
-          setMinimum(wRes.minimumWithdrawal);
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to load dashboard data:", e);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    loadRealData();
-  }, [loadRealData]);
+  const {
+    wallet,
+    stats: userStats,
+    isWalletLoading,
+    isStatsLoading,
+    refreshWallet,
+  } = useUserProfile();
 
   const handleMenuClick = (label: string, href: string) => {
     if (href.startsWith("/")) return;
@@ -137,9 +122,15 @@ export function DashboardView() {
                   <p className="text-[0.72rem] font-semibold tracking-wide text-ink-500 uppercase">
                     Saldo Kamu
                   </p>
-                  <p className="mt-1.5 text-[2rem] leading-none font-bold tracking-tight text-ink-900 tabular-nums sm:text-[2.35rem] md:text-[2.6rem]">
-                    {formatIDR(balance)}
-                  </p>
+                  {isWalletLoading ? (
+                    <div className="mt-2 py-0.5">
+                      <Skeleton className="h-8 w-36 rounded-lg" />
+                    </div>
+                  ) : (
+                    <p className="mt-1.5 text-[2rem] leading-none font-bold tracking-tight text-ink-900 tabular-nums sm:text-[2.35rem] md:text-[2.6rem]">
+                      {formatIDR(wallet.balance)}
+                    </p>
+                  )}
                 </div>
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-md">
                   <Wallet className="size-5" strokeWidth={2.2} aria-hidden="true" />
@@ -370,9 +361,9 @@ export function DashboardView() {
       <TarikSaldoModal
         open={tarikModalOpen}
         onClose={() => setTarikModalOpen(false)}
-        onSuccess={loadRealData}
-        balance={balance}
-        minimum={minimum}
+        onSuccess={refreshWallet}
+        balance={wallet.balance}
+        minimum={wallet.minimumWithdrawal}
       />
     </PageShell>
   );

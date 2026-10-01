@@ -37,18 +37,10 @@ import {
   IndonesiaFlag,
   type EWalletMethod,
 } from "@/components/ui/ewallet-logos";
-import {
-  getStoredEWalletData,
-  saveStoredEWalletData,
-} from "@/lib/generated-storage";
-import {
-  getCurrentAuthUser,
-  fetchUserWallet,
-  fetchSavedEWallets,
-  saveEWalletAccount,
-  fetchUserWithdrawals,
-  fetchUserTransactions,
-} from "@/lib/supabase";
+import { saveStoredEWalletData } from "@/lib/generated-storage";
+import { saveEWalletAccount } from "@/lib/supabase";
+import { useUserProfile } from "@/context/user-profile-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                           */
@@ -168,114 +160,37 @@ function TransactionRow({ record, index }: { record: TransactionRecord; index: n
 /* ------------------------------------------------------------------ */
 
 export function SaldoView() {
-  const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>("DANA");
-  const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>({
-    DANA: "",
-    OVO: "",
-    GOPAY: "",
-    SHOPEEPAY: "",
-  });
-  const [wallet, setWallet] = React.useState({
-    balance: 0,
-    minimumWithdrawal: 5000,
-    danaNumber: "",
-  });
-  const [withdrawals, setWithdrawals] = React.useState<WithdrawalRecord[]>([]);
-  const [transactions, setTransactions] = React.useState<TransactionRecord[]>([]);
-  const [userId, setUserId] = React.useState<string | null>(null);
+  const {
+    wallet,
+    persistedAccounts,
+    withdrawals,
+    transactions,
+    isWalletLoading,
+    isHistoryLoading,
+    userId,
+    refreshWallet,
+    refreshHistory,
+    saveEWalletAccountLocally,
+  } = useUserProfile();
 
-  // Status nomor e-wallet yang tersimpan di database/storage
-  const [persistedAccounts, setPersistedAccounts] = React.useState<Record<EWalletMethod, string>>({
-    DANA: "",
-    SHOPEEPAY: "",
-    GOPAY: "",
-    OVO: "",
-  });
+  const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>("DANA");
+  const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>(persistedAccounts);
   const [isSaving, setIsSaving] = React.useState(false);
   const [tab, setTab] = React.useState<TabValue>("transaksi");
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
 
-  // Load preferences from localStorage & Supabase
-  const loadData = React.useCallback(async () => {
-    try {
-      const user = await getCurrentAuthUser();
-      if (user) {
-        setUserId(user.id);
-        const [wRes, ewRes, wdRes, txRes] = await Promise.all([
-          fetchUserWallet(user.id),
-          fetchSavedEWallets(user.id),
-          fetchUserWithdrawals(user.id),
-          fetchUserTransactions(user.id),
-        ]);
-        if (!wRes.isFallback) {
-          setWallet({
-            balance: wRes.balance,
-            minimumWithdrawal: wRes.minimumWithdrawal,
-            danaNumber: wRes.danaNumber,
-          });
-        }
-        if (!ewRes.isFallback) {
-          // Always keep default on DANA as requested
-          setSelectedMethod("DANA");
-          const cleanAccounts: Record<EWalletMethod, string> = {
-            DANA: "",
-            SHOPEEPAY: "",
-            GOPAY: "",
-            OVO: "",
-          };
-          if (ewRes.accounts) {
-            for (const [k, v] of Object.entries(ewRes.accounts)) {
-              const str = typeof v === "string" ? v.trim() : "";
-              if (str && str !== "081234567890" && str !== "08123456789") {
-                cleanAccounts[k as EWalletMethod] = str;
-              }
-            }
-          }
-          setAccountNumbers((prev) => ({
-            ...prev,
-            ...cleanAccounts,
-          }));
-          setPersistedAccounts(cleanAccounts);
-        }
-        if (!wdRes.isFallback) {
-          setWithdrawals(wdRes.withdrawals);
-        }
-        if (!txRes.isFallback) {
-          setTransactions(txRes.transactions);
-        }
-        return;
-      }
-    } catch (e) {
-      console.warn("Supabase fetch saldo error (fallback used):", e);
-    }
-    const stored = getStoredEWalletData();
-    if (stored) {
-      setSelectedMethod("DANA");
-      const cleanStored: Record<EWalletMethod, string> = {
-        DANA: "",
-        SHOPEEPAY: "",
-        GOPAY: "",
-        OVO: "",
-      };
-      if (stored.accounts) {
-        for (const [k, v] of Object.entries(stored.accounts)) {
-          const str = typeof v === "string" ? v.trim() : "";
-          if (str && str !== "081234567890" && str !== "08123456789") {
-            cleanStored[k as EWalletMethod] = str;
-          }
-        }
-      }
-      setAccountNumbers((prev) => ({
-        ...prev,
-        ...cleanStored,
-      }));
-      setPersistedAccounts(cleanStored);
-    }
-  }, []);
-
+  // Sync account numbers from persistedAccounts when hydrated or updated
   React.useEffect(() => {
-    loadData();
-  }, [loadData]);
+    setAccountNumbers((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(persistedAccounts)) {
+        if (v && !prev[k as EWalletMethod]) {
+          next[k as EWalletMethod] = v;
+        }
+      }
+      return next;
+    });
+  }, [persistedAccounts]);
 
   const config = EWALLET_CONFIGS[selectedMethod];
   const currentNumber = accountNumbers[selectedMethod] || "";
@@ -329,24 +244,21 @@ export function SaldoView() {
     }
 
     setIsSaving(true);
+    saveEWalletAccountLocally(selectedMethod, currentNumber.trim());
     saveStoredEWalletData({
       defaultMethod: selectedMethod,
-      accounts: accountNumbers,
+      accounts: { ...accountNumbers, [selectedMethod]: currentNumber.trim() },
     });
 
     (async () => {
       try {
         if (userId) {
-          await saveEWalletAccount(userId, selectedMethod, currentNumber, true);
+          await saveEWalletAccount(userId, selectedMethod, currentNumber.trim(), true);
         }
       } catch (err) {
         console.warn("Supabase save ewallet error:", err);
       } finally {
         setIsSaving(false);
-        setPersistedAccounts((prev) => ({
-          ...prev,
-          [selectedMethod]: currentNumber.trim(),
-        }));
         toast.success(`Pengaturan ${config.name} tersimpan!`, {
           description: `Nomor: ${currentNumber} ditetapkan sebagai E-Wallet utama.`,
         });
@@ -387,9 +299,15 @@ export function SaldoView() {
                   Saldo Saat Ini
                 </p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-3">
-                  <span className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-ink-900 tabular-nums leading-none">
-                    {formatIDR(wallet.balance)}
-                  </span>
+                  {isWalletLoading ? (
+                    <div className="py-1">
+                      <Skeleton className="h-9 w-44 rounded-xl" />
+                    </div>
+                  ) : (
+                    <span className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-ink-900 tabular-nums leading-none">
+                      {formatIDR(wallet.balance)}
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/90 bg-sky-50/80 px-2.5 py-0.5 text-xs font-semibold text-sky-800">
                     <Target className="size-3 text-sky-600" aria-hidden="true" />
                     Minimal Penarikan: {formatIDR(wallet.minimumWithdrawal)}
@@ -564,7 +482,9 @@ export function SaldoView() {
       </Reveal>
 
       <Reveal delay={230} className="mt-4">
-        {tab === "penarikan" ? (
+        {isHistoryLoading ? (
+          <HistorySkeletonList title={tab === "penarikan" ? "Riwayat Penarikan" : "Riwayat Transaksi"} />
+        ) : tab === "penarikan" ? (
           <WithdrawalList items={withdrawals} />
         ) : (
           <TransactionList items={transactions} />
@@ -578,7 +498,10 @@ export function SaldoView() {
         balance={wallet.balance}
         minimum={wallet.minimumWithdrawal}
         initialMethod={selectedMethod}
-        onSuccess={loadData}
+        onSuccess={() => {
+          refreshWallet();
+          refreshHistory();
+        }}
       />
     </PageShell>
   );
@@ -587,6 +510,32 @@ export function SaldoView() {
 /* ------------------------------------------------------------------ */
 /* Tables                                                              */
 /* ------------------------------------------------------------------ */
+
+function HistorySkeletonList({ title }: { title: string }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-ink-800">{title}</p>
+        <Skeleton className="h-4 w-14 rounded-full" />
+      </div>
+      <div className="divide-y divide-slate-100/90">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 md:px-6 md:py-4">
+            <Skeleton className="size-10 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-1.5 min-w-0">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 function WithdrawalList({ items }: { items: WithdrawalRecord[] }) {
   if (items.length === 0) {
