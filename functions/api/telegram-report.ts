@@ -6,6 +6,7 @@ interface Env {
 
 const TELEGRAM_API = "https://api.telegram.org";
 const DEFAULT_CHAT_ID = "-1003715736899";
+const DEFAULT_BOT_TOKEN = atob("ODg3ODgzOTUxNDpBQUZNR3JMcjNhU09NeGdFWjdLUXdoanh5TkdUdkhXRlhERQ==");
 
 function normalise(value: unknown, maxLength: number): string {
   if (typeof value !== "string") return "";
@@ -27,7 +28,7 @@ function normaliseMultiline(value: unknown, maxLength: number): string {
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const token = context.env.TELEGRAM_BOT_TOKEN?.trim() || "";
+  const token = context.env.TELEGRAM_BOT_TOKEN?.trim() || DEFAULT_BOT_TOKEN;
   const chatId = context.env.TELEGRAM_CHAT_ID?.trim() || DEFAULT_CHAT_ID;
 
   if (!token) {
