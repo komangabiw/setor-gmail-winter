@@ -154,24 +154,35 @@ export function TarikSaldoModal({
       try {
         const user = await getCurrentAuthUser();
         if (user) {
-          await insertWithdrawalRequest(user.id, {
+          const res = await insertWithdrawalRequest(user.id, {
             amount: balance,
             taxFee,
             netAmount,
             method: selectedMethod,
             accountNumber: currentNumber,
           });
+
+          if (!res.success) {
+            toast.error("Penarikan gagal", {
+              description: res.error || "Gagal memproses penarikan saldo.",
+            });
+            return;
+          }
         }
-      } catch (err) {
-        console.warn("Supabase withdrawal error (fallback used):", err);
-      } finally {
-        setIsLoading(false);
+
         onSuccess?.();
         onClose();
 
         toast.success("Permintaan penarikan dikirim!", {
           description: `Penarikan ${formatIDR(balance)} ke ${config.name} (${currentNumber}) sedang diproses.`,
         });
+      } catch (err) {
+        console.warn("Supabase withdrawal error:", err);
+        toast.error("Penarikan gagal", {
+          description: "Terjadi gangguan sistem. Silakan coba beberapa saat lagi.",
+        });
+      } finally {
+        setIsLoading(false);
       }
     })();
   };

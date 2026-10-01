@@ -163,4 +163,5 @@ const RULES: Array<
 const NOTES = [
   "Status di Checker hanya digunakan untuk memastikan Gmail masih aktif, bukan penentu diterima atau ditolaknya Gmail saat pengecekan admin.",
   "Gmail yang tidak sesuai rules atau berbeda dengan hasil Generate di website akan ditolak dan akun dapat diblokir oleh admin.",
+  "Klausul Perlindungan & Anti-Abuse: Segala bentuk manipulasi bug, farming akun ganda, kecurangan deposit, atau penyalahgunaan sistem akan mengakibatkan akun dibekukan/diban permanen dan seluruh saldo dicabut tanpa pengembalian (no refund).",
 ];

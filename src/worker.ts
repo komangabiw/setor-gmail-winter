@@ -330,25 +330,194 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
 }
 
 
+const ALLOWED_ORIGINS = [
+  "https://setorgmail.com",
+  "https://www.setorgmail.com",
+  "https://setor-gmail.pages.dev",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+function applySecurityHeaders(response: Response, origin?: string | null): Response {
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  newHeaders.set("X-Content-Type-Options", "nosniff");
+  newHeaders.set("X-Frame-Options", "DENY");
+  newHeaders.set("Referrer-Policy", "origin-when-cross-origin");
+  newHeaders.set("X-XSS-Protection", "1; mode=block");
+
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".pages.dev"))) {
+    newHeaders.set("Access-Control-Allow-Origin", origin);
+    newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    newHeaders.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, x-callback-token, x-flip-token, x-requested-with"
+    );
+    newHeaders.set("Access-Control-Allow-Credentials", "true");
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
+}
+
+async function sendAdminSecurityAlert(env: Env, title: string, details: string) {
+  const token = env.TELEGRAM_BOT_TOKEN || DEFAULT_BOT_TOKEN;
+  const chatId = env.TELEGRAM_CHAT_ID || DEFAULT_CHAT_ID;
+  if (!token || !chatId) return;
+
+  const text =
+    `🚨 *SECURITY ALERT - SETOR GMAIL*\n\n` +
+    `⚠️ *${title}*\n` +
+    `📝 ${details}\n\n` +
+    `⏰ _${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB_`;
+
+  try {
+    await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "Markdown",
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to send admin security alert:", err);
+  }
+}
+
+async function handleFlipWebhook(request: Request, env: Env): Promise<Response> {
+  const receivedToken =
+    request.headers.get("x-callback-token") ||
+    request.headers.get("x-flip-token") ||
+    request.headers.get("authorization")?.replace("Bearer ", "");
+
+  const expectedToken =
+    env.FLIP_WEBHOOK_SECRET || env.FLIP_CALLBACK_TOKEN || "flip_secret_webhook_token";
+
+  let body: any = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+
+  const payloadToken = body?.token || body?.secret_token;
+  const tokenToCheck = receivedToken || payloadToken;
+
+  // Webhook Signature / Token Verification
+  if (!tokenToCheck || tokenToCheck !== expectedToken) {
+    const clientIp = request.headers.get("cf-connecting-ip") || "Unknown IP";
+    console.warn("[WEBHOOK UNAUTHORIZED] Invalid or missing Flip webhook token from IP:", clientIp);
+    
+    await sendAdminSecurityAlert(
+      env,
+      "Percobaan Webhook Palsu / Ilegal",
+      `IP: ${clientIp}\nEndpoint: /api/webhook/flip\nStatus: Ditolak (401 Unauthorized)\nToken: ${tokenToCheck ? "Token Tidak Cocok" : "Token Kosong"}`
+    );
+
+    return new Response(
+      JSON.stringify({ success: false, error: "Unauthorized: Invalid webhook signature or token" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Valid webhook payload
+  const event = body.data || body;
+  console.log("[FLIP WEBHOOK SUCCESS] Valid transaction callback:", event?.id, event?.status);
+
+  return new Response(
+    JSON.stringify({ success: true, message: "Webhook signature verified successfully" }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
+}
+
+async function handleWithdrawalApi(request: Request, env: Env): Promise<Response> {
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      const clientIp = request.headers.get("cf-connecting-ip") || "Unknown";
+      await sendAdminSecurityAlert(
+        env,
+        "Akses API Penarikan Tanpa Sesi Sah",
+        `IP: ${clientIp}\nEndpoint: /api/withdraw\nAction: Permintaan ditolak`
+      );
+      return new Response(JSON.stringify({ success: false, error: "Akses ditolak: Sesi tidak sah." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const body: any = await request.json().catch(() => ({}));
+    const amount = Number(body.amount);
+    const method = String(body.method || "").toUpperCase();
+    const accountNumber = String(body.accountNumber || "").trim();
+
+    if (!amount || isNaN(amount) || amount < 5000 || amount > 5000000) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Nominal penarikan tidak valid (minimal Rp5.000, maksimal Rp5.000.000).",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!/^08\d{8,11}$/.test(accountNumber.replace(/[^\d]/g, ""))) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Nomor e-wallet tidak valid (10-13 digit angka)." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, message: "Permintaan penarikan divalidasi dan diterima." }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch {
+    return new Response(
+      JSON.stringify({ success: false, error: "Terjadi kesalahan pada sistem." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const origin = request.headers.get("origin");
+
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      const preflight = new Response(null, { status: 204 });
+      return applySecurityHeaders(preflight, origin);
+    }
+
+    let response: Response;
 
     // API Routes
     if (url.pathname === "/api/check-gmail" && request.method === "POST") {
-      return handleCheckGmail(request);
+      response = await handleCheckGmail(request);
+    } else if (url.pathname === "/api/telegram-report" && request.method === "POST") {
+      response = await handleTelegramReport(request, env);
+    } else if (
+      (url.pathname === "/api/webhook/flip" || url.pathname === "/api/flip-webhook") &&
+      request.method === "POST"
+    ) {
+      response = await handleFlipWebhook(request, env);
+    } else if (url.pathname === "/api/withdraw" && request.method === "POST") {
+      response = await handleWithdrawalApi(request, env);
+    } else if (env.ASSETS) {
+      // Serve static assets from Next.js export (out/)
+      response = await env.ASSETS.fetch(request);
+    } else {
+      response = new Response("Not Found", { status: 404 });
     }
 
-    if (url.pathname === "/api/telegram-report" && request.method === "POST") {
-      return handleTelegramReport(request, env);
-    }
-
-    // Serve static assets from Next.js export (out/)
-    if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
-    }
-
-    return new Response("Not Found", { status: 404 });
+    return applySecurityHeaders(response, origin);
   },
 };
 
