@@ -176,7 +176,7 @@ export function ReferralView() {
 
 function BannerStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white/15 px-2.5 py-2.5 backdrop-blur-sm">
+    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/15 px-2.5 py-2.5 text-center backdrop-blur-sm">
       <dt className="text-[0.6rem] font-semibold tracking-wide text-white/70 uppercase">
         {label}
       </dt>
