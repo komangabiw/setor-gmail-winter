@@ -22,6 +22,14 @@ export const metadata: Metadata = {
   description:
     "Setor Gmail Winter. Setor Gmail dengan harga transparan, penarikan cepat via DANA, GoPay, OVO, ShopeePay.",
   applicationName: "Setor Gmail",
+  icons: {
+    icon: [
+      { url: "/logo_removebg.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/logo_removebg.png",
+    apple: "/logo_removebg.png",
+  },
   appleWebApp: {
     capable: true,
     title: "Setor Gmail",
