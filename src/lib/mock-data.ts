@@ -18,7 +18,7 @@ export const mockUser: UserProfile = {
   danaNumber: "-",
   joinedAt: "-",
   passwordChangedAt: "Belum pernah",
-  whatsappChannelUrl: "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
+  whatsappChannelUrl: "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
 };
 
 export type SetorCategory = {

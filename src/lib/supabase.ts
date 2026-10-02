@@ -60,7 +60,7 @@ const defaultEmptyProfile: UserProfile = {
   danaNumber: "-",
   joinedAt: "-",
   passwordChangedAt: "Belum pernah",
-  whatsappChannelUrl: "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
+  whatsappChannelUrl: "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
 };
 
 /* ------------------------------------------------------------------ */
@@ -111,7 +111,7 @@ export async function fetchUserProfile(userId?: string): Promise<{
       role: (profileData?.role as UserProfile["role"]) || "User",
       avatarUrl: profileData?.avatar_url || user?.user_metadata?.avatar_url || undefined,
       whatsappChannelUrl:
-        profileData?.whatsapp_channel_url || "https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A",
+        profileData?.whatsapp_channel_url || "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
       danaNumber: profileData?.dana_number || "-",
       joinedAt: realDate
         ? new Date(realDate).toLocaleDateString("id-ID", {

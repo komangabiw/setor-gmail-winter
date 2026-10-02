@@ -41,7 +41,7 @@ export function TopBar() {
         {/* Right action: Saluran WA */}
         <div className="flex items-center gap-2">
           <a
-            href="https://whatsapp.com/channel/0029Vb4qWwV1iUxUf5k7qY0A"
+            href="https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-3.5 py-1.5 text-[0.76rem] font-semibold text-ink-800 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
