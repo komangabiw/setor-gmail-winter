@@ -2,22 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Mail, MessageCircle } from "lucide-react";
+import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 
 export function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100/90 bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-md items-center justify-between px-4 sm:max-w-lg sm:px-6 md:max-w-4xl md:px-8 lg:max-w-5xl xl:px-10">
-        {/* Left: Brand logo & name */}
+        {/* Left: Brand name & logo */}
         <Link
           href="/"
-          className="group flex items-center gap-2.5 transition-transform active:scale-98"
+          className="group flex items-center gap-2 transition-transform active:scale-98"
         >
-          {/* Blue circle with envelope icon */}
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-xs transition-transform duration-200 group-hover:scale-105">
-            <Mail className="size-4.5 stroke-[2.2]" aria-hidden="true" />
-          </span>
-
           {/* Brand Name */}
           <div className="flex items-baseline gap-1.5 text-[0.95rem] sm:text-[1.05rem] tracking-tight">
             <span className="font-black text-slate-900 tracking-tight">
@@ -30,6 +26,16 @@ export function TopBar() {
               Winter
             </span>
           </div>
+
+          {/* Logo on the right of Winter text */}
+          <Image
+            src="/logo_removebg.png"
+            alt="Setor Gmail Winter Logo"
+            width={38}
+            height={38}
+            priority
+            className="h-7.5 sm:h-8 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+          />
         </Link>
 
         {/* Right action: Saluran WA */}
