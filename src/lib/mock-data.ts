@@ -47,7 +47,7 @@ export const setorCategories: SetorCategory[] = [
   },
 ];
 
-export const defaultPassword = "winter1234";
+export const defaultPassword = "winter1212";
 
 export const rulesBannerText = "Cek Rules dulu sebelum setor";
 

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Info, Scale, Sparkles, TriangleAlert } from "lucide-react";
 import { Modal, ModalCloseButton } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { defaultPassword } from "@/lib/mock-data";
 
 interface RulesModalProps {
   open: boolean;
@@ -67,7 +68,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                 <>
                   Password Gmail wajib menggunakan:{" "}
                   <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-100 px-2 py-0.5 font-mono text-[0.82rem] font-extrabold text-amber-900 shadow-xs">
-                    winter1234
+                    {defaultPassword}
                   </span>{" "}
                   <span className="font-bold text-rose-600">
                     (huruf kecil semua)

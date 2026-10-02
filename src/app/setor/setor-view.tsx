@@ -642,7 +642,7 @@ export function SetorView() {
           </div>
         </Reveal>
 
-        {/* 3. Password Wajib Card (DIPERKECIL & RAMPING DENGAN HIGHLIGHT winter1234) */}
+        {/* 3. Password Wajib Card (DIPERKECIL & RAMPING DENGAN HIGHLIGHT winter1212) */}
         <Reveal delay={60}>
           <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 shadow-2xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
