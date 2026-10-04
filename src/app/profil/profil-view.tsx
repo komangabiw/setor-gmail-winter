@@ -336,14 +336,21 @@ export function ProfilView() {
                     }
                   } catch {}
                   try {
+                    localStorage.removeItem("setorgmail_auth");
                     localStorage.removeItem("setorgmail_cached_profile_v1");
                     localStorage.removeItem("setorgmail_cached_stats_v1");
+                    localStorage.removeItem("setorgmail_cached_wallet_v1");
+                    localStorage.removeItem("setorgmail_cached_ewallets_v1");
+                    localStorage.removeItem("setorgmail_cached_deposits_v1");
+                    localStorage.removeItem("setorgmail_cached_withdrawals_v1");
+                    localStorage.removeItem("setorgmail_cached_transactions_v1");
+                    localStorage.removeItem("setorgmail_cached_tickets_v1");
                     localStorage.removeItem("user_profile_avatar");
                   } catch {}
                   toast.success("Berhasil keluar akun", {
                     description: "Sesi kamu telah diakhiri.",
                   });
-                  router.push("/login");
+                  window.location.href = "/login";
                 }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/90 bg-rose-50/80 px-3 py-1 text-xs font-bold text-rose-600 shadow-2xs transition-all hover:bg-rose-100 active:scale-95 cursor-pointer whitespace-nowrap"
               >

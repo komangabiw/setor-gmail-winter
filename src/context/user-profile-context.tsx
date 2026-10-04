@@ -11,6 +11,7 @@ import {
 import { type EWalletMethod } from "@/components/ui/ewallet-logos";
 import { getStoredEWalletData } from "@/lib/generated-storage";
 import {
+  supabase,
   getCurrentAuthUser,
   fetchUserProfile,
   updateUserProfile,
@@ -363,12 +364,33 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  // Fetch once on mount in background
+  // Fetch on mount and revalidate on auth changes
   React.useEffect(() => {
-    if (!isFetchedRef.current) {
-      isFetchedRef.current = true;
-      refreshAll();
+    refreshAll();
+
+    let authSub: any = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          refreshAll();
+        } else if (event === "SIGNED_OUT") {
+          setUserProfile(defaultProfile);
+          setUserId(null);
+          setStats(defaultStats);
+          setWallet(defaultWallet);
+          setDeposits([]);
+          setWithdrawals([]);
+          setTransactions([]);
+          setTickets([]);
+          setAvatarImage(null);
+        }
+      });
+      authSub = data.subscription;
     }
+
+    return () => {
+      authSub?.unsubscribe?.();
+    };
   }, [refreshAll]);
 
   // Granular Refreshers

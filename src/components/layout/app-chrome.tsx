@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { TopBar } from "@/components/layout/top-bar";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { UserProfileProvider } from "@/context/user-profile-context";
 
@@ -30,12 +30,17 @@ export function AppChrome({
 
     async function checkAuth() {
       try {
-        if (supabase) {
+        if (isSupabaseConfigured) {
           const { data } = await supabase.auth.getSession();
           if (data?.session?.user) {
             if (active) setIsAuthenticated(true);
             return;
           }
+          try {
+            localStorage.removeItem("setorgmail_auth");
+          } catch {}
+          if (active) setIsAuthenticated(false);
+          return;
         }
         const localAuth = localStorage.getItem("setorgmail_auth");
         if (localAuth === "true") {

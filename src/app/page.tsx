@@ -3,7 +3,7 @@
 import * as React from "react";
 import { DashboardView } from "./dashboard-view";
 import { AuthCard } from "./login/auth-card";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,14 +29,19 @@ export default function HomePage() {
 
     async function checkAuth() {
       try {
-        if (supabase) {
+        if (isSupabaseConfigured) {
           const { data } = await supabase.auth.getSession();
           if (data?.session?.user) {
             if (isSubscribed) setIsAuthenticated(true);
             return;
           }
+          try {
+            localStorage.removeItem("setorgmail_auth");
+          } catch {}
+          if (isSubscribed) setIsAuthenticated(false);
+          return;
         }
-        // Fallback check
+        // Fallback check only if Supabase is unconfigured
         const localAuth = localStorage.getItem("setorgmail_auth");
         if (localAuth === "true") {
           if (isSubscribed) setIsAuthenticated(true);
