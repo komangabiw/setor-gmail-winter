@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Crown, Mail, Medal, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
@@ -26,27 +26,18 @@ const podiumStyles = {
     avatar: "size-16 sm:size-20 ring-4 ring-amber-400 ring-offset-2 ring-offset-white",
     name: "text-[0.82rem] sm:text-[0.95rem]",
     revenue: "text-[0.95rem] sm:text-[1.15rem] text-amber-700",
-    badge: "bg-amber-400 text-amber-950",
-    label: "Juara 1",
-    badgeIcon: <Crown className="size-3.5" strokeWidth={2.6} aria-hidden="true" />,
   },
   2: {
     card: "order-0 mt-5 items-stretch bg-gradient-to-b from-slate-50 to-white border-slate-200",
     avatar: "size-13 sm:size-16 ring-4 ring-slate-300 ring-offset-2 ring-offset-white",
     name: "text-[0.76rem] sm:text-[0.85rem]",
     revenue: "text-[0.85rem] sm:text-base text-slate-700",
-    badge: "bg-slate-300 text-slate-800",
-    label: "Juara 2",
-    badgeIcon: <Medal className="size-3.5" strokeWidth={2.6} aria-hidden="true" />,
   },
   3: {
     card: "order-2 mt-5 items-stretch bg-gradient-to-b from-orange-50 to-white border-orange-200",
     avatar: "size-13 sm:size-16 ring-4 ring-orange-300 ring-offset-2 ring-offset-white",
     name: "text-[0.76rem] sm:text-[0.85rem]",
     revenue: "text-[0.85rem] sm:text-base text-orange-700",
-    badge: "bg-orange-300 text-orange-950",
-    label: "Juara 3",
-    badgeIcon: <Medal className="size-3.5" strokeWidth={2.6} aria-hidden="true" />,
   },
 } as const;
 
@@ -94,25 +85,15 @@ export function LeaderboardView() {
                 <article
                   key={entry.rank}
                   className={cn(
-                    "flex flex-col items-center gap-2 rounded-3xl border p-3 pt-4 text-center shadow-card transition-transform duration-300 ease-out hover:-translate-y-1 sm:p-4 sm:pt-5",
+                    "flex flex-col items-center gap-2 rounded-3xl border p-3 pt-5 text-center shadow-card transition-transform duration-300 ease-out hover:-translate-y-1 sm:p-4 sm:pt-6",
                     style.card,
                   )}
                 >
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-bold tracking-wide uppercase",
-                      style.badge,
-                    )}
-                  >
-                    {style.badgeIcon}
-                    {style.label}
-                  </span>
-
                   <Avatar entry={entry} className={style.avatar} />
 
                   <p
                     className={cn(
-                      "line-clamp-2 w-full font-bold text-ink-900",
+                      "line-clamp-2 w-full font-bold text-ink-900 mt-1",
                       style.name,
                     )}
                     title={entry.name}
@@ -150,48 +131,40 @@ export function LeaderboardView() {
         </div>
       )}
 
-      {/* #4 downwards */}
+      {/* #4 downwards (Top 4 to 50) */}
       {rest.length > 0 && (
         <Reveal delay={120} className="mt-5">
           <Card>
             <CardContent className="space-y-2.5 md:p-6">
               <h2 className="text-[0.7rem] font-bold tracking-[0.14em] text-ink-400 uppercase">
-                Peringkat #{rest[0].rank} ke bawah
+                Peringkat #{rest[0].rank} - #{entries[entries.length - 1].rank}
               </h2>
 
               <ul className="space-y-2.5">
                 {rest.map((entry) => (
                   <li
                     key={entry.rank}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200/90 bg-white p-3 transition-[border-color,transform] duration-300 ease-out hover:border-sky-200 active:scale-[0.995]"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3 transition-[border-color,transform] duration-300 ease-out hover:border-sky-200 active:scale-[0.995]"
                   >
-                    <span className="w-8 shrink-0 text-center text-[0.95rem] font-bold text-ink-400 tabular-nums">
-                      #{entry.rank}
-                    </span>
-
-                    <Avatar entry={entry} className="size-11 ring-2 ring-white" />
-
-                    <div className="min-w-0 flex-1">
+                    {/* Sebelah kiri: Hanya foto profil dan nama */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar entry={entry} className="size-11 ring-2 ring-white" />
                       <p
                         className="truncate text-[0.85rem] font-semibold text-ink-800"
                         title={entry.name}
                       >
                         {entry.name}
                       </p>
-                      <p className="mt-0.5 flex items-center gap-1 text-[0.68rem] text-ink-500">
-                        <Mail className="size-3" aria-hidden="true" />
-                        <span className="font-semibold tabular-nums">
-                          {entry.gmailAccepted}
-                        </span>{" "}
-                        Gmail diterima
-                      </p>
                     </div>
 
+                    {/* Sebelah kanan: Total uang di atas, Gmail diterima di bawah menggantikan total pendapatan */}
                     <div className="shrink-0 text-right">
                       <p className="text-[0.88rem] font-bold text-ink-900 tabular-nums">
                         {formatIDR(entry.revenue)}
                       </p>
-                      <p className="text-[0.62rem] text-ink-400">total pendapatan</p>
+                      <p className="mt-0.5 text-[0.68rem] font-medium text-ink-500 tabular-nums">
+                        {entry.gmailAccepted} Gmail diterima
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -222,9 +195,10 @@ function Avatar({
         loading="lazy"
         className="size-full rounded-full bg-sky-100 object-cover"
       />
-      <span className="absolute -right-0.5 -bottom-0.5 flex size-[1.15rem] items-center justify-center rounded-full bg-brand-600 font-mono text-[0.6rem] font-bold text-white ring-2 ring-white">
+      <span className="absolute -right-1 -bottom-0.5 flex min-w-[1.25rem] h-5 px-1 items-center justify-center rounded-full bg-brand-600 font-mono text-[0.6rem] font-bold text-white ring-2 ring-white shadow-2xs">
         {entry.rank}
       </span>
     </span>
   );
 }
+

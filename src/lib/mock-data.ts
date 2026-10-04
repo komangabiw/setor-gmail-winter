@@ -240,6 +240,46 @@ const LEADERBOARD_BASE = [
   { name: "Hendra Gunawan", img: 60, gmailAccepted: 131 },
   { name: "Indah Permata", img: 38, gmailAccepted: 114 },
   { name: "Joko Susilo", img: 52, gmailAccepted: 97 },
+  { name: "Kevin Sanjaya", img: 11, gmailAccepted: 92 },
+  { name: "Larasati Putri", img: 25, gmailAccepted: 88 },
+  { name: "Muhammad Rizky", img: 33, gmailAccepted: 84 },
+  { name: "Nadia Safitri", img: 41, gmailAccepted: 80 },
+  { name: "Octavianus Rio", img: 18, gmailAccepted: 76 },
+  { name: "Putri Anggraini", img: 49, gmailAccepted: 73 },
+  { name: "Qori Ramadhan", img: 55, gmailAccepted: 70 },
+  { name: "Rian Hidayat", img: 14, gmailAccepted: 67 },
+  { name: "Siti Nurhaliza", img: 45, gmailAccepted: 64 },
+  { name: "Taufik Ismail", img: 59, gmailAccepted: 61 },
+  { name: "Utami Wibowo", img: 29, gmailAccepted: 58 },
+  { name: "Vina Panduwinata", img: 43, gmailAccepted: 55 },
+  { name: "Wahyu Setiawan", img: 3, gmailAccepted: 53 },
+  { name: "Xaverius Budi", img: 17, gmailAccepted: 50 },
+  { name: "Yulia Rahmawati", img: 35, gmailAccepted: 48 },
+  { name: "Zainal Abidin", img: 68, gmailAccepted: 46 },
+  { name: "Aditya Pratama", img: 6, gmailAccepted: 44 },
+  { name: "Bella Saphira", img: 48, gmailAccepted: 42 },
+  { name: "Candra Wijaya", img: 53, gmailAccepted: 40 },
+  { name: "Dini Aminarti", img: 39, gmailAccepted: 38 },
+  { name: "Ervan Kurniawan", img: 21, gmailAccepted: 36 },
+  { name: "Fitri Handayani", img: 42, gmailAccepted: 35 },
+  { name: "Gilang Ramadhan", img: 57, gmailAccepted: 33 },
+  { name: "Hana Maulida", img: 28, gmailAccepted: 32 },
+  { name: "Irfan Hakim", img: 61, gmailAccepted: 30 },
+  { name: "Jessica Mila", img: 46, gmailAccepted: 29 },
+  { name: "Kuncoro Hadi", img: 51, gmailAccepted: 27 },
+  { name: "Linda Marlina", img: 31, gmailAccepted: 26 },
+  { name: "Maulana Malik", img: 67, gmailAccepted: 25 },
+  { name: "Nina Zatulini", img: 24, gmailAccepted: 23 },
+  { name: "Oscar Lawalata", img: 56, gmailAccepted: 22 },
+  { name: "Prilly Latuconsina", img: 40, gmailAccepted: 21 },
+  { name: "Raden Mas Bagus", img: 64, gmailAccepted: 20 },
+  { name: "Sarah Sechan", img: 36, gmailAccepted: 18 },
+  { name: "Tommy Kurniawan", img: 63, gmailAccepted: 17 },
+  { name: "Umi Kalsum", img: 27, gmailAccepted: 16 },
+  { name: "Vicky Prasetyo", img: 62, gmailAccepted: 15 },
+  { name: "Wulan Guritno", img: 37, gmailAccepted: 14 },
+  { name: "Yoga Pratama", img: 58, gmailAccepted: 12 },
+  { name: "Zaskia Sungkar", img: 47, gmailAccepted: 10 },
 ];
 
 /** Shorter windows settle a fraction of the all-time volume. */
@@ -253,17 +293,23 @@ const RANGE_SCALE: Record<LeaderboardRange, number> = {
 /** Revenue always mirrors the Good category price so totals stay believable. */
 export function getLeaderboard(range: LeaderboardRange): LeaderboardEntry[] {
   const scale = RANGE_SCALE[range];
-  return LEADERBOARD_BASE.map((user, index) => {
-    const wobble = 0.85 + (((index * 7 + range.length * 3) % 5) / 10);
+  const list = LEADERBOARD_BASE.map((user, index) => {
+    const wobble = 0.95 + (((index * 3 + range.length) % 5) / 50);
     const gmailAccepted = Math.max(1, Math.round(user.gmailAccepted * scale * wobble));
     return {
-      rank: index + 1,
       name: user.name,
       avatarUrl: `https://i.pravatar.cc/160?img=${user.img}`,
       gmailAccepted,
       revenue: gmailAccepted * 4500,
     };
   });
+
+  list.sort((a, b) => b.gmailAccepted - a.gmailAccepted);
+
+  return list.map((entry, idx) => ({
+    ...entry,
+    rank: idx + 1,
+  }));
 }
 
 
