@@ -15,6 +15,7 @@ export type ShineBorderProps = {
   borderWidth?: number;
   duration?: number;
   color?: string;
+  onClick?: () => void;
 };
 
 export const ShineBorder = ({
@@ -23,6 +24,7 @@ export const ShineBorder = ({
   borderWidth = 3,
   duration = 4,
   color = "var(--color-blue-500, #0ea5e9)",
+  onClick,
 }: ShineBorderProps) => {
   return (
     <>
@@ -36,8 +38,9 @@ export const ShineBorder = ({
         }
       `}</style>
       <div
+        onClick={onClick}
         className={cn(
-          "relative rounded-2xl overflow-hidden border",
+          "relative rounded-2xl overflow-hidden border border-slate-200/80 bg-white",
           className,
         )}
         style={
@@ -48,9 +51,9 @@ export const ShineBorder = ({
         }
       >
         {/* Animated Conic Beam (meteor effect) */}
-        <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 pointer-events-none z-0 select-none overflow-hidden">
           <div
-            className="absolute left-1/2 top-1/2 h-[200%] w-[200%] animate-rotating-beam origin-center"
+            className="absolute left-1/2 top-1/2 h-[250%] w-[250%] animate-rotating-beam origin-center pointer-events-none select-none"
             style={
               {
                 background: `conic-gradient(from 90deg, transparent 0%, transparent 60%, ${color} 100%)`,
@@ -61,10 +64,10 @@ export const ShineBorder = ({
         </div>
 
         {/* Subtle static border */}
-        <div className="absolute inset-0 rounded-2xl border border-slate-200/50 dark:border-border/50 pointer-events-none" />
+        <div className="absolute inset-0 rounded-2xl border border-slate-200/50 dark:border-border/50 pointer-events-none z-10" />
 
-        {/* Content Layer */}
-        <div className="relative z-10 rounded-[calc(1rem-var(--bw))] bg-white dark:bg-card h-full w-full">
+        {/* Content Layer with high z-index and explicit pointer-events-auto */}
+        <div className="relative z-20 rounded-[calc(1rem-var(--bw))] bg-white dark:bg-card w-full h-full pointer-events-auto">
           {children}
         </div>
       </div>
