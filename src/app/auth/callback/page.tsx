@@ -9,25 +9,56 @@ function CallbackHandler() {
   const router = useRouter();
 
   React.useEffect(() => {
-    (async () => {
-      try {
-        if (supabase) {
-          // 1. If code parameter exists in URL search params (PKCE flow)
-          const params = new URLSearchParams(window.location.search);
-          const code = params.get("code");
-          if (code) {
-            await supabase.auth.exchangeCodeForSession(code);
-          } else {
-            // 2. If access_token in hash fragment or session already stored
-            await supabase.auth.getSession();
-          }
-        }
-      } catch (err) {
-        console.warn("Auth callback processing error:", err);
-      } finally {
-        router.replace("/");
+    let resolved = false;
+
+    const navigateHome = () => {
+      if (!resolved) {
+        resolved = true;
+        try {
+          localStorage.setItem("setorgmail_auth", "true");
+        } catch {}
+        // Full navigation to ensure all auth contexts re-initialize cleanly
+        window.location.href = "/";
       }
-    })();
+    };
+
+    // 1. Listen for auth state change (Supabase parses hash automatically with detectSessionInUrl)
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        navigateHome();
+      }
+    });
+
+    // 2. Check PKCE code in query search params if present
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
+        if (!error && data?.session?.user) {
+          navigateHome();
+        }
+      });
+    }
+
+    // 3. Check if session is already present or extracted from hash fragment
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.user) {
+        navigateHome();
+      }
+    });
+
+    // 4. Fallback timeout if no auth found after 3 seconds
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        window.location.href = "/";
+      }
+    }, 3000);
+
+    return () => {
+      clearTimeout(timeout);
+      listener?.subscription?.unsubscribe();
+    };
   }, [router]);
 
   return (
