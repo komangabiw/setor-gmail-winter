@@ -86,7 +86,7 @@ export function CreateReportModal({
   const [subject, setSubject] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
-  const [fileStats, setFileStats] = React.useState<{ original: number; compressed: number } | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [isCompressing, setIsCompressing] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -99,7 +99,10 @@ export function CreateReportModal({
     setSubject("");
     setDescription("");
     setFile(null);
-    setFileStats(null);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setIsCompressing(false);
     setIsSending(false);
     setStep("form");
@@ -201,7 +204,7 @@ export function CreateReportModal({
               return resolve({ file: rawFile, originalSize, compressedSize: originalSize });
             }
 
-            const cleanName = rawFile.name.replace(/\.[^.]+$/, "") + ".jpg";
+            const cleanName = rawFile.name;
             const optimized = new File([blob], cleanName, {
               type: "image/jpeg",
               lastModified: Date.now(),
@@ -232,31 +235,25 @@ export function CreateReportModal({
   const handleProcessFile = async (picked: File) => {
     if (!validateFile(picked)) {
       setFile(null);
-      setFileStats(null);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
+
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(picked);
+    });
 
     setIsCompressing(true);
     try {
       const result = await compressImageFile(picked);
       setFile(result.file);
-      setFileStats({
-        original: result.originalSize,
-        compressed: result.compressedSize,
-      });
-
-      if (result.compressedSize < result.originalSize * 0.9) {
-        const savedPercent = Math.round(
-          ((result.originalSize - result.compressedSize) / result.originalSize) * 100
-        );
-        toast.success("Gambar berhasil dikompresi otomatis!", {
-          description: `Ukuran dioptimalkan dari ${(result.originalSize / 1024 / 1024).toFixed(1)}MB menjadi ${(result.compressedSize / 1024).toFixed(0)}KB (-${savedPercent}%).`,
-        });
-      }
     } catch {
       setFile(picked);
-      setFileStats({ original: picked.size, compressed: picked.size });
     } finally {
       setIsCompressing(false);
     }
@@ -266,7 +263,10 @@ export function CreateReportModal({
     const picked = event.target.files?.[0] ?? null;
     if (!picked) {
       setFile(null);
-      setFileStats(null);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
       return;
     }
     await handleProcessFile(picked);
@@ -590,40 +590,44 @@ export function CreateReportModal({
               className="sr-only"
             />
 
-            {isCompressing ? (
-              <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-[0.82rem] font-medium text-sky-700">
-                <LoaderCircle className="size-4 animate-spin text-sky-600" />
-                <span>Mengompresi gambar otomatis...</span>
-              </div>
-            ) : file ? (
-              <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 px-4 py-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-100">
-                    <ImageIcon className="size-4 text-sky-600" />
+            {file ? (
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 p-2.5 pr-3.5">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="relative flex size-12 shrink-0 overflow-hidden rounded-xl border border-sky-200 bg-slate-100 shadow-2xs">
+                    {previewUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={previewUrl}
+                        alt="Preview lampiran"
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center bg-sky-100 text-sky-600">
+                        <ImageIcon className="size-5" />
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[0.82rem] font-semibold text-sky-900">
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="truncate text-[0.84rem] font-semibold text-sky-950"
+                      title={file.name}
+                    >
                       {file.name}
                     </p>
-                    <div className="flex items-center gap-1.5 text-[0.7rem] text-sky-600">
-                      <span>{(file.size / 1024).toFixed(0)} KB</span>
-                      {fileStats && fileStats.original > fileStats.compressed * 1.05 && (
-                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-emerald-700">
-                          Terkonpresi (-{Math.round(((fileStats.original - fileStats.compressed) / fileStats.original) * 100)}%)
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
                     setFile(null);
-                    setFileStats(null);
+                    if (previewUrl) {
+                      URL.revokeObjectURL(previewUrl);
+                    }
+                    setPreviewUrl(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   aria-label="Hapus file"
-                  className="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sky-500 transition-colors hover:bg-sky-200 hover:text-sky-800 cursor-pointer"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-500 transition-colors hover:bg-sky-200 hover:text-sky-800 cursor-pointer"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -695,19 +699,14 @@ export function CreateReportModal({
               : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-sky-200/70 hover:from-sky-400 hover:to-blue-500 hover:shadow-xl hover:shadow-sky-300/50"
           )}
         >
-          {!isSending && !isCompressing && (
+          {!isSending && (
             <span
               aria-hidden="true"
               className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full"
             />
           )}
 
-          {isCompressing ? (
-            <>
-              <LoaderCircle className="size-4 animate-spin" />
-              <span>Mengompresi Gambar...</span>
-            </>
-          ) : step === "sending" ? (
+          {step === "sending" ? (
             <>
               <LoaderCircle className="size-4 animate-spin" />
               <span>Mengirim...</span>
