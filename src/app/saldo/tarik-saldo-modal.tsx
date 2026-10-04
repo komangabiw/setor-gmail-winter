@@ -144,9 +144,25 @@ export function TarikSaldoModal({
     setAmountInput(formatRupiah(num));
   };
 
+  const nominalInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleSaldoTersediaClick = () => {
+    if (balance > 0) {
+      setAmountInput(formatRupiah(balance));
+      setTimeout(() => {
+        nominalInputRef.current?.focus();
+        nominalInputRef.current?.select();
+      }, 50);
+    }
+  };
+
   const handleSetMaxAmount = () => {
     if (balance > 0) {
       setAmountInput(formatRupiah(balance));
+      setTimeout(() => {
+        nominalInputRef.current?.focus();
+        nominalInputRef.current?.select();
+      }, 50);
     }
   };
 
@@ -295,17 +311,27 @@ export function TarikSaldoModal({
         onSubmit={handleWithdraw}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 md:px-6"
       >
-        {/* Info Saldo & Minimal Penarikan */}
+        {/* Info Saldo & Minimal Penarikan (Saldo Tersedia bisa diklik untuk menentukan nominal) */}
         <div className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[0.68rem] font-bold tracking-wider text-ink-500 uppercase">
-                Saldo Tersedia
-              </p>
-              <p className="mt-0.5 text-2xl font-black text-ink-900 tabular-nums">
+            <button
+              type="button"
+              onClick={handleSaldoTersediaClick}
+              title="Klik untuk menentukan nominal dari saldo tersedia"
+              className="group text-left -m-1.5 p-1.5 rounded-xl transition-all hover:bg-sky-100/70 active:scale-[0.98] cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5">
+                <p className="text-[0.68rem] font-bold tracking-wider text-ink-500 uppercase group-hover:text-sky-700 transition-colors">
+                  Saldo Tersedia
+                </p>
+                <span className="text-[0.6rem] font-semibold text-sky-600 bg-sky-100/80 group-hover:bg-sky-200/80 px-1.5 py-0.5 rounded-md transition-colors">
+                  Klik untuk pilih
+                </span>
+              </div>
+              <p className="mt-0.5 text-2xl font-black text-ink-900 group-hover:text-sky-950 transition-colors tabular-nums">
                 {formatIDR(balance)}
               </p>
-            </div>
+            </button>
             <div className="text-right">
               <p className="text-[0.68rem] font-bold tracking-wider text-sky-700 uppercase">
                 Minimal Penarikan
@@ -338,7 +364,7 @@ export function TarikSaldoModal({
             </label>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/90 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-800 shadow-2xs">
               <span className="size-1.5 rounded-full bg-amber-500" />
-              Gopay dan Ovo pajak transfer 1000
+              Gopay dan Ovo dikenakan pajak transfer 1000
             </span>
           </div>
           {/* Urutan E-Wallet: Dana / ShopeePay / GoPay / OVO */}
@@ -369,66 +395,7 @@ export function TarikSaldoModal({
           </div>
         </div>
 
-        {/* Input Nomor E-Wallet dengan Logo Indo di Sampingnya (tanpa +62) */}
-        <div>
-          <label
-            htmlFor="tarik-ewallet-number"
-            className="block text-[0.78rem] font-bold text-ink-800 mb-1.5"
-          >
-            Nomor {config.name} Penerima
-          </label>
-          <div className="flex items-center gap-2">
-            {/* Hanya Logo Indo tanpa +62 */}
-            <div
-              className="flex items-center justify-center size-10 bg-slate-50 border border-slate-200 rounded-xl shrink-0 select-none shadow-2xs"
-              title="Indonesia"
-            >
-              <IndonesiaFlag className="w-5.5 h-3.5" />
-            </div>
-            <div className="relative flex-1">
-              <Input
-                id="tarik-ewallet-number"
-                type="tel"
-                inputMode="numeric"
-                placeholder={config.placeholder}
-                value={currentNumber}
-                onChange={handleNumberChange}
-                maxLength={PHONE_MAX_LENGTH}
-                className={cn(
-                  "font-mono text-sm h-10",
-                  hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-200"
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Notifikasi Real-time Format Nomor Akun */}
-          {isPrefixInvalid && (
-            <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
-              <AlertCircle className="size-3.5 shrink-0" />
-              Angka depan harus diawali 08
-            </p>
-          )}
-          {isTooShort && (
-            <p className="mt-1.5 text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
-              <AlertTriangle className="size-3.5 shrink-0" />
-              Nomor kurang dari 10 digit (saat ini {currentNumber.length} digit, minimal 10 digit)
-            </p>
-          )}
-          {phoneValid && (
-            <p className="mt-1.5 text-[0.72rem] text-emerald-600 font-semibold flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 shrink-0" />
-              Format nomor {config.name} sudah benar ({currentNumber.length} digit)
-            </p>
-          )}
-          {!hasStartedTyping && (
-            <p className="mt-1.5 text-[0.7rem] text-ink-500">
-              Nomor akun {config.name} harus diawali 08 dan memiliki 10–13 digit angka.
-            </p>
-          )}
-        </div>
-
-        {/* Input Nominal Penarikan */}
+        {/* Input Nominal Penarikan (Berada di atas Nomor Penerima) */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label
@@ -437,15 +404,6 @@ export function TarikSaldoModal({
             >
               Nominal Penarikan
             </label>
-            {balance >= minimum && (
-              <button
-                type="button"
-                onClick={handleSetMaxAmount}
-                className="text-[0.72rem] font-bold text-sky-600 hover:text-sky-700 hover:underline cursor-pointer flex items-center gap-1"
-              >
-                Tarik Semua Saldo
-              </button>
-            )}
           </div>
 
           <div className="relative flex items-center">
@@ -453,6 +411,7 @@ export function TarikSaldoModal({
               Rp
             </div>
             <Input
+              ref={nominalInputRef}
               id="tarik-saldo-nominal"
               type="text"
               inputMode="numeric"
@@ -534,15 +493,68 @@ export function TarikSaldoModal({
               Maksimal penarikan instan adalah Rp5.000.000
             </p>
           )}
-          {hasStartedAmount && isAmountValid && (
-            <p className="mt-1.5 text-[0.72rem] text-emerald-600 font-semibold flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 shrink-0" />
-              Saldo yang akan ditarik: {formatIDR(withdrawAmount)}
-            </p>
-          )}
           {!hasStartedAmount && (
             <p className="mt-1.5 text-[0.7rem] text-ink-500">
               Kamu bisa menarik saldo berapa pun mulai dari {formatIDR(minimum)} hingga {formatIDR(balance)}.
+            </p>
+          )}
+        </div>
+
+        {/* Input Nomor E-Wallet dengan Logo Indo di Sampingnya (tanpa +62) */}
+        <div>
+          <label
+            htmlFor="tarik-ewallet-number"
+            className="block text-[0.78rem] font-bold text-ink-800 mb-1.5"
+          >
+            Nomor {config.name} Penerima
+          </label>
+          <div className="flex items-center gap-2">
+            {/* Hanya Logo Indo tanpa +62 */}
+            <div
+              className="flex items-center justify-center size-10 bg-slate-50 border border-slate-200 rounded-xl shrink-0 select-none shadow-2xs"
+              title="Indonesia"
+            >
+              <IndonesiaFlag className="w-5.5 h-3.5" />
+            </div>
+            <div className="relative flex-1">
+              <Input
+                id="tarik-ewallet-number"
+                type="tel"
+                inputMode="numeric"
+                placeholder={config.placeholder}
+                value={currentNumber}
+                onChange={handleNumberChange}
+                maxLength={PHONE_MAX_LENGTH}
+                className={cn(
+                  "font-mono text-sm h-10",
+                  hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-200"
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Notifikasi Real-time Format Nomor Akun */}
+          {isPrefixInvalid && (
+            <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+              <AlertCircle className="size-3.5 shrink-0" />
+              Angka depan harus diawali 08
+            </p>
+          )}
+          {isTooShort && (
+            <p className="mt-1.5 text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="size-3.5 shrink-0" />
+              Nomor kurang dari 10 digit (saat ini {currentNumber.length} digit, minimal 10 digit)
+            </p>
+          )}
+          {phoneValid && (
+            <p className="mt-1.5 text-[0.72rem] text-emerald-600 font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 shrink-0" />
+              Format nomor {config.name} sudah benar ({currentNumber.length} digit)
+            </p>
+          )}
+          {!hasStartedTyping && (
+            <p className="mt-1.5 text-[0.7rem] text-ink-500">
+              Nomor akun {config.name} harus diawali 08 dan memiliki 10–13 digit angka.
             </p>
           )}
         </div>
