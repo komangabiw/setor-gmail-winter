@@ -190,6 +190,11 @@ async function handleCheckGmail(request: Request): Promise<Response> {
   }
 }
 
+function escapeMarkdown(text: string): string {
+  if (!text) return "";
+  return text.replace(/([_*\[\]`\\])/g, "\\$1");
+}
+
 async function handleTelegramReport(request: Request, env: Env): Promise<Response> {
   const token = env.TELEGRAM_BOT_TOKEN?.trim() || DEFAULT_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID?.trim() || DEFAULT_CHAT_ID;
@@ -204,6 +209,9 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   let kategori = "";
   let judul = "";
   let deskripsi = "";
+  let namaUser = "";
+  let emailUser = "";
+  let uidUser = "";
   let attachedFile: File | null = null;
 
   const contentType = request.headers.get("content-type") || "";
@@ -211,9 +219,12 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   if (contentType.includes("multipart/form-data")) {
     try {
       const formData = await request.formData();
-      kategori = (formData.get("kategori") as string) || "";
-      judul = (formData.get("judul") as string) || "";
-      deskripsi = (formData.get("deskripsi") as string) || "";
+      kategori = ((formData.get("kategori") as string) || "").trim();
+      judul = ((formData.get("judul") as string) || "").trim();
+      deskripsi = ((formData.get("deskripsi") as string) || "").trim();
+      namaUser = ((formData.get("nama_user") || formData.get("namaUser") || formData.get("nama") || "") as string).trim();
+      emailUser = ((formData.get("email_user") || formData.get("emailUser") || formData.get("email") || "") as string).trim();
+      uidUser = ((formData.get("uid_user") || formData.get("uidUser") || formData.get("uid") || "") as string).trim();
       const fileEntry = formData.get("file");
       if (fileEntry instanceof File && fileEntry.size > 0) {
         attachedFile = fileEntry;
@@ -227,9 +238,12 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   } else {
     try {
       const body: any = await request.json();
-      kategori = body.kategori || "";
-      judul = body.judul || "";
-      deskripsi = body.deskripsi || "";
+      kategori = (body.kategori || "").trim();
+      judul = (body.judul || "").trim();
+      deskripsi = (body.deskripsi || "").trim();
+      namaUser = (body.nama_user || body.namaUser || body.nama || "").trim();
+      emailUser = (body.email_user || body.emailUser || body.email || "").trim();
+      uidUser = (body.uid_user || body.uidUser || body.uid || "").trim();
     } catch {
       return new Response(JSON.stringify({ ok: false, error: "JSON tidak valid." }), {
         status: 400,
@@ -245,11 +259,21 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
     );
   }
 
-  const messageText = `📬 *LAPORAN PENGGUNA BARU*\n\n` +
-    `🏷️ *Kategori:* ${kategori}\n` +
-    `📌 *Judul:* ${judul}\n\n` +
+  const waktuJakarta = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+  const isSecurityAlert = kategori.includes("KEAMANAN") || kategori.includes("ALERT");
+
+  const userHeader = isSecurityAlert
+    ? `🚨 *ALERT KEAMANAN SISTEM*\n\n`
+    : `📋 *Laporan User*\n` +
+      `👤 *Nama User:* ${escapeMarkdown(namaUser || "-")}\n` +
+      `📧 *Email User:* ${escapeMarkdown(emailUser || "-")}\n` +
+      `🆔 *Uid User:* ${escapeMarkdown(uidUser || "-")}\n\n`;
+
+  const messageText = `${userHeader}` +
+    `🏷️ *Kategori:* ${escapeMarkdown(kategori)}\n` +
+    `📌 *Judul:* ${escapeMarkdown(judul)}\n\n` +
     `📝 *Deskripsi:*\n${deskripsi}\n\n` +
-    `⏰ _Waktu: ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB_`;
+    `⏰ _Waktu: ${waktuJakarta} WIB_`;
 
   try {
     let response: Response;

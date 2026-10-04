@@ -144,25 +144,9 @@ export function TarikSaldoModal({
     setAmountInput(formatRupiah(num));
   };
 
-  const nominalInputRef = React.useRef<HTMLInputElement>(null);
-
-  const handleSaldoTersediaClick = () => {
-    if (balance > 0) {
-      setAmountInput(formatRupiah(balance));
-      setTimeout(() => {
-        nominalInputRef.current?.focus();
-        nominalInputRef.current?.select();
-      }, 50);
-    }
-  };
-
   const handleSetMaxAmount = () => {
     if (balance > 0) {
       setAmountInput(formatRupiah(balance));
-      setTimeout(() => {
-        nominalInputRef.current?.focus();
-        nominalInputRef.current?.select();
-      }, 50);
     }
   };
 
@@ -311,49 +295,121 @@ export function TarikSaldoModal({
         onSubmit={handleWithdraw}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 md:px-6"
       >
-        {/* Info Saldo & Minimal Penarikan (Saldo Tersedia bisa diklik untuk menentukan nominal) */}
-        <div className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
+        {/* Info Saldo & Input Penarikan Langsung di Saldo Tersedia */}
+        <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4 space-y-2.5">
           <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleSaldoTersediaClick}
-              title="Klik untuk menentukan nominal dari saldo tersedia"
-              className="group text-left -m-1.5 p-1.5 rounded-xl transition-all hover:bg-sky-100/70 active:scale-[0.98] cursor-pointer"
-            >
-              <div className="flex items-center gap-1.5">
-                <p className="text-[0.68rem] font-bold tracking-wider text-ink-500 uppercase group-hover:text-sky-700 transition-colors">
-                  Saldo Tersedia
-                </p>
-                <span className="text-[0.6rem] font-semibold text-sky-600 bg-sky-100/80 group-hover:bg-sky-200/80 px-1.5 py-0.5 rounded-md transition-colors">
-                  Klik untuk pilih
-                </span>
-              </div>
-              <p className="mt-0.5 text-2xl font-black text-ink-900 group-hover:text-sky-950 transition-colors tabular-nums">
-                {formatIDR(balance)}
+            <div>
+              <p className="text-[0.68rem] font-bold tracking-wider text-ink-500 uppercase">
+                Saldo Tersedia
               </p>
-            </button>
+              <p className="text-[0.72rem] font-semibold text-sky-700">
+                Total saldo: <strong className="font-bold text-ink-900">{formatIDR(balance)}</strong>
+              </p>
+            </div>
             <div className="text-right">
               <p className="text-[0.68rem] font-bold tracking-wider text-sky-700 uppercase">
                 Minimal Penarikan
               </p>
-              <p className="mt-0.5 text-base font-bold text-sky-600 tabular-nums">
+              <p className="text-sm font-bold text-sky-600 tabular-nums">
                 {formatIDR(minimum)}
               </p>
             </div>
           </div>
 
-          <p className="mt-2.5 text-[0.73rem] text-ink-600 border-t border-sky-100 pt-2.5">
-            {reached ? (
-              <span className="font-semibold text-emerald-600 flex items-center gap-1.5">
-                <CheckCircle2 className="size-3.5" />
-                Saldo sudah mencukupi untuk melakukan penarikan.
-              </span>
-            ) : (
-              <span>
-                Kurang <strong className="font-semibold text-ink-800">{formatIDR(remaining)}</strong> lagi untuk mencapai batas minimal penarikan.
-              </span>
-            )}
-          </p>
+          {/* Input Nominal Langsung pada Saldo Tersedia */}
+          <div className="relative flex items-center">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-base font-bold text-ink-500 select-none">
+              Rp
+            </div>
+            <Input
+              id="tarik-saldo-input"
+              type="text"
+              inputMode="numeric"
+              placeholder={`Minimal ${formatRupiah(minimum)}`}
+              value={amountInput}
+              onChange={handleAmountChange}
+              className={cn(
+                "pl-11 pr-22 font-black text-xl h-12 bg-white text-ink-900 tabular-nums border-sky-200/90 shadow-2xs focus:bg-white",
+                hasStartedAmount && !isAmountValid && "border-rose-400 focus-visible:ring-rose-200"
+              )}
+            />
+            <div className="absolute right-2 flex items-center">
+              <button
+                type="button"
+                onClick={handleSetMaxAmount}
+                disabled={balance <= 0}
+                className="px-2.5 py-1 text-[0.72rem] font-bold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 active:scale-95 transition-all border border-sky-200/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Maksimal
+              </button>
+            </div>
+          </div>
+
+          {/* Quick preset chips */}
+          {presets.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[0.68rem] text-ink-400 font-medium mr-0.5">Pilihan Cepat:</span>
+              {presets.map((val) => {
+                const isSelected = withdrawAmount === val;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setAmountInput(formatRupiah(val))}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
+                      isSelected
+                        ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
+                        : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
+                    )}
+                  >
+                    {formatIDR(val)}
+                  </button>
+                );
+              })}
+              {balance > 0 && !presets.includes(balance) && (
+                <button
+                  type="button"
+                  onClick={handleSetMaxAmount}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
+                    withdrawAmount === balance
+                      ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
+                      : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
+                  )}
+                >
+                  Semua ({formatIDR(balance)})
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Real-time Validation Helper */}
+          {hasStartedAmount && isExceedingBalance && (
+            <p className="text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+              <AlertCircle className="size-3.5 shrink-0" />
+              Nominal melebihi saldo tersedia (maksimal {formatIDR(balance)})
+            </p>
+          )}
+          {hasStartedAmount && isBelowMinimum && (
+            <p className="text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="size-3.5 shrink-0" />
+              Nominal minimal penarikan adalah {formatIDR(minimum)}
+            </p>
+          )}
+          {hasStartedAmount && isExceedingMax && (
+            <p className="text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+              <AlertCircle className="size-3.5 shrink-0" />
+              Maksimal penarikan instan adalah Rp5.000.000
+            </p>
+          )}
+          {!hasStartedAmount && (
+            <p className="text-[0.7rem] text-ink-500">
+              {reached
+                ? "Saldo sudah mencukupi untuk melakukan penarikan."
+                : `Kurang ${formatIDR(remaining)} lagi untuk mencapai batas minimal penarikan.`}
+            </p>
+          )}
         </div>
 
         {/* Pilihan E-Wallet */}
@@ -393,111 +449,6 @@ export function TarikSaldoModal({
               );
             })}
           </div>
-        </div>
-
-        {/* Input Nominal Penarikan (Berada di atas Nomor Penerima) */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label
-              htmlFor="tarik-saldo-nominal"
-              className="block text-[0.78rem] font-bold text-ink-800"
-            >
-              Nominal Penarikan
-            </label>
-          </div>
-
-          <div className="relative flex items-center">
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-sm font-bold text-ink-500 select-none">
-              Rp
-            </div>
-            <Input
-              ref={nominalInputRef}
-              id="tarik-saldo-nominal"
-              type="text"
-              inputMode="numeric"
-              placeholder={`Contoh: ${formatRupiah(balance > 0 ? balance : minimum)}`}
-              value={amountInput}
-              onChange={handleAmountChange}
-              className={cn(
-                "pl-10 pr-22 font-bold text-base h-11 text-ink-900 tabular-nums",
-                hasStartedAmount && !isAmountValid && "border-rose-400 focus-visible:ring-rose-200"
-              )}
-            />
-            <div className="absolute right-2 flex items-center">
-              <button
-                type="button"
-                onClick={handleSetMaxAmount}
-                disabled={balance <= 0}
-                className="px-2.5 py-1 text-[0.72rem] font-bold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 active:scale-95 transition-all border border-sky-200/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Maksimal
-              </button>
-            </div>
-          </div>
-
-          {/* Quick preset chips */}
-          {presets.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <span className="text-[0.68rem] text-ink-400 font-medium mr-0.5">Pilihan Cepat:</span>
-              {presets.map((val) => {
-                const isSelected = withdrawAmount === val;
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setAmountInput(formatRupiah(val))}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
-                      isSelected
-                        ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
-                        : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
-                    )}
-                  >
-                    {formatIDR(val)}
-                  </button>
-                );
-              })}
-              {balance > 0 && !presets.includes(balance) && (
-                <button
-                  type="button"
-                  onClick={handleSetMaxAmount}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
-                    withdrawAmount === balance
-                      ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
-                      : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
-                  )}
-                >
-                  Semua ({formatIDR(balance)})
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Real-time Validation Helper */}
-          {hasStartedAmount && isExceedingBalance && (
-            <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
-              <AlertCircle className="size-3.5 shrink-0" />
-              Nominal melebihi saldo tersedia (maksimal {formatIDR(balance)})
-            </p>
-          )}
-          {hasStartedAmount && isBelowMinimum && (
-            <p className="mt-1.5 text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
-              <AlertTriangle className="size-3.5 shrink-0" />
-              Nominal minimal penarikan adalah {formatIDR(minimum)}
-            </p>
-          )}
-          {hasStartedAmount && isExceedingMax && (
-            <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
-              <AlertCircle className="size-3.5 shrink-0" />
-              Maksimal penarikan instan adalah Rp5.000.000
-            </p>
-          )}
-          {!hasStartedAmount && (
-            <p className="mt-1.5 text-[0.7rem] text-ink-500">
-              Kamu bisa menarik saldo berapa pun mulai dari {formatIDR(minimum)} hingga {formatIDR(balance)}.
-            </p>
-          )}
         </div>
 
         {/* Input Nomor E-Wallet dengan Logo Indo di Sampingnya (tanpa +62) */}

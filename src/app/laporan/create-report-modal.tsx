@@ -24,6 +24,7 @@ import {
   type ReportTicket,
 } from "@/lib/mock-data";
 import { getCurrentAuthUser, insertSupportTicket } from "@/lib/supabase";
+import { useUserProfile } from "@/context/user-profile-context";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"];
@@ -78,6 +79,7 @@ export function CreateReportModal({
   onClose: () => void;
   onSubmit: (ticket: ReportTicket) => void;
 }) {
+  const { userProfile, userId } = useUserProfile();
   const defaultCat: ReportCategory =
     reportCategories.find((c) => c === "Setoran Gmail") ?? reportCategories[0];
   const [category, setCategory] = React.useState<ReportCategory>(defaultCat);
@@ -217,6 +219,25 @@ export function CreateReportModal({
     setStep("sending");
 
     try {
+      const authUser = await getCurrentAuthUser().catch(() => null);
+      const namaUser =
+        (userProfile?.name && userProfile.name !== "Pengguna"
+          ? userProfile.name
+          : authUser?.user_metadata?.full_name ||
+            authUser?.user_metadata?.name ||
+            authUser?.user_metadata?.username ||
+            userProfile?.name) || "Pengguna";
+
+      const emailUser =
+        (userProfile?.email && userProfile.email !== "-"
+          ? userProfile.email
+          : authUser?.email || userProfile?.email) || "-";
+
+      const uidUser =
+        (userProfile?.uid && userProfile.uid !== "-"
+          ? userProfile.uid
+          : authUser?.id || userId || userProfile?.uid) || "-";
+
       let response: Response;
 
       if (file) {
@@ -224,6 +245,9 @@ export function CreateReportModal({
         formData.append("kategori", category);
         formData.append("judul", cleanSubject);
         formData.append("deskripsi", cleanDescription);
+        formData.append("nama_user", namaUser);
+        formData.append("email_user", emailUser);
+        formData.append("uid_user", uidUser);
         formData.append("file", file);
         response = await fetch("/api/telegram-report", {
           method: "POST",
@@ -237,6 +261,9 @@ export function CreateReportModal({
             kategori: category,
             judul: cleanSubject,
             deskripsi: cleanDescription,
+            nama_user: namaUser,
+            email_user: emailUser,
+            uid_user: uidUser,
           }),
         });
       }
@@ -381,7 +408,7 @@ export function CreateReportModal({
               <Tag className="size-3.5" />
               Kategori Laporan
             </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {reportCategories.map((cat) => {
                 const meta = getCategoryMeta(cat);
                 const isActive = category === cat;
@@ -391,11 +418,10 @@ export function CreateReportModal({
                     type="button"
                     onClick={() => setCategory(cat as ReportCategory)}
                     className={cn(
-                      "group relative flex items-center gap-2.5 rounded-2xl border p-2.5 text-left transition-all duration-200 active:scale-[0.98]",
+                      "group relative flex items-center gap-2.5 rounded-2xl border p-2.5 sm:p-3 text-left transition-all duration-200 active:scale-[0.98] cursor-pointer",
                       isActive
                         ? "border-sky-500 bg-gradient-to-br from-sky-50 to-blue-50/90 text-sky-950 font-semibold shadow-sm ring-2 ring-sky-400/25"
                         : "border-slate-200/80 bg-slate-50/70 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-xs",
-                      cat === "Lainnya" && "col-span-2 sm:col-span-1"
                     )}
                   >
                     <span
@@ -408,11 +434,11 @@ export function CreateReportModal({
                     >
                       {meta.icon}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[0.8rem]">
+                    <span className="min-w-0 flex-1 whitespace-nowrap text-[0.82rem] sm:text-[0.85rem] font-medium">
                       {cat}
                     </span>
                     {isActive && (
-                      <span className="size-1.5 shrink-0 rounded-full bg-sky-500" />
+                      <span className="size-2 shrink-0 rounded-full bg-sky-500 shadow-xs" />
                     )}
                   </button>
                 );

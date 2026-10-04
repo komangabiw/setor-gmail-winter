@@ -140,7 +140,6 @@ export const reportCategories = [
   "Penarikan Saldo",
   "Bug / Error",
   "Saran & Masukan",
-  "Lainnya",
 ] as const;
 
 export type ReportCategory = (typeof reportCategories)[number];

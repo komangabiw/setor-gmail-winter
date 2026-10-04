@@ -27,6 +27,11 @@ function normaliseMultiline(value: unknown, maxLength: number): string {
     .slice(0, maxLength);
 }
 
+function escapeMarkdown(text: string): string {
+  if (!text) return "";
+  return text.replace(/([_*\[\]`\\])/g, "\\$1");
+}
+
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const token = context.env.TELEGRAM_BOT_TOKEN?.trim() || DEFAULT_BOT_TOKEN;
   const chatId = context.env.TELEGRAM_CHAT_ID?.trim() || DEFAULT_CHAT_ID;
@@ -41,6 +46,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   let kategori = "";
   let judul = "";
   let deskripsi = "";
+  let namaUser = "";
+  let emailUser = "";
+  let uidUser = "";
   let attachedFile: File | null = null;
 
   const contentType = context.request.headers.get("content-type") || "";
@@ -51,6 +59,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       kategori = normalise(formData.get("kategori"), 64);
       judul = normalise(formData.get("judul"), 120);
       deskripsi = normaliseMultiline(formData.get("deskripsi"), 2000);
+      namaUser = normalise(formData.get("nama_user") || formData.get("namaUser") || formData.get("nama"), 100);
+      emailUser = normalise(formData.get("email_user") || formData.get("emailUser") || formData.get("email"), 150);
+      uidUser = normalise(formData.get("uid_user") || formData.get("uidUser") || formData.get("uid"), 100);
       const fileEntry = formData.get("file");
       if (fileEntry instanceof File && fileEntry.size > 0) {
         attachedFile = fileEntry;
@@ -67,6 +78,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       kategori = normalise(body.kategori, 64);
       judul = normalise(body.judul, 120);
       deskripsi = normaliseMultiline(body.deskripsi, 2000);
+      namaUser = normalise(body.nama_user || body.namaUser || body.nama, 100);
+      emailUser = normalise(body.email_user || body.emailUser || body.email, 150);
+      uidUser = normalise(body.uid_user || body.uidUser || body.uid, 100);
     } catch {
       return new Response(JSON.stringify({ ok: false, error: "JSON tidak valid." }), {
         status: 400,
@@ -82,11 +96,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     );
   }
 
-  const messageText = `📬 *LAPORAN PENGGUNA BARU*\n\n` +
-    `🏷️ *Kategori:* ${kategori}\n` +
-    `📌 *Judul:* ${judul}\n\n` +
+  const waktuJakarta = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+  const isSecurityAlert = kategori.includes("KEAMANAN") || kategori.includes("ALERT");
+
+  const userHeader = isSecurityAlert
+    ? `🚨 *ALERT KEAMANAN SISTEM*\n\n`
+    : `📋 *Laporan User*\n` +
+      `👤 *Nama User:* ${escapeMarkdown(namaUser || "-")}\n` +
+      `📧 *Email User:* ${escapeMarkdown(emailUser || "-")}\n` +
+      `🆔 *Uid User:* ${escapeMarkdown(uidUser || "-")}\n\n`;
+
+  const messageText = `${userHeader}` +
+    `🏷️ *Kategori:* ${escapeMarkdown(kategori)}\n` +
+    `📌 *Judul:* ${escapeMarkdown(judul)}\n\n` +
     `📝 *Deskripsi:*\n${deskripsi}\n\n` +
-    `⏰ _Waktu: ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB_`;
+    `⏰ _Waktu: ${waktuJakarta} WIB_`;
 
   try {
     let response: Response;
@@ -102,6 +126,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         method: "POST",
         body: fileForm,
       });
+
+      // If markdown entity parsing failed on caption, retry without markdown
+      if (!response.ok) {
+        const detail: any = await response.clone().json().catch(() => null);
+        if (detail?.description?.includes("can't parse entities")) {
+          const retryForm = new FormData();
+          retryForm.append("chat_id", chatId);
+          retryForm.append("document", attachedFile, attachedFile.name);
+          retryForm.append("caption", messageText.slice(0, 1024).replace(/[*_`[\]\\]/g, ""));
+          response = await fetch(`${TELEGRAM_API}/bot${token}/sendDocument`, {
+            method: "POST",
+            body: retryForm,
+          });
+        }
+      }
     } else {
       response = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
         method: "POST",
@@ -112,6 +151,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
           parse_mode: "Markdown",
         }),
       });
+
+      // If markdown entity parsing failed, retry without markdown
+      if (!response.ok) {
+        const detail: any = await response.clone().json().catch(() => null);
+        if (detail?.description?.includes("can't parse entities")) {
+          response = await fetch(`${TELEGRAM_API}/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: messageText.replace(/[*_`[\]\\]/g, ""),
+            }),
+          });
+        }
+      }
     }
 
     if (!response.ok) {

@@ -704,10 +704,14 @@ export function SetorView() {
                 <button
                   type="button"
                   onClick={handleCopyPassword}
-                  className="text-amber-800 hover:text-amber-950 cursor-pointer"
+                  className="text-amber-800 hover:text-amber-950 transition-colors cursor-pointer"
                   title="Salin password"
                 >
-                  <Copy className="size-3" />
+                  {copiedPassword ? (
+                    <Check className="size-3 text-emerald-700" />
+                  ) : (
+                    <Copy className="size-3" />
+                  )}
                 </button>
               </span>
             </div>

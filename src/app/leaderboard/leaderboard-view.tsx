@@ -114,7 +114,7 @@ export function LeaderboardView() {
                     <span className="font-semibold text-ink-700 tabular-nums">
                       {entry.gmailAccepted}
                     </span>{" "}
-                    Gmail
+                    Gmail diterima
                   </p>
                 </article>
               );
@@ -136,10 +136,7 @@ export function LeaderboardView() {
         <Reveal delay={120} className="mt-5">
           <Card>
             <CardContent className="space-y-2.5 md:p-6">
-              <h2 className="text-[0.7rem] font-bold tracking-[0.14em] text-ink-400 uppercase">
-                Peringkat #{rest[0].rank} - #{entries[entries.length - 1].rank}
-              </h2>
-
+              <h2 className="sr-only">Peringkat Lainnya</h2>
               <ul className="space-y-2.5">
                 {rest.map((entry) => (
                   <li
