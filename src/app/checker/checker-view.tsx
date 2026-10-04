@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status";
 import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
+import GradientBlobCard from "@/components/ui/gradient-bold-card";
 import { type CheckResult, type CheckStatus, checkStatusMeta } from "@/lib/checker";
 import { splitLines } from "@/lib/email";
 import { getStoredGeneratedGmails } from "@/lib/generated-storage";
@@ -724,15 +725,22 @@ export function CheckerView() {
         </Reveal>
       )}
 
-      {/* Empty State when never run */}
+      {/* Empty State with Gradient Blob Card */}
       {!hasRun && (
-        <Reveal className="mt-5" delay={80}>
-          <EmptyState
-            compact
-            icon={<Inbox className="size-5" aria-hidden="true" />}
-            title="Belum ada hasil pemeriksaan"
-            description="Masukkan daftar Gmail di atas lalu klik Mulai Checker untuk memverifikasi akun secara real-time."
-          />
+        <Reveal className="mt-6 flex flex-col items-center justify-center" delay={80}>
+          <GradientBlobCard wrapperClassName="py-0 w-full flex justify-center">
+            <div className="flex flex-col items-center justify-center p-3 text-center">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 shadow-xs mb-2.5">
+                <Inbox className="size-5.5 stroke-[2.2]" aria-hidden="true" />
+              </span>
+              <h4 className="text-sm font-bold text-slate-900 tracking-tight">
+                Belum ada hasil pemeriksaan
+              </h4>
+              <p className="mt-1 text-xs text-slate-500 leading-relaxed max-w-[200px]">
+                Masukkan daftar Gmail di atas lalu klik Mulai Checker untuk memverifikasi akun secara real-time.
+              </p>
+            </div>
+          </GradientBlobCard>
         </Reveal>
       )}
     </PageShell>
