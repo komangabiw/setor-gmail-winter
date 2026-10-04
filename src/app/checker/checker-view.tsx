@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status";
+import { ShineBorder } from "@/components/ui/shine-border-04";
 import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
 import { type CheckResult, type CheckStatus, checkStatusMeta } from "@/lib/checker";
 import { splitLines } from "@/lib/email";
@@ -392,31 +393,41 @@ export function CheckerView() {
               )}
             </div>
 
-            <Textarea
-              rows={7}
-              spellCheck={false}
-              autoCapitalize="off"
-              autoCorrect="off"
-              placeholder={"contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com"}
-              value={input}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              className="font-mono text-xs sm:text-sm"
-              hint={
-                lineCount > 0 ? (
-                  <span className={cn(
+            <ShineBorder
+              borderWidth={2}
+              duration={5}
+              color="var(--color-blue-500, #0ea5e9)"
+              className="w-full rounded-2xl shadow-sm"
+            >
+              <textarea
+                rows={7}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                placeholder={"contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com"}
+                value={input}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-white dark:bg-card border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
+              />
+            </ShineBorder>
+
+            <p className="text-[0.78rem] leading-relaxed text-ink-500 px-0.5">
+              {lineCount > 0 ? (
+                <span
+                  className={cn(
                     "tabular-nums font-semibold",
                     lineCount >= MAX_LINES ? "text-amber-600 font-bold" : "text-ink-700"
-                  )}>
-                    {lineCount} email terdeteksi · 1 per baris · maks {MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.
-                    {lineCount >= MAX_LINES && " (Maksimal 100 baris tercapai)"}
-                  </span>
-                ) : (
-                  `1 per baris · maks ${MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.`
-                )
-              }
-            />
+                  )}
+                >
+                  {lineCount} email terdeteksi · 1 per baris · maks {MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.
+                  {lineCount >= MAX_LINES && " (Maksimal 100 baris tercapai)"}
+                </span>
+              ) : (
+                `1 per baris · maks ${MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.`
+              )}
+            </p>
 
             <div className="flex flex-col gap-2.5 sm:flex-row pt-1">
               <Button
