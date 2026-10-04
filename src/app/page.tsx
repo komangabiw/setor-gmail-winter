@@ -5,12 +5,27 @@ import { DashboardView } from "./dashboard-view";
 import { AuthCard } from "./login/auth-card";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     let isSubscribed = true;
+
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const rawHash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+      const hashParams = new URLSearchParams(rawHash);
+      const err =
+        hashParams.get("error_description") ||
+        searchParams.get("error_description") ||
+        hashParams.get("error") ||
+        searchParams.get("error");
+      if (err) {
+        toast.error("Gagal Login", { description: decodeURIComponent(err) });
+      }
+    }
 
     async function checkAuth() {
       try {
