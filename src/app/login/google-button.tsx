@@ -1,15 +1,170 @@
 "use client";
 
-export function GoogleButton({ onClick }: { onClick: () => void }) {
+import * as React from "react";
+
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "737775499762-ith3o3248k9g59mt9jisgvh9qgljg7ia.apps.googleusercontent.com";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential: string; select_by?: string }) => void;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              type?: "standard" | "icon";
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              shape?: "rectangular" | "pill" | "circle" | "square";
+              logo_alignment?: "left" | "center";
+              width?: number;
+              locale?: string;
+            }
+          ) => void;
+          prompt: (momentListener?: (moment: any) => void) => void;
+        };
+      };
+    };
+  }
+}
+
+interface GoogleButtonProps {
+  onSuccess: (credential: string) => void;
+  onFallbackClick?: () => void;
+  isLoading?: boolean;
+}
+
+export function GoogleButton({
+  onSuccess,
+  onFallbackClick,
+  isLoading = false,
+}: GoogleButtonProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [isGsiReady, setIsGsiReady] = React.useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const loadGsi = () => {
+      if (typeof window === "undefined") return;
+
+      const initAndRender = () => {
+        if (!isMounted || !window.google?.accounts?.id || !containerRef.current) {
+          return;
+        }
+
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: (response) => {
+              if (response?.credential) {
+                onSuccess(response.credential);
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          // Measure container width or default to 360px
+          const width = containerRef.current.clientWidth || 360;
+          const targetWidth = Math.min(Math.max(width, 240), 400);
+
+          containerRef.current.innerHTML = "";
+          window.google.accounts.id.renderButton(containerRef.current, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            shape: "pill",
+            logo_alignment: "left",
+            width: targetWidth,
+          });
+
+          setIsGsiReady(true);
+
+          // Prompt One Tap if supported
+          try {
+            window.google.accounts.id.prompt();
+          } catch {
+            // One Tap prompt optional
+          }
+        } catch (err) {
+          console.warn("GSI initialization error:", err);
+        }
+      };
+
+      if (window.google?.accounts?.id) {
+        initAndRender();
+        return;
+      }
+
+      const existingScript = document.getElementById("google-gsi-script");
+      if (existingScript) {
+        existingScript.addEventListener("load", initAndRender);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "google-gsi-script";
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initAndRender;
+      script.onerror = () => {
+        console.warn("Failed to load Google Identity Services script");
+      };
+      document.body.appendChild(script);
+    };
+
+    loadGsi();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onSuccess]);
+
+  const handleCustomClick = () => {
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt();
+        return;
+      } catch {}
+    }
+    if (onFallbackClick) {
+      onFallbackClick();
+    }
+  };
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200/90 bg-white text-[0.95rem] font-semibold text-ink-800 shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 hover:shadow-md active:scale-[0.99]"
-    >
-      <GoogleMark />
-      <span>Lanjutkan dengan Google</span>
-    </button>
+    <div className="relative min-h-[48px] w-full flex items-center justify-center">
+      {/* Official Google Identity Services button container */}
+      <div
+        ref={containerRef}
+        className="w-full flex justify-center [&>div]:!mx-auto"
+      />
+
+      {/* Fallback button shown when GSI is loading or unavailable */}
+      {!isGsiReady && (
+        <button
+          type="button"
+          onClick={handleCustomClick}
+          disabled={isLoading}
+          className="absolute inset-0 flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200/90 bg-white text-[0.95rem] font-semibold text-ink-800 shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 hover:shadow-md active:scale-[0.99] disabled:opacity-70"
+        >
+          <GoogleMark />
+          <span>{isLoading ? "Menghubungkan..." : "Lanjutkan dengan Google"}</span>
+        </button>
+      )}
+    </div>
   );
 }
 

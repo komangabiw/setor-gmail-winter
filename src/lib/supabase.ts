@@ -16,12 +16,8 @@ import {
   MAX_WITHDRAWALS_PER_DAY,
 } from "./security";
 
-const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://auth.setorgmail.com";
-// Gunakan custom domain auth.setorgmail.com untuk otentikasi & API agar terverifikasi di Google OAuth
 const supabaseUrl =
-  !rawSupabaseUrl || rawSupabaseUrl.includes("kdjoeeehyahdgwgsfyal.supabase.co")
-    ? "https://auth.setorgmail.com"
-    : rawSupabaseUrl;
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://kdjoeeehyahdgwgsfyal.supabase.co";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 export const isSupabaseConfigured = Boolean(

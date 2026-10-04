@@ -46,6 +46,78 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
     setErrors({});
   };
 
+  const handleGoogleCredential = async (credential: string) => {
+    setIsLoading(true);
+    try {
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: credential,
+        });
+
+        if (error) {
+          toast.error("Gagal Masuk dengan Google", {
+            description: error.message,
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        if (data?.user) {
+          // Pastikan profile dan wallet tersedia tanpa menghapus data yang sudah ada
+          try {
+            const { data: existingProfile } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("id", data.user.id)
+              .maybeSingle();
+
+            if (!existingProfile) {
+              const fullName =
+                data.user.user_metadata?.full_name ||
+                data.user.user_metadata?.name ||
+                data.user.email?.split("@")[0] ||
+                "Pengguna";
+
+              await supabase.from("profiles").upsert({
+                id: data.user.id,
+                name: fullName,
+                email: data.user.email || "",
+                role: "user",
+              });
+              await supabase.from("wallets").upsert({
+                user_id: data.user.id,
+                balance: 0,
+              });
+            }
+          } catch (profileErr) {
+            console.warn("Profile init notice:", profileErr);
+          }
+
+          try {
+            localStorage.setItem("setorgmail_auth", "true");
+          } catch {}
+
+          toast.success("Masuk dengan Google berhasil!", {
+            description: "Selamat datang kembali.",
+          });
+
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/");
+          }
+          return;
+        }
+      }
+    } catch (err: unknown) {
+      console.error("Google ID Token sign-in error:", err);
+      toast.error("Terjadi kendala saat autentikasi Google.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogle = async () => {
     setIsLoading(true);
     try {
@@ -259,7 +331,11 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
             />
 
             <div className="mb-4">
-              <GoogleButton onClick={handleGoogle} />
+              <GoogleButton
+                onSuccess={handleGoogleCredential}
+                onFallbackClick={handleGoogle}
+                isLoading={isLoading}
+              />
               <Divider label="atau" />
             </div>
 
