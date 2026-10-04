@@ -283,7 +283,7 @@ export function TarikSaldoModal({
               Penarikan ke {config.name}
             </h2>
             <p className="mt-0.5 text-[0.76rem] leading-relaxed text-white/85">
-              Pilih E-Wallet tujuan kamu (DANA, ShopeePay, GoPay, atau OVO).
+              Pilih E-Wallet tujuan kamu.
             </p>
           </div>
           <ModalCloseButton onClick={onClose} label="Tutup Tarik Saldo" />
@@ -299,11 +299,11 @@ export function TarikSaldoModal({
         <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4 space-y-2.5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[0.68rem] font-bold tracking-wider text-ink-500 uppercase">
+              <p className="text-[0.68rem] font-bold tracking-wider text-sky-700 uppercase">
                 Saldo Tersedia
               </p>
-              <p className="text-[0.72rem] font-semibold text-sky-700">
-                Total saldo: <strong className="font-bold text-ink-900">{formatIDR(balance)}</strong>
+              <p className="text-sm font-bold text-sky-600 tabular-nums">
+                {formatIDR(balance)}
               </p>
             </div>
             <div className="text-right">
@@ -316,32 +316,27 @@ export function TarikSaldoModal({
             </div>
           </div>
 
-          {/* Input Nominal Langsung pada Saldo Tersedia */}
-          <div className="relative flex items-center">
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-base font-bold text-ink-500 select-none">
+          {/* Input Nominal Langsung pada Saldo Tersedia dengan Rp di samping input */}
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="tarik-saldo-input"
+              className="flex h-12 items-center justify-center px-3.5 rounded-2xl border border-sky-200/90 bg-white font-bold text-base text-sky-800 shadow-2xs select-none shrink-0 cursor-pointer"
+            >
               Rp
-            </div>
-            <Input
-              id="tarik-saldo-input"
-              type="text"
-              inputMode="numeric"
-              placeholder={`Minimal ${formatRupiah(minimum)}`}
-              value={amountInput}
-              onChange={handleAmountChange}
-              className={cn(
-                "pl-11 pr-22 font-black text-xl h-12 bg-white text-ink-900 tabular-nums border-sky-200/90 shadow-2xs focus:bg-white",
-                hasStartedAmount && !isAmountValid && "border-rose-400 focus-visible:ring-rose-200"
-              )}
-            />
-            <div className="absolute right-2 flex items-center">
-              <button
-                type="button"
-                onClick={handleSetMaxAmount}
-                disabled={balance <= 0}
-                className="px-2.5 py-1 text-[0.72rem] font-bold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 active:scale-95 transition-all border border-sky-200/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Maksimal
-              </button>
+            </label>
+            <div className="relative flex-1">
+              <Input
+                id="tarik-saldo-input"
+                type="text"
+                inputMode="numeric"
+                placeholder={`Minimal ${formatRupiah(minimum)}`}
+                value={amountInput}
+                onChange={handleAmountChange}
+                className={cn(
+                  "font-black text-xl h-12 bg-white text-ink-900 tabular-nums border-sky-200/90 shadow-2xs focus:bg-white px-4",
+                  hasStartedAmount && !isAmountValid && "border-rose-400 focus-visible:ring-rose-200"
+                )}
+              />
             </div>
           </div>
 

@@ -86,6 +86,8 @@ export function CreateReportModal({
   const [subject, setSubject] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [file, setFile] = React.useState<File | null>(null);
+  const [fileStats, setFileStats] = React.useState<{ original: number; compressed: number } | null>(null);
+  const [isCompressing, setIsCompressing] = React.useState(false);
   const [isSending, setIsSending] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
   const [step, setStep] = React.useState<"form" | "sending" | "done">("form");
@@ -97,6 +99,8 @@ export function CreateReportModal({
     setSubject("");
     setDescription("");
     setFile(null);
+    setFileStats(null);
+    setIsCompressing(false);
     setIsSending(false);
     setStep("form");
     setIsDragging(false);
@@ -124,69 +128,148 @@ export function CreateReportModal({
     return true;
   };
 
-  const optimizeImageFile = async (rawFile: File): Promise<File> => {
-    if (rawFile.size <= 1.2 * 1024 * 1024) return rawFile;
+  /**
+   * Kompresi gambar otomatis di sisi klien via HTML5 Canvas API
+   * Mengoptimalkan dimensi (maks 1920px) dan mengompres ke format JPEG berkualitas tinggi
+   * dengan target ukuran ideal di bawah 1MB-2MB untuk Telegram.
+   */
+  const compressImageFile = async (
+    rawFile: File
+  ): Promise<{ file: File; originalSize: number; compressedSize: number }> => {
+    const originalSize = rawFile.size;
+    const TARGET_MAX_BYTES = 1.2 * 1024 * 1024; // 1.2 MB target ideal
+
+    // Jika file sudah sangat kecil (< 300KB) dan bukan PNG, langsung gunakan
+    if (originalSize <= 300 * 1024 && !rawFile.type.includes("png")) {
+      return { file: rawFile, originalSize, compressedSize: originalSize };
+    }
+
     return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-            const maxDim = 1920;
-            if (width > maxDim || height > maxDim) {
-              if (width > height) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
-              } else {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
+      const objectUrl = URL.createObjectURL(rawFile);
+      const img = new Image();
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        try {
+          let width = img.naturalWidth || img.width;
+          let height = img.naturalHeight || img.height;
+          const maxDim = 1920; // Full HD ideal untuk Telegram
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+
+          if (!ctx) {
+            return resolve({ file: rawFile, originalSize, compressedSize: originalSize });
+          }
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const tryEncode = (quality: number): Promise<Blob | null> => {
+            return new Promise((res) => {
+              canvas.toBlob((b) => res(b), "image/jpeg", quality);
+            });
+          };
+
+          (async () => {
+            // Pass 1: standard quality 0.82
+            let blob = await tryEncode(0.82);
+
+            // Pass 2: jika masih di atas 1.2MB, turunkan quality ke 0.72
+            if (blob && blob.size > TARGET_MAX_BYTES) {
+              const pass2 = await tryEncode(0.72);
+              if (pass2 && pass2.size < blob.size) {
+                blob = pass2;
               }
             }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return resolve(rawFile);
-            ctx.drawImage(img, 0, 0, width, height);
-            canvas.toBlob(
-              (blob) => {
-                if (!blob || blob.size >= rawFile.size) return resolve(rawFile);
-                const cleanName = rawFile.name.replace(/\.[^.]+$/, "") + ".jpg";
-                const optimized = new File([blob], cleanName, {
-                  type: "image/jpeg",
-                });
-                resolve(optimized);
-              },
-              "image/jpeg",
-              0.82,
-            );
-          } catch {
-            resolve(rawFile);
-          }
-        };
-        img.onerror = () => resolve(rawFile);
-        img.src = event.target?.result as string;
+
+            if (!blob || blob.size >= originalSize) {
+              // Jika hasil kompresi malah lebih besar dari file asli, tetap gunakan file asli
+              return resolve({ file: rawFile, originalSize, compressedSize: originalSize });
+            }
+
+            const cleanName = rawFile.name.replace(/\.[^.]+$/, "") + ".jpg";
+            const optimized = new File([blob], cleanName, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+
+            resolve({
+              file: optimized,
+              originalSize,
+              compressedSize: optimized.size,
+            });
+          })().catch(() => {
+            resolve({ file: rawFile, originalSize, compressedSize: originalSize });
+          });
+        } catch {
+          resolve({ file: rawFile, originalSize, compressedSize: originalSize });
+        }
       };
-      reader.onerror = () => resolve(rawFile);
-      reader.readAsDataURL(rawFile);
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve({ file: rawFile, originalSize, compressedSize: originalSize });
+      };
+
+      img.src = objectUrl;
     });
+  };
+
+  const handleProcessFile = async (picked: File) => {
+    if (!validateFile(picked)) {
+      setFile(null);
+      setFileStats(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setIsCompressing(true);
+    try {
+      const result = await compressImageFile(picked);
+      setFile(result.file);
+      setFileStats({
+        original: result.originalSize,
+        compressed: result.compressedSize,
+      });
+
+      if (result.compressedSize < result.originalSize * 0.9) {
+        const savedPercent = Math.round(
+          ((result.originalSize - result.compressedSize) / result.originalSize) * 100
+        );
+        toast.success("Gambar berhasil dikompresi otomatis!", {
+          description: `Ukuran dioptimalkan dari ${(result.originalSize / 1024 / 1024).toFixed(1)}MB menjadi ${(result.compressedSize / 1024).toFixed(0)}KB (-${savedPercent}%).`,
+        });
+      }
+    } catch {
+      setFile(picked);
+      setFileStats({ original: picked.size, compressed: picked.size });
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const picked = event.target.files?.[0] ?? null;
     if (!picked) {
       setFile(null);
+      setFileStats(null);
       return;
     }
-    if (!validateFile(picked)) {
-      setFile(null);
-      event.target.value = "";
-      return;
-    }
-    const optimized = await optimizeImageFile(picked);
-    setFile(optimized);
+    await handleProcessFile(picked);
   };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
@@ -194,14 +277,12 @@ export function CreateReportModal({
     setIsDragging(false);
     const picked = e.dataTransfer.files?.[0];
     if (!picked) return;
-    if (!validateFile(picked)) return;
-    const optimized = await optimizeImageFile(picked);
-    setFile(optimized);
+    await handleProcessFile(picked);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSending) return;
+    if (isSending || isCompressing) return;
 
     const cleanSubject = subject.trim().slice(0, 50);
     const cleanDescription = description.trim().slice(0, MAX_DESC);
@@ -324,9 +405,6 @@ export function CreateReportModal({
       setStep("form");
     }
   };
-
-  const charCountDesc = description.length;
-  const descProgress = Math.min(charCountDesc / MAX_DESC, 1);
 
   return (
     <Modal
@@ -470,32 +548,18 @@ export function CreateReportModal({
             />
           </div>
 
-          {/* Description + char bar (max 500) */}
+          {/* Description (max 500) */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label
-                htmlFor="report-description"
-                className="flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700"
-              >
-                <AlertCircle className="size-3.5" />
-                Deskripsi Masalah
-                <span className="ml-1 font-normal normal-case tracking-normal text-red-500">
-                  *
-                </span>
-              </label>
-              <span
-                className={cn(
-                  "text-[0.68rem] font-medium tabular-nums transition-colors",
-                  descProgress > 0.85
-                    ? "text-red-500 font-semibold"
-                    : descProgress > 0.6
-                    ? "text-amber-500"
-                    : "text-slate-400"
-                )}
-              >
-                {charCountDesc}/{MAX_DESC}
+            <label
+              htmlFor="report-description"
+              className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700"
+            >
+              <AlertCircle className="size-3.5" />
+              Deskripsi Masalah
+              <span className="ml-auto font-normal normal-case tracking-normal text-red-500">
+                Wajib *
               </span>
-            </div>
+            </label>
             <textarea
               id="report-description"
               required
@@ -503,22 +567,9 @@ export function CreateReportModal({
               maxLength={MAX_DESC}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Jelaskan masalah selengkap mungkin (maksimal 500 karakter)..."
+              placeholder="Jelaskan masalah selengkap mungkin..."
               className="min-h-[110px] w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-[0.88rem] leading-relaxed text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
             />
-            <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  descProgress > 0.85
-                    ? "bg-red-400"
-                    : descProgress > 0.6
-                    ? "bg-amber-400"
-                    : "bg-sky-400"
-                )}
-                style={{ width: `${descProgress * 100}%` }}
-              />
-            </div>
           </div>
 
           {/* Image attachment */}
@@ -539,7 +590,12 @@ export function CreateReportModal({
               className="sr-only"
             />
 
-            {file ? (
+            {isCompressing ? (
+              <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-[0.82rem] font-medium text-sky-700">
+                <LoaderCircle className="size-4 animate-spin text-sky-600" />
+                <span>Mengompresi gambar otomatis...</span>
+              </div>
+            ) : file ? (
               <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-100">
@@ -549,19 +605,25 @@ export function CreateReportModal({
                     <p className="truncate text-[0.82rem] font-semibold text-sky-900">
                       {file.name}
                     </p>
-                    <p className="text-[0.7rem] text-sky-600">
-                      {(file.size / 1024).toFixed(0)} KB
-                    </p>
+                    <div className="flex items-center gap-1.5 text-[0.7rem] text-sky-600">
+                      <span>{(file.size / 1024).toFixed(0)} KB</span>
+                      {fileStats && fileStats.original > fileStats.compressed * 1.05 && (
+                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-emerald-700">
+                          Terkonpresi (-{Math.round(((fileStats.original - fileStats.compressed) / fileStats.original) * 100)}%)
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
                     setFile(null);
+                    setFileStats(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   aria-label="Hapus file"
-                  className="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sky-500 transition-colors hover:bg-sky-200 hover:text-sky-800"
+                  className="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sky-500 transition-colors hover:bg-sky-200 hover:text-sky-800 cursor-pointer"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -625,7 +687,7 @@ export function CreateReportModal({
         <button
           type="submit"
           form="create-report-form"
-          disabled={isSending}
+          disabled={isSending || isCompressing}
           className={cn(
             "group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3 text-[0.88rem] font-semibold text-white shadow-lg transition-all duration-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70",
             step === "done"
@@ -633,14 +695,19 @@ export function CreateReportModal({
               : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-sky-200/70 hover:from-sky-400 hover:to-blue-500 hover:shadow-xl hover:shadow-sky-300/50"
           )}
         >
-          {!isSending && (
+          {!isSending && !isCompressing && (
             <span
               aria-hidden="true"
               className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full"
             />
           )}
 
-          {step === "sending" ? (
+          {isCompressing ? (
+            <>
+              <LoaderCircle className="size-4 animate-spin" />
+              <span>Mengompresi Gambar...</span>
+            </>
+          ) : step === "sending" ? (
             <>
               <LoaderCircle className="size-4 animate-spin" />
               <span>Mengirim...</span>
