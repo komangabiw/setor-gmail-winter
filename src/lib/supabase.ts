@@ -27,7 +27,7 @@ export const isSupabaseConfigured = Boolean(
 );
 
 export const supabase = createClient(
-  supabaseUrl || "https://kdjoeeehyahdgwgsfyal.supabase.co",
+  supabaseUrl || "https://auth.setorgmail.com",
   supabaseAnonKey || "placeholder-key",
   {
     auth: {

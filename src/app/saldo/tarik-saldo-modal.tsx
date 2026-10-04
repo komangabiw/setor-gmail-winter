@@ -123,11 +123,25 @@ export function TarikSaldoModal({
   const isPrefixInvalid = hasStartedTyping && !currentNumber.startsWith("08");
   const isTooShort = hasStartedTyping && currentNumber.startsWith("08") && currentNumber.length < 10;
 
-  // Quick preset options
+  // Quick preset options: Cukup 2 pilihan terbaik sesuai saldo yang tersedia (1 lagi "Semua" di render terpisah)
   const presets = React.useMemo(() => {
-    const common = [5000, 10000, 20000, 50000, 100000];
-    return common.filter((p) => p >= minimum && p <= balance);
-  }, [minimum, balance]);
+    if (balance <= 10000) {
+      return [5000, 10000];
+    }
+    if (balance <= 25000) {
+      return [5000, 10000];
+    }
+    if (balance <= 50000) {
+      return [10000, 20000];
+    }
+    if (balance <= 250000) {
+      return [20000, 50000];
+    }
+    if (balance <= 500000) {
+      return [50000, 100000];
+    }
+    return [100000, 250000];
+  }, [balance]);
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const digitsOnly = event.target.value.replace(/[^0-9]/g, "");
@@ -340,44 +354,40 @@ export function TarikSaldoModal({
             </div>
           </div>
 
-          {/* Quick preset chips */}
-          {presets.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              <span className="text-[0.68rem] text-ink-400 font-medium mr-0.5">Pilihan Cepat:</span>
-              {presets.map((val) => {
-                const isSelected = withdrawAmount === val;
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setAmountInput(formatRupiah(val))}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
-                      isSelected
-                        ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
-                        : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
-                    )}
-                  >
-                    {formatIDR(val)}
-                  </button>
-                );
-              })}
-              {balance > 0 && !presets.includes(balance) && (
+          {/* Quick preset chips: Tepat 3 pilihan (2 rekomendasi terbaik + 1 Semua) */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            <span className="text-[0.68rem] text-ink-400 font-medium mr-0.5">Pilihan Cepat:</span>
+            {presets.map((val) => {
+              const isSelected = withdrawAmount === val;
+              return (
                 <button
+                  key={val}
                   type="button"
-                  onClick={handleSetMaxAmount}
+                  onClick={() => setAmountInput(formatRupiah(val))}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
-                    withdrawAmount === balance
+                    isSelected
                       ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
                       : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
                   )}
                 >
-                  Semua ({formatIDR(balance)})
+                  {formatIDR(val)}
                 </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={handleSetMaxAmount}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
+                withdrawAmount === balance && balance > 0
+                  ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
+                  : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
               )}
-            </div>
-          )}
+            >
+              Semua ({formatIDR(balance)})
+            </button>
+          </div>
 
           {/* Real-time Validation Helper */}
           {hasStartedAmount && isExceedingBalance && (

@@ -428,9 +428,9 @@ export function ProfilView() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                      <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
                         <KeyRound className="size-3 text-sky-500" />
-                        <span>UID Pengguna</span>
+                        <span>UID</span>
                       </div>
                       <CopyValue value={userProfile.uid} />
                     </div>
@@ -450,9 +450,9 @@ export function ProfilView() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
                       <Mail className="size-3 text-sky-500" />
-                      <span>Email Terdaftar</span>
+                      <span>Email</span>
                     </div>
                     <p className="mt-1 break-all text-[11px] sm:text-xs leading-relaxed font-semibold text-slate-800">
                       {userProfile.email}
@@ -470,7 +470,7 @@ export function ProfilView() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-1.5 text-[0.65rem] font-bold tracking-wider text-slate-400 uppercase">
+                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
                       <Calendar className="size-3 text-sky-500" />
                       <span>Tanggal Bergabung</span>
                     </div>
