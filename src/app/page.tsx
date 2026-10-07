@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { DashboardView } from "./dashboard-view";
-import { AuthCard } from "./login/auth-card";
+import { LandingView } from "./landing-view";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -88,7 +88,7 @@ export default function HomePage() {
   }
 
   if (!isAuthenticated) {
-    return <AuthCard onSuccess={() => setIsAuthenticated(true)} />;
+    return <LandingView onAuthSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return <DashboardView />;

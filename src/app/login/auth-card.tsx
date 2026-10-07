@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,28 @@ const tabs = [
   { value: "register" as const, label: "Daftar" },
 ];
 
-export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
+export interface AuthCardProps {
+  onSuccess?: () => void;
+  onClose?: () => void;
+  isModal?: boolean;
+  initialMode?: AuthMode;
+}
+
+export function AuthCard({
+  onSuccess,
+  onClose,
+  isModal = false,
+  initialMode = "login",
+}: AuthCardProps = {}) {
   const router = useRouter();
-  const [mode, setMode] = React.useState<AuthMode>("login");
+  const [mode, setMode] = React.useState<AuthMode>(initialMode);
+
+  React.useEffect(() => {
+    if (initialMode) {
+      setMode(initialMode);
+    }
+  }, [initialMode]);
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
@@ -310,55 +330,23 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
     }, 600);
   };
 
-  return (
-    <div className="relative flex min-h-dvh w-full flex-col overflow-hidden">
-      {/* Ambient background orbs */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 -left-20 size-72 rounded-full bg-sky-300/30 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/3 -right-24 size-80 rounded-full bg-brand-300/25 blur-3xl"
+  const cardBody = (
+    <>
+      <Tabs
+        items={tabs}
+        value={mode}
+        onValueChange={switchMode}
+        className="mb-6"
       />
 
-      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12 lg:justify-center lg:py-16">
-        {/* Brand header matching TopBar Gambar 1 */}
-        <div className="animate-fade-up mb-7 flex items-center justify-center gap-2.5">
-          <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-md shadow-sky-500/20">
-            <Mail className="size-4.5 sm:size-5 stroke-[2.2]" aria-hidden="true" />
-          </span>
-          <div className="flex items-baseline gap-1.5 text-lg sm:text-xl tracking-tight">
-            <span className="font-black text-slate-900 tracking-tight">
-              SETOR GMAIL
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-400 lowercase">
-              by
-            </span>
-            <span className="font-black tracking-tight bg-gradient-to-r from-sky-500 via-sky-600 to-brand-600 bg-clip-text text-transparent">
-              Winter
-            </span>
-          </div>
-        </div>
-
-        {/* Floating auth card */}
-        <div className="animate-fade-up flex-1 lg:flex-none" style={{ animationDelay: "80ms" }}>
-          <div className="rounded-3xl bg-white p-5 shadow-[0_10px_40px_-12px_rgb(14_165_233/0.25)] sm:p-6 lg:p-7">
-            <Tabs
-              items={tabs}
-              value={mode}
-              onValueChange={switchMode}
-              className="mb-6"
-            />
-
-            <div className="mb-4">
-              <GoogleButton
-                onSuccess={handleGoogleCredential}
-                onFallbackClick={handleGoogle}
-                isLoading={isLoading}
-              />
-              <Divider label="atau" />
-            </div>
+      <div className="mb-4">
+        <GoogleButton
+          onSuccess={handleGoogleCredential}
+          onFallbackClick={handleGoogle}
+          isLoading={isLoading}
+        />
+        <Divider label="atau" />
+      </div>
 
             {mode === "login" ? (
               <form key="login" onSubmit={handleLogin} className="animate-fade-in space-y-4">
@@ -490,29 +478,107 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
                 </Button>
               </form>
             )}
+    </>
+  );
+
+  const trustRow = (
+    <div
+      className="animate-fade-up mt-6 flex items-center justify-center gap-2 text-[0.7rem] text-slate-500"
+      style={{ animationDelay: "160ms" }}
+    >
+      <ShieldCheck className="size-3.5 text-emerald-500" aria-hidden="true" />
+      <span>Aman &amp; terenkripsi</span>
+      <span aria-hidden="true" className="text-slate-300">
+        ·
+      </span>
+      <Sparkles className="size-3.5 text-sky-500" aria-hidden="true" />
+      <span>{mode === "login" ? "Belum punya akun?" : "Sudah punya akun?"}</span>
+      <button
+        type="button"
+        onClick={() => switchMode(mode === "login" ? "register" : "login")}
+        className="font-semibold text-sky-600 transition-colors hover:text-sky-700 cursor-pointer"
+      >
+        {mode === "login" ? "Daftar gratis" : "Masuk sekarang"}
+      </button>
+    </div>
+  );
+
+  if (isModal) {
+    return (
+      <div className="relative w-full max-w-md mx-auto p-5 sm:p-7 bg-white rounded-3xl shadow-2xl">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors z-10 cursor-pointer"
+            aria-label="Tutup dialog"
+          >
+            <X className="size-5" />
+          </button>
+        )}
+
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-md shadow-sky-500/20">
+            <Mail className="size-4.5 sm:size-5 stroke-[2.2]" aria-hidden="true" />
+          </span>
+          <div className="flex items-baseline gap-1.5 text-lg sm:text-xl tracking-tight">
+            <span className="font-black text-slate-900 tracking-tight">
+              SETOR GMAIL
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-400 lowercase">
+              by
+            </span>
+            <span className="font-black tracking-tight bg-gradient-to-r from-sky-500 via-sky-600 to-brand-600 bg-clip-text text-transparent">
+              Winter
+            </span>
           </div>
         </div>
 
-        {/* Trust row */}
-        <div
-          className="animate-fade-up mt-6 flex items-center justify-center gap-2 text-[0.7rem] text-ink-500"
-          style={{ animationDelay: "160ms" }}
-        >
-          <ShieldCheck className="size-3.5 text-emerald-500" aria-hidden="true" />
-          <span>Aman &amp; terenkripsi</span>
-          <span aria-hidden="true" className="text-ink-400">
-            ·
+        {cardBody}
+        {trustRow}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-dvh w-full flex-col overflow-hidden">
+      {/* Ambient background orbs */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -left-20 size-72 rounded-full bg-sky-300/30 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1/3 -right-24 size-80 rounded-full bg-brand-300/25 blur-3xl"
+      />
+
+      <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12 lg:justify-center lg:py-16">
+        {/* Brand header matching TopBar Gambar 1 */}
+        <div className="animate-fade-up mb-7 flex items-center justify-center gap-2.5">
+          <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-md shadow-sky-500/20">
+            <Mail className="size-4.5 sm:size-5 stroke-[2.2]" aria-hidden="true" />
           </span>
-          <Sparkles className="size-3.5 text-sky-500" aria-hidden="true" />
-          <span>Belum punya akun?</span>
-          <button
-            type="button"
-            onClick={() => switchMode("register")}
-            className="font-semibold text-sky-600 transition-colors hover:text-sky-700"
-          >
-            Daftar gratis
-          </button>
+          <div className="flex items-baseline gap-1.5 text-lg sm:text-xl tracking-tight">
+            <span className="font-black text-slate-900 tracking-tight">
+              SETOR GMAIL
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-400 lowercase">
+              by
+            </span>
+            <span className="font-black tracking-tight bg-gradient-to-r from-sky-500 via-sky-600 to-brand-600 bg-clip-text text-transparent">
+              Winter
+            </span>
+          </div>
         </div>
+
+        {/* Floating auth card */}
+        <div className="animate-fade-up flex-1 lg:flex-none" style={{ animationDelay: "80ms" }}>
+          <div className="rounded-3xl bg-white p-5 shadow-[0_10px_40px_-12px_rgb(14_165_233/0.25)] sm:p-6 lg:p-7">
+            {cardBody}
+          </div>
+        </div>
+
+        {trustRow}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { AuthCard } from "./auth-card";
+import { LandingView } from "@/app/landing-view";
 
 export const metadata: Metadata = {
-  title: "Masuk & Daftar",
+  title: "Masuk & Daftar | Setor Gmail by Winter",
 };
 
 export default function LoginPage() {
-  return <AuthCard />;
+  return <LandingView defaultModalMode="login" />;
 }
