@@ -48,6 +48,16 @@
   --animate-modal-in: modal-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-modal-out: modal-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
   --animate-backdrop-out: backdrop-out 0.22s ease-in both;
+  --animate-marquee: marquee 35s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 @keyframes fade-up {
@@ -235,6 +245,15 @@
   }
   .mb-safe-nav {
     margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem);
+  }
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 35s linear infinite;
+    will-change: transform;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 }
 

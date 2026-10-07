@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { AuthCard } from "./login/auth-card";
+import { TopTicker } from "@/components/layout/top-ticker";
 
 interface LandingViewProps {
   onAuthSuccess?: () => void;
@@ -69,45 +70,7 @@ export function LandingView({
       {/* ------------------------------------------------------------- */}
       {/* 2. Top Marquee Running Ticker (Iklan Berjalan) */}
       {/* ------------------------------------------------------------- */}
-      <div className="relative z-20 w-full overflow-hidden border-b border-sky-100/80 bg-white/80 py-2.5 backdrop-blur-md shadow-xs">
-        <div className="flex w-max animate-marquee space-x-12 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-slate-600">
-          <div className="flex items-center space-x-8">
-            <span className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              Dukungan 24/7
-            </span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Platform Setor Gmail #1 di Indonesia</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Harga Terbaik</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span className="text-sky-600 font-extrabold">Pencairan Instan</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>100% aman dan terpercaya</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Verifikasi Cepat</span>
-            <span className="text-sky-500 font-black">✦</span>
-          </div>
-
-          <div className="flex items-center space-x-8">
-            <span className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              Dukungan 24/7
-            </span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Platform Setor Gmail #1 di Indonesia</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Harga Terbaik</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span className="text-sky-600 font-extrabold">Pencairan Instan</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>100% aman dan terpercaya</span>
-            <span className="text-sky-500 font-black">✦</span>
-            <span>Verifikasi Cepat</span>
-            <span className="text-sky-500 font-black">✦</span>
-          </div>
-        </div>
-      </div>
+      <TopTicker />
 
       {/* ------------------------------------------------------------- */}
       {/* 3. Top Navigation Bar (SETOR GMAIL by Winter) */}
