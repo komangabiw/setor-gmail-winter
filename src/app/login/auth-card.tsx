@@ -15,12 +15,30 @@ import {
 import { Tabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input, PasswordInput } from "@/components/ui/input";
+import { PasswordStrength, type PasswordRule } from "@/components/ui/password-strength";
 import { GoogleButton } from "./google-button";
 import { Divider } from "./divider";
 
 import { supabase } from "@/lib/supabase";
 
 type AuthMode = "login" | "register";
+
+const registerPasswordRules: PasswordRule[] = [
+  { id: "length", label: "Minimal 6 karakter", test: (v) => v.length >= 6 },
+  {
+    id: "case",
+    label: "Huruf besar dan kecil",
+    test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v),
+  },
+  { id: "digit", label: "Angka", test: (v) => /\d/.test(v) },
+  {
+    id: "symbol",
+    label: "Simbol (@, #, $, dll)",
+    test: (v) => /[!-/:-@[-`{-~]/.test(v),
+  },
+];
+
+const registerPasswordLabels = ["Kosong", "Lemah", "Cukup", "Bagus", "Kuat"];
 
 const tabs = [
   { value: "login" as const, label: "Masuk" },
@@ -41,9 +59,12 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
     password: "",
   });
 
+  const [isPasswordFocused, setIsPasswordFocused] = React.useState(false);
+
   const switchMode = (next: AuthMode) => {
     setMode(next);
     setErrors({});
+    setIsPasswordFocused(false);
   };
 
   const handleGoogleCredential = async (credential: string) => {
@@ -426,18 +447,36 @@ export function AuthCard({ onSuccess }: { onSuccess?: () => void } = {}) {
                   }
                 />
 
-                <PasswordInput
-                  label="Password"
-                  autoComplete="new-password"
-                  placeholder="Minimal 6 karakter"
-                  leftIcon={<Lock className="size-[1.05rem]" aria-hidden="true" />}
-                  value={registerForm.password}
-                  error={errors.password}
-                  onChange={(e) =>
-                    setRegisterForm((f) => ({ ...f, password: e.target.value }))
-                  }
-                  hint="Gunakan kombinasi huruf dan angka"
-                />
+                <div className="space-y-2">
+                  <PasswordInput
+                    label="Password"
+                    autoComplete="new-password"
+                    placeholder="Minimal 6 karakter"
+                    leftIcon={<Lock className="size-[1.05rem]" aria-hidden="true" />}
+                    value={registerForm.password}
+                    error={errors.password}
+                    onChange={(e) =>
+                      setRegisterForm((f) => ({ ...f, password: e.target.value }))
+                    }
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
+                    hint={
+                      isPasswordFocused || registerForm.password.length > 0
+                        ? undefined
+                        : "Gunakan kombinasi huruf dan angka"
+                    }
+                  />
+
+                  {(isPasswordFocused || registerForm.password.length > 0) && (
+                    <div className="rounded-xl border border-sky-100 bg-sky-50/40 p-3 transition-all duration-200 dark:border-white/10 dark:bg-white/[0.03]">
+                      <PasswordStrength
+                        value={registerForm.password}
+                        rules={registerPasswordRules}
+                        labels={registerPasswordLabels}
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <Button
                   type="submit"
