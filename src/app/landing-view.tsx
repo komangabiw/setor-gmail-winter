@@ -19,6 +19,7 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { AuthCard } from "./login/auth-card";
 import { TopTicker } from "@/components/layout/top-ticker";
+import { CinematicFooter } from "@/components/ui/motion-footer";
 
 interface LandingViewProps {
   onAuthSuccess?: () => void;
@@ -289,25 +290,17 @@ export function LandingView({
       </main>
 
       {/* ------------------------------------------------------------- */}
-      {/* 5. Pojok Kanan Bawah: "Crafted with love by Winter" */}
-      {/* (Menggantikan tombol klik ke atas) */}
+      {/* 5. Cinematic Motion Footer (21st.dev Style) */}
       {/* ------------------------------------------------------------- */}
-      <footer className="relative z-30 w-full py-4 px-4 sm:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-end">
-          <div className="flex items-center gap-2 rounded-full border border-sky-200/90 bg-white/95 px-4 py-2 text-xs font-semibold text-slate-700 shadow-lg shadow-sky-500/10 backdrop-blur-md transition-transform hover:scale-105 cursor-default">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Crafted with
-            </span>
-            <Heart className="size-3.5 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              by
-            </span>
-            <span className="font-extrabold text-slate-900">
-              Winter
-            </span>
-          </div>
-        </div>
-      </footer>
+      <div className="relative z-20 w-full mt-12">
+        <CinematicFooter
+          directReveal={true}
+          onOpenRegister={() => openAuth("register")}
+          onOpenLogin={() => openAuth("login")}
+          onOpenTutorial={() => setIsTutorialOpen(true)}
+          giantText="WINTER"
+        />
+      </div>
 
       {/* ------------------------------------------------------------- */}
       {/* 6. POPUP MODAL untuk Masuk & Daftar */}
