@@ -14,6 +14,12 @@ import {
   ShieldCheck,
   Users,
   Clock,
+  Wrench,
+  ArrowRight,
+  ArrowDown,
+  FileText,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 
 // Register ScrollTrigger safely for React
@@ -90,6 +96,20 @@ const STYLES = `
 
 .animate-float-2 {
   animation: float-subtle-2 6s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.96); opacity: 0.7; }
+  50% { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(0.96); opacity: 0.7; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 3.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
 }
 
 /* Theme-adaptive Grid Background */
@@ -358,8 +378,8 @@ export function CinematicFooter({
 
   const footerContent = (
     <footer className={cn(
-      "flex h-full min-h-screen w-full flex-col justify-between overflow-hidden bg-[#09090b] text-[#f8fafc] cinematic-footer-wrapper select-none",
-      isOnePage ? "relative" : "fixed bottom-0 left-0 h-screen"
+      "relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-[#09090b] text-[#f8fafc] cinematic-footer-wrapper select-none",
+      isOnePage ? "relative" : "fixed bottom-0 left-0 min-h-screen"
     )}>
       {/* Ambient Light & Grid Background */}
       <div className="footer-aurora absolute left-1/2 top-1/2 h-[65vh] w-[85vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[90px] pointer-events-none z-0" />
@@ -371,13 +391,13 @@ export function CinematicFooter({
       */}
       <div
         ref={giantTextRef}
-        className="footer-giant-bg-text absolute -bottom-[1.5vh] sm:-bottom-[2vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none text-center"
+        className="footer-giant-bg-text absolute -bottom-[1.5vh] sm:-bottom-[2vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none text-center opacity-60 sm:opacity-100"
       >
         {giantText}
       </div>
 
       {/* 1. Diagonal Sleek Marquee (Top of view) */}
-      <div className="absolute top-8 sm:top-12 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-3 sm:py-3.5 z-10 -rotate-2 scale-110 shadow-2xl">
+      <div className="absolute top-6 sm:top-10 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-3 sm:py-3.5 z-10 -rotate-2 scale-110 shadow-2xl">
         <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.25em] text-zinc-300 uppercase">
           <MarqueeItem />
           <MarqueeItem />
@@ -385,8 +405,8 @@ export function CinematicFooter({
       </div>
 
       {/* 2. Main Center / Hero Content Area */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-6 sm:px-10 lg:px-16 pt-24 pb-16 w-full max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 sm:px-8 lg:px-12 pt-28 sm:pt-32 pb-16 w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
           
           {/* SISI KIRI: Headline & Tombol Action (Login & Daftar) */}
           <div ref={heroLeftRef} className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left">
@@ -399,24 +419,24 @@ export function CinematicFooter({
               </span>
             </div>
 
-            {/* Headline: Ubah Akun / Gmail Jadi / Penghasilan */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6">
+            {/* Headline: Ubah Akun / Gmail Jadi / Penghasilan (g terlihat utuh dan jelas) */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.12] mb-6">
               <span className="block footer-text-glow">
                 Ubah Akun
               </span>
               <span className="block footer-text-glow mt-1 sm:mt-2">
                 Gmail Jadi
               </span>
-              <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
+              <span className="inline-block mt-1 sm:mt-2 px-1 pb-3 sm:pb-4 leading-[1.2] bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
                 Penghasilan
               </span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-sm sm:text-base text-zinc-400 max-w-lg mb-8 leading-relaxed">
-              Buat akun Gmail dan tukar menjadi saldo
+            <p className="text-sm sm:text-base text-zinc-300 max-w-lg mb-8 leading-relaxed">
+              Buat akun Gmail dan dapatkan saldo.
               <br className="hidden sm:inline" />
-              {" "}Pencairan instan via E-wallet dan Bank
+              {" "}Pencairan instan via E-wallet dan Bank.
             </p>
 
             {/* Tombol Action: Login dan Daftar */}
@@ -447,9 +467,9 @@ export function CinematicFooter({
             </div>
           </div>
 
-          {/* SISI KANAN / BESIDE: Showcase & Floating Cards persis sesuai gambar referensi */}
-          <div ref={heroRightRef} className="lg:col-span-6 relative flex items-center justify-center py-8">
-            <div className="relative w-full max-w-md">
+          {/* SISI KANAN / BESIDE: Showcase & Floating Cards + 3-Step Flow */}
+          <div ref={heroRightRef} className="lg:col-span-6 flex flex-col items-center justify-center w-full py-4 sm:py-8">
+            <div className="relative w-full max-w-md mx-auto">
               
               {/* Center Main Card: Setor Gmail */}
               <div className="floating-showcase-card rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center relative z-10">
@@ -462,17 +482,25 @@ export function CinematicFooter({
                 <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 max-w-xs">
                   Platform setor gmail tercepat &amp; terpercaya
                 </p>
-                <div className="mt-5 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-1 text-xs font-bold text-emerald-300">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Server Aktif &amp; Siap Proses
+
+                {/* Badge: Platform sedang dalam tahap pengembangan */}
+                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 px-4 py-1.5 text-xs font-bold text-amber-300 shadow-[0_0_24px_-3px_rgba(245,158,11,0.4)] backdrop-blur-md">
+                  <span className="relative flex size-2 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
+                  </span>
+                  <Wrench className="size-3.5 text-amber-300 animate-spin-slow" />
+                  <span className="tracking-wide text-[11px] sm:text-xs">
+                    Platform sedang dalam tahap pengembangan
+                  </span>
                 </div>
               </div>
 
               {/* 4 FLOATING CARDS */}
               {/* 1. Kiri Atas: Cair Instan | E-wallet dan Bank */}
-              <div className="animate-float-1 absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
-                  <Zap className="size-5 fill-amber-400" />
+              <div className="animate-float-1 absolute -top-5 -left-2 sm:-top-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
+                  <Zap className="size-4 sm:size-5 fill-amber-400" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
@@ -485,9 +513,9 @@ export function CinematicFooter({
               </div>
 
               {/* 2. Kanan Atas: Rp 90.000 Cair | 3 menit lalu */}
-              <div className="animate-float-2 absolute -top-6 -right-4 sm:-top-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
-                  <Banknote className="size-5" />
+              <div className="animate-float-2 absolute -top-5 -right-2 sm:-top-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
+                  <Banknote className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
@@ -500,9 +528,9 @@ export function CinematicFooter({
               </div>
 
               {/* 3. Kiri Bawah: 100% Aman | SSL Terenkripsi */}
-              <div className="animate-float-2 absolute -bottom-6 -left-4 sm:-bottom-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
-                  <ShieldCheck className="size-5" />
+              <div className="animate-float-2 absolute -bottom-5 -left-2 sm:-bottom-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
+                  <ShieldCheck className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
@@ -515,9 +543,9 @@ export function CinematicFooter({
               </div>
 
               {/* 4. Kanan Bawah: 3.5K Member | Aktif sekarang */}
-              <div className="animate-float-1 absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-xs">
-                  <Users className="size-5" />
+              <div className="animate-float-1 absolute -bottom-5 -right-2 sm:-bottom-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
+                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-xs">
+                  <Users className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
@@ -530,6 +558,128 @@ export function CinematicFooter({
               </div>
 
             </div>
+
+            {/* 
+              3. STEP ALUR PROSES (HOW IT WORKS) - Disesuaikan persis Gambar Referensi 2
+              Diletakkan rapi di sebelah kanan di bawah floating showcase cards
+            */}
+            <div className="w-full mt-10 sm:mt-12">
+              <div className="relative">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4 relative items-stretch">
+                  
+                  {/* STEP 1: Daftar Akun */}
+                  <div className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5 backdrop-blur-md shadow-lg transition-all duration-300 hover:border-indigo-400/50 hover:bg-white/[0.07] hover:scale-[1.02] hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.3)] flex flex-col items-center text-center">
+                    {/* Number Badge with Dashed Outer Ring */}
+                    <div className="relative mb-3 flex items-center justify-center">
+                      <div className="rounded-2xl border-2 border-dashed border-indigo-400/50 p-1 transition-transform duration-300 group-hover:scale-110 group-hover:border-indigo-400">
+                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 font-black text-xl sm:text-2xl text-white shadow-lg shadow-indigo-500/40">
+                          1
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Accent Icon */}
+                    <div className="mb-2 flex items-center justify-center text-indigo-400">
+                      <CreditCard className="size-4" />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-sm sm:text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">
+                      Daftar Akun
+                    </h4>
+
+                    {/* Description */}
+                    <p className="mt-1 text-xs text-zinc-400 leading-relaxed">
+                      Buat akun member, lalu masuk ke dashboard untuk mulai menyetor Gmail.
+                    </p>
+                  </div>
+
+                  {/* CONNECTOR 1 -> 2 (Desktop Arrow) */}
+                  <div className="hidden md:flex absolute left-[33.33%] -translate-x-1/2 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/50 border border-indigo-300/40 animate-pulse">
+                      <ArrowRight className="size-3.5 stroke-[2.5]" />
+                    </div>
+                  </div>
+
+                  {/* CONNECTOR 1 -> 2 (Mobile Arrow) */}
+                  <div className="flex md:hidden items-center justify-center -my-1 z-20">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-600/50 border border-indigo-300/40">
+                      <ArrowDown className="size-3 stroke-[2.5]" />
+                    </div>
+                  </div>
+
+                  {/* STEP 2: Setor Gmail */}
+                  <div className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5 backdrop-blur-md shadow-lg transition-all duration-300 hover:border-indigo-400/50 hover:bg-white/[0.07] hover:scale-[1.02] hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.3)] flex flex-col items-center text-center">
+                    {/* Number Badge with Dashed Outer Ring */}
+                    <div className="relative mb-3 flex items-center justify-center">
+                      <div className="rounded-2xl border-2 border-dashed border-indigo-400/50 p-1 transition-transform duration-300 group-hover:scale-110 group-hover:border-indigo-400">
+                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 font-black text-xl sm:text-2xl text-white shadow-lg shadow-indigo-500/40">
+                          2
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Accent Icon */}
+                    <div className="mb-2 flex items-center justify-center text-indigo-400">
+                      <FileText className="size-4" />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-sm sm:text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">
+                      Setor Gmail
+                    </h4>
+
+                    {/* Description */}
+                    <p className="mt-1 text-xs text-zinc-400 leading-relaxed">
+                      Paste akun Gmail sesuai format. Sistem akan merapikan input sebelum dikirim ke admin.
+                    </p>
+                  </div>
+
+                  {/* CONNECTOR 2 -> 3 (Desktop Arrow) */}
+                  <div className="hidden md:flex absolute left-[66.66%] -translate-x-1/2 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/50 border border-indigo-300/40 animate-pulse">
+                      <ArrowRight className="size-3.5 stroke-[2.5]" />
+                    </div>
+                  </div>
+
+                  {/* CONNECTOR 2 -> 3 (Mobile Arrow) */}
+                  <div className="flex md:hidden items-center justify-center -my-1 z-20">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-600/50 border border-indigo-300/40">
+                      <ArrowDown className="size-3 stroke-[2.5]" />
+                    </div>
+                  </div>
+
+                  {/* STEP 3: Tunggu & Cairkan */}
+                  <div className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5 backdrop-blur-md shadow-lg transition-all duration-300 hover:border-indigo-400/50 hover:bg-white/[0.07] hover:scale-[1.02] hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.3)] flex flex-col items-center text-center">
+                    {/* Number Badge with Dashed Outer Ring */}
+                    <div className="relative mb-3 flex items-center justify-center">
+                      <div className="rounded-2xl border-2 border-dashed border-indigo-400/50 p-1 transition-transform duration-300 group-hover:scale-110 group-hover:border-indigo-400">
+                        <div className="flex size-12 sm:size-14 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-600 font-black text-xl sm:text-2xl text-white shadow-lg shadow-indigo-500/40">
+                          3
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Accent Icon */}
+                    <div className="mb-2 flex items-center justify-center text-indigo-400">
+                      <Wallet className="size-4" />
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-sm sm:text-base font-bold text-white tracking-tight group-hover:text-indigo-200 transition-colors">
+                      Tunggu &amp; Cairkan
+                    </h4>
+
+                    {/* Description */}
+                    <p className="mt-1 text-xs text-zinc-400 leading-relaxed">
+                      Akun diproses admin 1-2 hari. Setelah ACC, pencairan dana diproses sekitar 1-2 menit.
+                    </p>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -540,7 +690,7 @@ export function CinematicFooter({
         - Teks copyright sebelah kiri SUDAH DIHAPUS
         - Badge diubah menjadi "Crafted by Winter" dan diposisikan di sebelah KANAN
       */}
-      <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex justify-end items-center">
+      <div className="relative z-20 w-full pb-8 pt-4 px-6 md:px-12 flex justify-end items-center">
         <div className="footer-glass-pill px-6 py-2.5 rounded-full flex items-center gap-1.5 cursor-default border-white/10 shadow-lg">
           <span className="text-zinc-400 text-[10px] md:text-xs font-semibold uppercase tracking-wider">Crafted by</span>
           <span className="text-white font-black text-xs md:text-sm tracking-normal ml-0.5">{craftedByText}</span>
@@ -553,13 +703,13 @@ export function CinematicFooter({
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       {isOnePage ? (
-        <div ref={wrapperRef} className="relative h-screen w-full overflow-hidden bg-[#09090b]">
+        <div ref={wrapperRef} className="relative min-h-screen w-full overflow-y-auto overflow-x-hidden bg-[#09090b]">
           {footerContent}
         </div>
       ) : (
         <div
           ref={wrapperRef}
-          className="relative h-screen w-full bg-[#09090b]"
+          className="relative min-h-screen w-full bg-[#09090b]"
           style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
         >
           {footerContent}

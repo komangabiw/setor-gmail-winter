@@ -34,7 +34,7 @@ export function LandingView({
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#09090b] text-[#f8fafc] select-none">
+    <div className="relative min-h-screen w-full overflow-y-auto overflow-x-hidden bg-[#09090b] text-[#f8fafc] select-none">
       {/* 1 Page Dark Fullscreen View */}
       <CinematicFooter
         singlePage={true}
