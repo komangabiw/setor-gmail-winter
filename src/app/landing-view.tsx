@@ -34,18 +34,22 @@ export function LandingView({
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#F8F9FC] text-slate-900 select-none">
-      {/* 1 Page Fullscreen View as shown in Arc browser screenshot */}
+    <div className="relative h-screen w-full overflow-hidden bg-[#09090b] text-[#f8fafc] select-none">
+      {/* 1 Page Dark Fullscreen View persis seperti screenshot */}
       <CinematicFooter
         singlePage={true}
-        giantText="Ready for Work"
-        onOpenRegister={() => openAuth("register")}
-        onOpenLogin={() => openAuth("login")}
-        onOpenTutorial={() => setIsTutorialOpen(true)}
-        whatsappUrl="https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y"
-        supportUrl="/setor"
-        copyrightText="© 2026 SETOR GMAIL WINTER. ALL RIGHTS RESERVED."
-        craftedByText="Winter"
+        headingText="Ready to begin?"
+        giantText="SOBERS"
+        pill1Text="Download iOS"
+        pill2Text="Download Android"
+        pill3Text="Privacy Policy"
+        pill4Text="Terms of Service"
+        pill5Text="Support"
+        onPill1Click={() => openAuth("register")}
+        onPill2Click={() => openAuth("login")}
+        onPill3Click={() => setIsTutorialOpen(true)}
+        copyrightText="© 2026 VOLVOX. ALL RIGHTS RESERVED."
+        craftedByText="Volvox"
       />
 
       {/* POPUP MODAL: Masuk & Daftar Akun */}
@@ -73,74 +77,74 @@ export function LandingView({
         onClose={() => setIsTutorialOpen(false)}
         labelledBy="tutorial-modal-title"
       >
-        <div className="relative p-6 sm:p-8 bg-white rounded-3xl">
+        <div className="relative p-6 sm:p-8 bg-zinc-950 text-white border border-zinc-800 rounded-3xl">
           <button
             type="button"
             onClick={() => setIsTutorialOpen(false)}
-            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
             aria-label="Tutup tutorial"
           >
             <X className="size-5" />
           </button>
 
           <div className="flex items-center gap-3 mb-5">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-sky-950/60 border border-sky-800/40 text-sky-400">
               <PlayCircle className="size-6" />
             </span>
             <div>
-              <h3 id="tutorial-modal-title" className="text-lg font-black text-slate-900">
+              <h3 id="tutorial-modal-title" className="text-lg font-black text-white">
                 Panduan Setor Gmail
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-zinc-400">
                 Langkah mudah menghasilkan saldo dari akun Gmail Anda
               </p>
             </div>
           </div>
 
-          <div className="space-y-3.5 my-6 text-sm text-slate-700">
-            <div className="flex items-start gap-3 rounded-2xl bg-sky-50/70 p-3.5 border border-sky-100">
+          <div className="space-y-3.5 my-6 text-sm text-zinc-300">
+            <div className="flex items-start gap-3 rounded-2xl bg-zinc-900/80 p-3.5 border border-zinc-800">
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white font-bold text-xs">
                 1
               </span>
               <div>
-                <strong className="block text-slate-900">Daftar atau Masuk Akun</strong>
-                <p className="text-xs text-slate-600 mt-0.5">
+                <strong className="block text-white">Daftar atau Masuk Akun</strong>
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Buat akun gratis menggunakan email atau login instan dengan akun Google.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl bg-sky-50/70 p-3.5 border border-sky-100">
+            <div className="flex items-start gap-3 rounded-2xl bg-zinc-900/80 p-3.5 border border-zinc-800">
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white font-bold text-xs">
                 2
               </span>
               <div>
-                <strong className="block text-slate-900">Siapkan Akun Gmail</strong>
-                <p className="text-xs text-slate-600 mt-0.5">
+                <strong className="block text-white">Siapkan Akun Gmail</strong>
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Pastikan akun Gmail aktif, terawat, dan sesuai kriteria format setoran.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl bg-sky-50/70 p-3.5 border border-sky-100">
+            <div className="flex items-start gap-3 rounded-2xl bg-zinc-900/80 p-3.5 border border-zinc-800">
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white font-bold text-xs">
                 3
               </span>
               <div>
-                <strong className="block text-slate-900">Setorkan di Menu Setor</strong>
-                <p className="text-xs text-slate-600 mt-0.5">
+                <strong className="block text-white">Setorkan di Menu Setor</strong>
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Kirimkan format akun pada halaman Setor untuk proses verifikasi.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl bg-emerald-50/70 p-3.5 border border-emerald-100">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white font-bold text-xs">
+            <div className="flex items-start gap-3 rounded-2xl bg-emerald-950/40 p-3.5 border border-emerald-800/40">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-bold text-xs">
                 4
               </span>
               <div>
-                <strong className="block text-emerald-950">Pencairan Kilat 1-2 Menit</strong>
-                <p className="text-xs text-emerald-800 mt-0.5">
+                <strong className="block text-emerald-300">Pencairan Kilat 1-2 Menit</strong>
+                <p className="text-xs text-emerald-400/90 mt-0.5">
                   Setelah ACC, saldo masuk dompet dan langsung bisa ditarik ke DANA, GoPay, atau OVO!
                 </p>
               </div>
