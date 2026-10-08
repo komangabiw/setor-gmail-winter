@@ -412,7 +412,7 @@ export function CheckerView() {
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-white dark:bg-card border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-slate-800 dark:text-slate-100 placeholder:text-slate-400 relative z-30 pointer-events-auto cursor-text select-text"
+                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-white border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-slate-900 placeholder:text-slate-400 relative z-30 pointer-events-auto cursor-text select-text"
               />
             </ShineBorder>
 

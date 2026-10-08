@@ -4,12 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
-import { TopTicker } from "@/components/layout/top-ticker";
-
 export function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100/90 bg-white/95 backdrop-blur-md">
-      <TopTicker />
       <div className="mx-auto flex h-14 w-full max-w-md items-center justify-between px-4 sm:max-w-lg sm:px-6 md:max-w-4xl md:px-8 lg:max-w-5xl xl:px-10">
         {/* Left: Brand name & logo */}
         <Link
