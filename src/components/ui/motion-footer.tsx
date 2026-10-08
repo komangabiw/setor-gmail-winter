@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
+import { ArrowUp } from "lucide-react";
 
 // Register ScrollTrigger safely for React
 if (typeof window !== "undefined") {
@@ -21,32 +22,33 @@ const STYLES = `
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   
-  /* Dynamic Variables using standard shadcn/tailwind v4 tokens with fallbacks (Dark Mode as in 21st.dev) */
-  --foreground: #f8fafc;
-  --background: #09090b;
-  --primary: #38bdf8;
-  --secondary: #818cf8;
+  /* Fallback / Theme variables */
+  --foreground: #0f172a;
+  --background: #f8f9fc;
+  --primary: #0ea5e9;
+  --secondary: #6366f1;
   --destructive: #ef4444;
-  --muted-foreground: #a1a1aa;
-  --border: rgba(255, 255, 255, 0.12);
+  --muted-foreground: #64748b;
+  --border: rgba(15, 23, 42, 0.08);
 
-  --pill-bg-1: rgba(255, 255, 255, 0.06);
-  --pill-bg-2: rgba(255, 255, 255, 0.02);
-  --pill-shadow: rgba(0, 0, 0, 0.5);
-  --pill-highlight: rgba(255, 255, 255, 0.12);
-  --pill-inset-shadow: rgba(0, 0, 0, 0.4);
-  --pill-border: rgba(255, 255, 255, 0.1);
-  
-  --pill-bg-1-hover: rgba(255, 255, 255, 0.12);
-  --pill-bg-2-hover: rgba(255, 255, 255, 0.04);
-  --pill-border-hover: rgba(255, 255, 255, 0.25);
-  --pill-shadow-hover: rgba(0, 0, 0, 0.7);
-  --pill-highlight-hover: rgba(255, 255, 255, 0.25);
+  /* Glass pill tokens for clean, premium light appearance */
+  --pill-bg-1: rgba(255, 255, 255, 0.95);
+  --pill-bg-2: rgba(248, 250, 252, 0.88);
+  --pill-shadow: rgba(15, 23, 42, 0.07);
+  --pill-highlight: rgba(255, 255, 255, 1);
+  --pill-inset-shadow: rgba(0, 0, 0, 0.03);
+  --pill-border: rgba(226, 232, 240, 0.95);
+
+  --pill-bg-1-hover: #ffffff;
+  --pill-bg-2-hover: #f1f5f9;
+  --pill-border-hover: rgba(14, 165, 233, 0.4);
+  --pill-shadow-hover: rgba(14, 165, 233, 0.16);
+  --pill-highlight-hover: #ffffff;
 }
 
 @keyframes footer-breathe {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.85; }
 }
 
 @keyframes footer-scroll-marquee {
@@ -55,8 +57,8 @@ const STYLES = `
 }
 
 @keyframes footer-heartbeat {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px color-mix(in oklch, var(--destructive) 50%, transparent)); }
-  15%, 45% { transform: scale(1.2); filter: drop-shadow(0 0 10px color-mix(in oklch, var(--destructive) 80%, transparent)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.4)); }
+  15%, 45% { transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); }
   30% { transform: scale(1); }
 }
 
@@ -65,7 +67,10 @@ const STYLES = `
 }
 
 .animate-footer-scroll-marquee {
-  animation: footer-scroll-marquee 40s linear infinite;
+  animation: footer-scroll-marquee 35s linear infinite;
+  display: flex;
+  width: max-content;
+  will-change: transform;
 }
 
 .animate-footer-heartbeat {
@@ -74,20 +79,18 @@ const STYLES = `
 
 /* Theme-adaptive Grid Background */
 .footer-bg-grid {
-  background-size: 60px 60px;
+  background-size: 54px 54px;
   background-image: 
-    linear-gradient(to right, color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px);
-  mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+    linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
 }
 
-/* Theme-adaptive Aurora Glow */
+/* Theme-adaptive Ambient Glow */
 .footer-aurora {
   background: radial-gradient(
     circle at 50% 50%, 
-    color-mix(in oklch, var(--primary) 15%, transparent) 0%, 
-    color-mix(in oklch, var(--secondary) 15%, transparent) 40%, 
+    rgba(14, 165, 233, 0.09) 0%, 
+    rgba(99, 102, 241, 0.04) 40%, 
     transparent 70%
   );
 }
@@ -96,44 +99,35 @@ const STYLES = `
 .footer-glass-pill {
   background: linear-gradient(145deg, var(--pill-bg-1) 0%, var(--pill-bg-2) 100%);
   box-shadow: 
-      0 10px 30px -10px var(--pill-shadow), 
+      0 10px 28px -8px var(--pill-shadow), 
       inset 0 1px 1px var(--pill-highlight), 
       inset 0 -1px 2px var(--pill-inset-shadow);
   border: 1px solid var(--pill-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .footer-glass-pill:hover {
   background: linear-gradient(145deg, var(--pill-bg-1-hover) 0%, var(--pill-bg-2-hover) 100%);
   border-color: var(--pill-border-hover);
   box-shadow: 
-      0 20px 40px -10px var(--pill-shadow-hover), 
+      0 18px 36px -10px var(--pill-shadow-hover), 
       inset 0 1px 1px var(--pill-highlight-hover);
   color: var(--foreground);
 }
 
 /* Giant Background Text Masking */
 .footer-giant-bg-text {
-  font-size: 26vw;
-  line-height: 0.75;
+  font-size: clamp(3.5rem, 11vw, 11rem);
+  line-height: 1;
   font-weight: 900;
-  letter-spacing: -0.05em;
-  color: transparent;
-  -webkit-text-stroke: 1px color-mix(in oklch, var(--foreground) 5%, transparent);
-  background: linear-gradient(180deg, color-mix(in oklch, var(--foreground) 10%, transparent) 0%, transparent 60%);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-/* Metallic Text Glow */
-.footer-text-glow {
-  background: linear-gradient(180deg, var(--foreground) 0%, color-mix(in oklch, var(--foreground) 40%, transparent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0px 0px 20px color-mix(in oklch, var(--foreground) 15%, transparent));
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 20px rgba(15, 23, 42, 0.04);
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  user-select: none;
 }
 `;
 
@@ -163,13 +157,13 @@ export const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>
           const y = e.clientY - rect.top - w;
 
           gsap.to(element, {
-            x: x * 0.4,
-            y: y * 0.4,
-            rotationX: -y * 0.15,
-            rotationY: x * 0.15,
-            scale: 1.05,
+            x: x * 0.35,
+            y: y * 0.35,
+            rotationX: -y * 0.1,
+            rotationY: x * 0.1,
+            scale: 1.03,
             ease: "power2.out",
-            duration: 0.4,
+            duration: 0.35,
           });
         };
 
@@ -181,7 +175,7 @@ export const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>
             rotationY: 0,
             scale: 1,
             ease: "elastic.out(1, 0.3)",
-            duration: 1.2,
+            duration: 1.1,
           });
         };
 
@@ -219,260 +213,286 @@ MagneticButton.displayName = "MagneticButton";
 // -------------------------------------------------------------------------
 export const MarqueeItem = () => (
   <div className="flex items-center space-x-12 px-6">
-    <span>Sponsor Connection</span> <span className="text-sky-400">✦</span>
-    <span>Absolute Privacy</span> <span className="text-sky-400">✦</span>
-    <span>Accountability Redefined</span> <span className="text-sky-400">✦</span>
-    <span>Transparent Tracking</span> <span className="text-sky-400">✦</span>
-    <span>12-Step Progress</span> <span className="text-sky-400">✦</span>
-    <span>Platform Setor Gmail #1</span> <span className="text-sky-400">✦</span>
-    <span>Pencairan Kilat 1-2 Menit</span> <span className="text-sky-400">✦</span>
-    <span>Harga Terbaik Rp4.500</span> <span className="text-sky-400">✦</span>
+    <span>PLATFORM SETOR GMAIL #1</span> <span className="text-sky-400">✦</span>
+    <span>PENCAIRAN KILAT 1-2 MENIT</span> <span className="text-sky-400">✦</span>
+    <span>HARGA TERBAIK RP4.500</span> <span className="text-sky-400">✦</span>
+    <span>PROSES VERIFIKASI CEPAT</span> <span className="text-sky-400">✦</span>
+    <span>100% AMAN &amp; TRANSPARAN</span> <span className="text-sky-400">✦</span>
   </div>
 );
 
 export interface CinematicFooterProps {
+  /** If true, renders directly as a full-page 100vh view without scroll-reveal wrapping */
+  singlePage?: boolean;
+  /** Legacy prop alias for singlePage */
   directReveal?: boolean;
-  onOpenRegister?: () => void;
-  onOpenLogin?: () => void;
-  onOpenTutorial?: () => void;
+  /** Giant faint text in the center background */
   giantText?: string;
+  /** Callback when user clicks 'Daftar Akun Baru' */
+  onOpenRegister?: () => void;
+  /** Callback when user clicks 'Masuk ke Akun' */
+  onOpenLogin?: () => void;
+  /** Callback when user clicks 'Panduan Tutorial' */
+  onOpenTutorial?: () => void;
+  /** WhatsApp channel or community URL */
+  whatsappUrl?: string;
+  /** Rules & Support link URL */
+  supportUrl?: string;
+  /** Copyright text */
+  copyrightText?: string;
+  /** Creator brand name */
+  craftedByText?: string;
 }
 
 export function CinematicFooter({
+  singlePage = false,
   directReveal = false,
+  giantText = "Ready for Work",
   onOpenRegister,
   onOpenLogin,
   onOpenTutorial,
-  giantText = "WINTER",
+  whatsappUrl = "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
+  supportUrl = "/setor",
+  copyrightText = "© 2026 SETOR GMAIL WINTER. ALL RIGHTS RESERVED.",
+  craftedByText = "Winter",
 }: CinematicFooterProps = {}) {
+  const isOnePage = singlePage || directReveal;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const linksRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!wrapperRef.current) return;
+    if (typeof window !== "undefined" && wrapperRef.current) {
+      const ctx = gsap.context(() => {
+        if (isOnePage) {
+          // Direct smooth entry for single-page mode
+          gsap.fromTo(
+            giantTextRef.current,
+            { scale: 0.92, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 1.2, ease: "power2.out" }
+          );
 
-    // React strict mode compatible GSAP context cleanup
-    const ctx = gsap.context(() => {
-      if (directReveal) {
-        gsap.fromTo(
-          giantTextRef.current,
-          { y: "5vh", scale: 0.9, opacity: 0 },
-          { y: "0vh", scale: 1, opacity: 1, duration: 1, ease: "power2.out" }
-        );
-
-        gsap.fromTo(
-          [headingRef.current, linksRef.current],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, stagger: 0.15, duration: 0.8, ease: "power3.out" }
-        );
-      } else {
-        // Background Parallax
-        gsap.fromTo(
-          giantTextRef.current,
-          { y: "10vh", scale: 0.8, opacity: 0 },
-          {
-            y: "0vh",
-            scale: 1,
-            opacity: 1,
-            ease: "power1.out",
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: "top 80%",
-              end: "bottom bottom",
-              scrub: 1,
-            },
+          if (linksRef.current) {
+            gsap.fromTo(
+              linksRef.current.children,
+              { y: 24, opacity: 0 },
+              { y: 0, opacity: 1, stagger: 0.1, duration: 0.8, ease: "power3.out", delay: 0.1 }
+            );
           }
-        );
+        } else {
+          // Curtain Reveal scroll animation
+          gsap.fromTo(
+            giantTextRef.current,
+            { y: "10vh", scale: 0.8, opacity: 0 },
+            {
+              y: "0vh",
+              scale: 1,
+              opacity: 1,
+              ease: "power1.out",
+              scrollTrigger: {
+                trigger: wrapperRef.current,
+                start: "top 80%",
+                end: "bottom bottom",
+                scrub: 1,
+              },
+            }
+          );
 
-        // Staggered Content Reveal
-        gsap.fromTo(
-          [headingRef.current, linksRef.current],
-          { y: 50, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            stagger: 0.15,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: "top 40%",
-              end: "bottom bottom",
-              scrub: 1,
-            },
+          if (linksRef.current) {
+            gsap.fromTo(
+              linksRef.current.children,
+              { y: 50, opacity: 0 },
+              {
+                y: 0,
+                opacity: 1,
+                stagger: 0.15,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: wrapperRef.current,
+                  start: "top 40%",
+                  end: "bottom bottom",
+                  scrub: 1,
+                },
+              }
+            );
           }
-        );
-      }
-    }, wrapperRef);
+        }
+      }, wrapperRef);
 
-    return () => ctx.revert();
-  }, [directReveal]);
+      return () => ctx.revert();
+    }
+  }, [isOnePage]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const footerContent = (
+    <footer className={cn(
+      "relative flex h-full min-h-screen w-full flex-col justify-between overflow-hidden bg-[#F8F9FC] text-slate-900 cinematic-footer-wrapper select-none",
+      !isOnePage && "fixed bottom-0 left-0"
+    )}>
+      {/* Ambient Light & Grid Background */}
+      <div className="footer-aurora absolute left-1/2 top-1/2 h-[65vh] w-[85vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[90px] pointer-events-none z-0" />
+      <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
+
+      {/* 1. Diagonal Sleek Marquee (Top of view) */}
+      <div className="absolute top-6 sm:top-10 left-0 w-full overflow-hidden border-y border-slate-200/80 bg-white/95 backdrop-blur-md py-3.5 sm:py-4 z-10 -rotate-1 sm:-rotate-2 scale-105 shadow-md">
+        <div className="flex w-max animate-footer-scroll-marquee text-xs sm:text-sm font-extrabold tracking-[0.25em] text-slate-800 uppercase">
+          <MarqueeItem />
+          <MarqueeItem />
+          <MarqueeItem />
+        </div>
+      </div>
+
+      {/* 2. Main Center Content Area */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 w-full max-w-5xl mx-auto pt-24 pb-16">
+        
+        {/* Giant background text positioned behind the pills */}
+        <div
+          ref={giantTextRef}
+          className="footer-giant-bg-text absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap z-0 pointer-events-none text-center"
+        >
+          {giantText}
+        </div>
+
+        {/* Interactive Magnetic Pills Layout */}
+        <div ref={linksRef} className="relative z-10 flex flex-col items-center gap-4 sm:gap-5 w-full">
+          
+          {/* Row 1: Primary Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
+            {onOpenRegister ? (
+              <MagneticButton
+                as="button"
+                type="button"
+                onClick={onOpenRegister}
+                className="footer-glass-pill px-7 sm:px-9 py-3.5 sm:py-4 rounded-full text-slate-800 font-bold text-sm sm:text-base flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
+              >
+                <span className="size-2.5 rounded-full bg-emerald-400 shadow-xs ring-4 ring-emerald-400/20" />
+                <span>Daftar Akun Baru</span>
+              </MagneticButton>
+            ) : (
+              <MagneticButton
+                as="a"
+                href="#register"
+                className="footer-glass-pill px-7 sm:px-9 py-3.5 sm:py-4 rounded-full text-slate-800 font-bold text-sm sm:text-base flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
+              >
+                <span className="size-2.5 rounded-full bg-emerald-400 shadow-xs ring-4 ring-emerald-400/20" />
+                <span>Daftar Akun Baru</span>
+              </MagneticButton>
+            )}
+
+            {onOpenLogin ? (
+              <MagneticButton
+                as="button"
+                type="button"
+                onClick={onOpenLogin}
+                className="footer-glass-pill px-7 sm:px-9 py-3.5 sm:py-4 rounded-full text-slate-800 font-bold text-sm sm:text-base flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
+              >
+                <span>Masuk ke Akun</span>
+              </MagneticButton>
+            ) : (
+              <MagneticButton
+                as="a"
+                href="#login"
+                className="footer-glass-pill px-7 sm:px-9 py-3.5 sm:py-4 rounded-full text-slate-800 font-bold text-sm sm:text-base flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
+              >
+                <span>Masuk ke Akun</span>
+              </MagneticButton>
+            )}
+          </div>
+
+          {/* Row 2: Secondary Navigation Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 w-full">
+            {onOpenTutorial ? (
+              <MagneticButton
+                as="button"
+                type="button"
+                onClick={onOpenTutorial}
+                className="footer-glass-pill px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-slate-600 font-semibold text-xs sm:text-sm hover:text-slate-900 shadow-xs hover:shadow-md transition-all"
+              >
+                Panduan Tutorial
+              </MagneticButton>
+            ) : (
+              <MagneticButton
+                as="a"
+                href="#tutorial"
+                className="footer-glass-pill px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-slate-600 font-semibold text-xs sm:text-sm hover:text-slate-900 shadow-xs hover:shadow-md transition-all"
+              >
+                Panduan Tutorial
+              </MagneticButton>
+            )}
+
+            <MagneticButton
+              as="a"
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-glass-pill px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-slate-600 font-semibold text-xs sm:text-sm hover:text-slate-900 shadow-xs hover:shadow-md transition-all"
+            >
+              Saluran WhatsApp
+            </MagneticButton>
+
+            <MagneticButton
+              as="a"
+              href={supportUrl}
+              className="footer-glass-pill px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-slate-600 font-semibold text-xs sm:text-sm hover:text-slate-900 shadow-xs hover:shadow-md transition-all"
+            >
+              Rules &amp; Support
+            </MagneticButton>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 3. Bottom Bar / Credits */}
+      <div className="relative z-20 w-full pb-6 sm:pb-8 px-4 sm:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        {/* Copyright */}
+        <div className="text-slate-500 text-[10.5px] sm:text-xs font-semibold tracking-wider uppercase order-2 md:order-1 text-center md:text-left">
+          {copyrightText}
+        </div>
+
+        {/* "Crafted with Love" Badge */}
+        <div className="footer-glass-pill px-5 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 order-1 md:order-2 cursor-default border border-slate-200/80 shadow-xs">
+          <span className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest">Crafted with</span>
+          <span className="animate-footer-heartbeat text-sm sm:text-base text-rose-500">❤</span>
+          <span className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest">by</span>
+          <span className="text-slate-900 font-black text-xs sm:text-sm tracking-normal ml-0.5">{craftedByText}</span>
+        </div>
+
+        {/* Back to top Button */}
+        <MagneticButton
+          as="button"
+          onClick={scrollToTop}
+          className="size-10 sm:size-11 rounded-full footer-glass-pill flex items-center justify-center text-slate-600 hover:text-slate-900 shadow-xs hover:shadow-md group order-3 transition-all"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="size-4 sm:size-4.5 stroke-[2.2] group-hover:-translate-y-0.5 transition-transform duration-300" />
+        </MagneticButton>
+
+      </div>
+    </footer>
+  );
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
-      
-      {/* 
-        The "Curtain Reveal" Wrapper:
-        It sits in standard flow. Because it has clip-path, its contents
-        are ONLY visible within its bounding box.
-      */}
-      <div
-        ref={wrapperRef}
-        className={cn("relative w-full", directReveal ? "min-h-screen" : "h-screen")}
-        style={directReveal ? undefined : { clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
-      >
-        {/* The actual footer stays fixed or relative based on reveal mode */}
-        <footer className={cn(
-          "flex min-h-screen w-full flex-col justify-between overflow-hidden bg-background text-foreground cinematic-footer-wrapper",
-          directReveal ? "relative" : "fixed bottom-0 left-0 h-screen"
-        )}>
-          
-          {/* Ambient Light & Grid Background */}
-          <div className="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px] pointer-events-none z-0" />
-          <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
-
-          {/* Giant background text */}
-          <div
-            ref={giantTextRef}
-            className="footer-giant-bg-text absolute -bottom-[5vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none"
-          >
-            {giantText}
-          </div>
-
-          {/* 1. Diagonal Sleek Marquee (Top of footer) */}
-          <div className="absolute top-12 left-0 w-full overflow-hidden border-y border-border/50 bg-background/60 backdrop-blur-md py-4 z-10 -rotate-2 scale-110 shadow-2xl">
-            <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.3em] text-muted-foreground uppercase">
-              <MarqueeItem />
-              <MarqueeItem />
-            </div>
-          </div>
-
-          {/* 2. Main Center Content */}
-          <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 mt-20 w-full max-w-5xl mx-auto">
-            <h2
-              ref={headingRef}
-              className="text-5xl md:text-8xl font-black footer-text-glow tracking-tighter mb-12 text-center"
-            >
-              Ready to begin?
-            </h2>
-
-            {/* Interactive Magnetic Pills Layout */}
-            <div ref={linksRef} className="flex flex-col items-center gap-6 w-full">
-              {/* App Store / Action Links */}
-              <div className="flex flex-wrap justify-center gap-4 w-full">
-                {onOpenRegister ? (
-                  <MagneticButton
-                    as="button"
-                    type="button"
-                    onClick={onOpenRegister}
-                    className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group"
-                  >
-                    <span className="size-2.5 rounded-full bg-emerald-400 animate-ping" />
-                    <span>Daftar Akun Baru</span>
-                  </MagneticButton>
-                ) : (
-                  <MagneticButton as="a" href="#" className="footer-glass-pill px-10 py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group">
-                    <svg className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.04 2.26-.79 3.59-.76 1.56.04 2.87.67 3.55 1.76-3.13 1.77-2.62 5.92.35 7.14-.65 1.58-1.57 3.1-2.57 4.03zm-3.21-14.7c-.55 1.4-1.89 2.37-3.25 2.28.09-1.5 1.05-2.82 2.38-3.4 1.25-.57 2.66-.41 3.25.04-.15.35-.26.72-.38 1.08z" />
-                    </svg>
-                    Download iOS
-                  </MagneticButton>
-                )}
-                
-                {onOpenLogin ? (
-                  <MagneticButton
-                    as="button"
-                    type="button"
-                    onClick={onOpenLogin}
-                    className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group"
-                  >
-                    <span>Masuk ke Akun</span>
-                  </MagneticButton>
-                ) : (
-                  <MagneticButton as="a" href="#" className="footer-glass-pill px-10 py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group">
-                    <svg className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0222 3.503C15.5902 8.242 13.8533 7.85 12 7.85c-1.8533 0-3.5902.392-5.1369 1.1004L4.841 5.4475a.416.416 0 00-.5676-.1521.416.416 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3436-4.1021-2.6893-7.5743-6.1185-9.4396" />
-                    </svg>
-                    Download Android
-                  </MagneticButton>
-                )}
-              </div>
-
-              {/* Secondary Text Links */}
-              <div className="flex flex-wrap justify-center gap-3 md:gap-6 w-full mt-2">
-                {onOpenTutorial ? (
-                  <MagneticButton
-                    as="button"
-                    type="button"
-                    onClick={onOpenTutorial}
-                    className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground"
-                  >
-                    Panduan Tutorial
-                  </MagneticButton>
-                ) : (
-                  <MagneticButton as="a" href="#" className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground">
-                    Privacy Policy
-                  </MagneticButton>
-                )}
-
-                <MagneticButton
-                  as="a"
-                  href="https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground"
-                >
-                  Saluran WhatsApp
-                </MagneticButton>
-
-                <MagneticButton
-                  as="a"
-                  href="/setor"
-                  className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground"
-                >
-                  Rules &amp; Support
-                </MagneticButton>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Bottom Bar / Credits */}
-          <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
-            
-            {/* Copyright */}
-            <div className="text-muted-foreground text-[10px] md:text-xs font-semibold tracking-widest uppercase order-2 md:order-1">
-              © 2026 Setor Gmail Winter. All rights reserved.
-            </div>
-
-            {/* "Made with Love" Badge */}
-            <div className="footer-glass-pill px-6 py-3 rounded-full flex items-center gap-2 order-1 md:order-2 cursor-default border-border/50">
-              <span className="text-muted-foreground text-[10px] md:text-xs font-bold uppercase tracking-widest">Crafted with</span>
-              <span className="animate-footer-heartbeat text-sm md:text-base text-destructive">❤</span>
-              <span className="text-muted-foreground text-[10px] md:text-xs font-bold uppercase tracking-widest">by</span>
-              <span className="text-foreground font-black text-xs md:text-sm tracking-normal ml-1">Winter</span>
-            </div>
-
-            {/* Back to top */}
-            <MagneticButton
-              as="button"
-              onClick={scrollToTop}
-              className="w-12 h-12 rounded-full footer-glass-pill flex items-center justify-center text-muted-foreground hover:text-foreground group order-3"
-            >
-              <svg className="w-5 h-5 transform group-hover:-translate-y-1.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-              </svg>
-            </MagneticButton>
-
-          </div>
-        </footer>
-      </div>
+      {isOnePage ? (
+        <div ref={wrapperRef} className="relative h-screen w-full overflow-hidden">
+          {footerContent}
+        </div>
+      ) : (
+        <div
+          ref={wrapperRef}
+          className="relative h-screen w-full"
+          style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
+        >
+          {footerContent}
+        </div>
+      )}
     </>
   );
 }
+
+export default CinematicFooter;
