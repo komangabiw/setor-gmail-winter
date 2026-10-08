@@ -33,9 +33,25 @@ export function AppChrome({
         if (isSupabaseConfigured) {
           const { data } = await supabase.auth.getSession();
           if (data?.session?.user) {
+            try {
+              localStorage.setItem("setorgmail_auth", "true");
+            } catch {}
             if (active) setIsAuthenticated(true);
             return;
           }
+
+          const localAuth =
+            typeof window !== "undefined"
+              ? localStorage.getItem("setorgmail_auth")
+              : null;
+          if (localAuth === "true") {
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+              if (active) setIsAuthenticated(true);
+              return;
+            }
+          }
+
           try {
             localStorage.removeItem("setorgmail_auth");
           } catch {}
@@ -57,13 +73,13 @@ export function AppChrome({
 
     let sub: any = null;
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
           try {
             localStorage.setItem("setorgmail_auth", "true");
           } catch {}
           if (active) setIsAuthenticated(true);
-        } else {
+        } else if (event === "SIGNED_OUT") {
           try {
             localStorage.removeItem("setorgmail_auth");
           } catch {}
@@ -80,12 +96,15 @@ export function AppChrome({
   }, [pathname]);
 
   // Route protection: redirect unauthenticated users to /login on internal routes
+  // and redirect authenticated users from /login back to home dashboard
   React.useEffect(() => {
     if (isAuthenticated === false) {
       const isPublic = PUBLIC_ROUTES.some((r) => pathname.startsWith(r)) || pathname === "/";
       if (!isPublic) {
         router.replace("/login");
       }
+    } else if (isAuthenticated === true && pathname === "/login") {
+      router.replace("/");
     }
   }, [isAuthenticated, pathname, router]);
 

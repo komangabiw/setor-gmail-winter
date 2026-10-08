@@ -32,9 +32,25 @@ export default function HomePage() {
         if (isSupabaseConfigured) {
           const { data } = await supabase.auth.getSession();
           if (data?.session?.user) {
+            try {
+              localStorage.setItem("setorgmail_auth", "true");
+            } catch {}
             if (isSubscribed) setIsAuthenticated(true);
             return;
           }
+
+          const localAuth =
+            typeof window !== "undefined"
+              ? localStorage.getItem("setorgmail_auth")
+              : null;
+          if (localAuth === "true") {
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+              if (isSubscribed) setIsAuthenticated(true);
+              return;
+            }
+          }
+
           try {
             localStorage.removeItem("setorgmail_auth");
           } catch {}

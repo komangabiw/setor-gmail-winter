@@ -59,6 +59,9 @@ export function LandingView({
             if (onAuthSuccess) {
               onAuthSuccess();
             }
+            if (typeof window !== "undefined" && window.location.pathname !== "/") {
+              window.location.href = "/";
+            }
           }}
         />
       </Modal>
