@@ -50,6 +50,13 @@ export function GoogleButton({
 }: GoogleButtonProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isGsiReady, setIsGsiReady] = React.useState(false);
+  const onSuccessRef = React.useRef(onSuccess);
+  const onFallbackClickRef = React.useRef(onFallbackClick);
+
+  React.useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onFallbackClickRef.current = onFallbackClick;
+  });
 
   React.useEffect(() => {
     let isMounted = true;
@@ -62,19 +69,23 @@ export function GoogleButton({
           return;
         }
 
+        // Avoid re-rendering if already rendered inside container
+        if (containerRef.current.childElementCount > 0 && isGsiReady) {
+          return;
+        }
+
         try {
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
             callback: (response) => {
               if (response?.credential) {
-                onSuccess(response.credential);
+                onSuccessRef.current(response.credential);
               }
             },
             auto_select: false,
             cancel_on_tap_outside: true,
           });
 
-          // Measure container width or default to 360px
           const width = containerRef.current.clientWidth || 360;
           const targetWidth = Math.min(Math.max(width, 240), 400);
 
@@ -91,12 +102,9 @@ export function GoogleButton({
 
           setIsGsiReady(true);
 
-          // Prompt One Tap if supported
           try {
             window.google.accounts.id.prompt();
-          } catch {
-            // One Tap prompt optional
-          }
+          } catch {}
         } catch (err) {
           console.warn("GSI initialization error:", err);
         }
@@ -130,7 +138,7 @@ export function GoogleButton({
     return () => {
       isMounted = false;
     };
-  }, [onSuccess]);
+  }, []); // Run once on mount!
 
   const handleCustomClick = () => {
     if (window.google?.accounts?.id) {
@@ -139,13 +147,13 @@ export function GoogleButton({
         return;
       } catch {}
     }
-    if (onFallbackClick) {
-      onFallbackClick();
+    if (onFallbackClickRef.current) {
+      onFallbackClickRef.current();
     }
   };
 
   return (
-    <div className="relative min-h-[48px] w-full flex items-center justify-center">
+    <div className="relative h-11 min-h-[44px] w-full flex items-center justify-center">
       {/* Official Google Identity Services button container */}
       <div
         ref={containerRef}
@@ -158,7 +166,7 @@ export function GoogleButton({
           type="button"
           onClick={handleCustomClick}
           disabled={isLoading}
-          className="absolute inset-0 flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200/90 bg-white text-[0.95rem] font-semibold text-ink-800 shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 hover:shadow-md active:scale-[0.99] disabled:opacity-70"
+          className="absolute inset-0 flex h-11 w-full items-center justify-center gap-3 rounded-full border border-zinc-700 bg-zinc-900/90 text-sm font-semibold text-zinc-100 shadow-sm transition hover:bg-zinc-800 hover:border-zinc-600 active:scale-[0.99] disabled:opacity-70 cursor-pointer"
         >
           <GoogleMark />
           <span>{isLoading ? "Menghubungkan..." : "Lanjutkan dengan Google"}</span>

@@ -136,7 +136,7 @@ export function Modal({
         onMouseDown={onClose}
         aria-hidden="true"
         className={cn(
-          "absolute inset-0 bg-ink-900/45 backdrop-blur-[3px]",
+          "absolute inset-0 bg-black/70 backdrop-blur-md",
           exiting ? "animate-backdrop-out" : "animate-fade-in",
         )}
       />
@@ -149,7 +149,7 @@ export function Modal({
         onMouseDown={(event) => event.stopPropagation()}
         onAnimationEnd={handleAnimationEnd}
         className={cn(
-          "relative flex max-h-[88dvh] w-full flex-col overflow-hidden bg-white shadow-2xl outline-none",
+          "relative flex max-h-[92dvh] w-full flex-col overflow-y-auto overscroll-contain bg-[#111116] text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(56,189,248,0.15)] outline-none border border-white/10",
           "rounded-t-3xl sm:max-w-lg sm:rounded-3xl",
           exiting ? "animate-modal-out" : "animate-modal-in",
           className,

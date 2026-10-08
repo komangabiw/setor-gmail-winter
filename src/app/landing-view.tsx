@@ -72,7 +72,7 @@ export function LandingView({
         onClose={() => setIsTutorialOpen(false)}
         labelledBy="tutorial-modal-title"
       >
-        <div className="relative p-6 sm:p-8 bg-zinc-950 text-white border border-zinc-800 rounded-3xl">
+        <div className="relative p-6 sm:p-8 text-white">
           <button
             type="button"
             onClick={() => setIsTutorialOpen(false)}

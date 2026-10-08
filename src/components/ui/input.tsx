@@ -14,6 +14,8 @@ export function FieldShell({
   error,
   required,
   className,
+  labelClassName,
+  hintClassName,
   children,
   trailing,
 }: {
@@ -23,6 +25,8 @@ export function FieldShell({
   error?: string;
   required?: boolean;
   className?: string;
+  labelClassName?: string;
+  hintClassName?: string;
   children: React.ReactNode;
   trailing?: React.ReactNode;
 }) {
@@ -33,7 +37,7 @@ export function FieldShell({
           {label && (
             <label
               htmlFor={id}
-              className="text-[0.78rem] font-medium text-ink-700"
+              className={cn("text-[0.78rem] font-medium text-ink-700", labelClassName)}
             >
               {label}
               {required && <span className="ml-0.5 text-rose-500">*</span>}
@@ -46,7 +50,7 @@ export function FieldShell({
       {error ? (
         <p className="animate-fade-in text-[0.72rem] font-medium text-rose-600">{error}</p>
       ) : (
-        hint && <p className="text-[0.72rem] text-ink-500">{hint}</p>
+        hint && <p className={cn("text-[0.72rem] text-ink-500", hintClassName)}>{hint}</p>
       )}
     </div>
   );
@@ -60,6 +64,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   trailingSlot?: React.ReactNode;
   trailing?: React.ReactNode;
   containerClassName?: string;
+  labelClassName?: string;
+  hintClassName?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -67,6 +73,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     {
       className,
       containerClassName,
+      labelClassName,
+      hintClassName,
       label,
       hint,
       error,
@@ -92,6 +100,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         required={required}
         trailing={trailing}
         className={containerClassName}
+        labelClassName={labelClassName}
+        hintClassName={hintClassName}
       >
         <div className="relative">
           {leftIcon && (
@@ -127,7 +137,23 @@ Input.displayName = "Input";
 export type PasswordInputProps = Omit<InputProps, "type" | "trailingSlot">;
 
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, containerClassName, id, label, hint, error, leftIcon, trailing, required, ...props }, ref) => {
+  (
+    {
+      className,
+      containerClassName,
+      labelClassName,
+      hintClassName,
+      id,
+      label,
+      hint,
+      error,
+      leftIcon,
+      trailing,
+      required,
+      ...props
+    },
+    ref,
+  ) => {
     const generatedId = React.useId();
     const inputId = id ?? generatedId;
     const [visible, setVisible] = React.useState(false);
@@ -141,6 +167,8 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
         required={required}
         trailing={trailing}
         className={containerClassName}
+        labelClassName={labelClassName}
+        hintClassName={hintClassName}
       >
         <div className="relative">
           {leftIcon && (
@@ -166,7 +194,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
             type="button"
             onClick={() => setVisible((v) => !v)}
             aria-label={visible ? "Sembunyikan password" : "Tampilkan password"}
-            className="absolute top-1/2 right-1.5 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-slate-100 hover:text-ink-600"
+            className="absolute top-1/2 right-1.5 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-zinc-400 transition-colors duration-200 hover:bg-white/10 hover:text-white cursor-pointer"
           >
             {visible ? (
               <EyeOff className="size-[1.05rem]" aria-hidden="true" />
