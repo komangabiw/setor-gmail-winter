@@ -121,10 +121,10 @@ const STYLES = `
 
 /* Giant Background Text Masking at Bottom */
 .footer-giant-bg-text {
-  font-size: 26vw;
-  line-height: 0.75;
+  font-size: clamp(3.2rem, 15vw, 13.5rem);
+  line-height: 0.8;
   font-weight: 900;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   color: transparent;
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
@@ -136,11 +136,11 @@ const STYLES = `
 
 /* Metallic Text Glow */
 .footer-text-glow {
-  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.4) 100%);
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.45) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.22));
+  filter: drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.2));
 }
 `;
 
@@ -157,7 +157,7 @@ export const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>
     const localRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
-      if (typeof window === "undefined") return;
+      if (typeof window !== "undefined") return;
       const element = localRef.current;
       if (!element) return;
 
@@ -239,68 +239,38 @@ export interface CinematicFooterProps {
   singlePage?: boolean;
   /** Legacy prop alias for singlePage */
   directReveal?: boolean;
-  /** Center main headline */
-  headingText?: string;
+  /** Custom heading element or text */
+  heading?: React.ReactNode;
   /** Giant masked outline text placed at the bottom */
   giantText?: string;
   /** Primary Pill 1 label */
   pill1Text?: string;
   /** Primary Pill 2 label */
   pill2Text?: string;
-  /** Secondary Pill 1 label */
-  pill3Text?: string;
-  /** Secondary Pill 2 label */
-  pill4Text?: string;
-  /** Secondary Pill 3 label */
-  pill5Text?: string;
   /** Primary Pill 1 action */
   onPill1Click?: () => void;
   /** Primary Pill 2 action */
   onPill2Click?: () => void;
-  /** Secondary Pill 1 action */
-  onPill3Click?: () => void;
-  /** Secondary Pill 2 action */
-  onPill4Click?: () => void;
-  /** Secondary Pill 3 action */
-  onPill5Click?: () => void;
-  /** WhatsApp or secondary link */
-  whatsappUrl?: string;
-  /** Support or rules link */
-  supportUrl?: string;
-  /** Copyright text (Left side) */
-  copyrightText?: string;
   /** Brand name for Crafted with badge (Right side) */
   craftedByText?: string;
   /** Compatibility alias */
   onOpenRegister?: () => void;
   /** Compatibility alias */
   onOpenLogin?: () => void;
-  /** Compatibility alias */
-  onOpenTutorial?: () => void;
 }
 
 export function CinematicFooter({
   singlePage = false,
   directReveal = false,
-  headingText = "Ready to begin?",
-  giantText = "SOBERS",
+  heading,
+  giantText = "SETOR GMAIL",
   pill1Text = "Download iOS",
   pill2Text = "Download Android",
-  pill3Text = "Privacy Policy",
-  pill4Text = "Terms of Service",
-  pill5Text = "Support",
   onPill1Click,
   onPill2Click,
-  onPill3Click,
-  onPill4Click,
-  onPill5Click,
-  whatsappUrl = "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
-  supportUrl = "/setor",
-  copyrightText = "© 2026 VOLVOX. ALL RIGHTS RESERVED.",
-  craftedByText = "Volvox",
+  craftedByText = "Winter",
   onOpenRegister,
   onOpenLogin,
-  onOpenTutorial,
 }: CinematicFooterProps = {}) {
   const isOnePage = singlePage || directReveal;
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -311,65 +281,65 @@ export function CinematicFooter({
   // Handle compatibility actions
   const handlePill1 = onPill1Click || onOpenRegister;
   const handlePill2 = onPill2Click || onOpenLogin;
-  const handlePill3 = onPill3Click || onOpenTutorial;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!wrapperRef.current) return;
+    if (typeof window !== "undefined") {
+      if (!wrapperRef.current) return;
 
-    const ctx = gsap.context(() => {
-      if (isOnePage) {
-        gsap.fromTo(
-          giantTextRef.current,
-          { y: "5vh", scale: 0.9, opacity: 0 },
-          { y: "0vh", scale: 1, opacity: 1, duration: 1, ease: "power2.out" }
-        );
+      const ctx = gsap.context(() => {
+        if (isOnePage) {
+          gsap.fromTo(
+            giantTextRef.current,
+            { y: "5vh", scale: 0.9, opacity: 0 },
+            { y: "0vh", scale: 1, opacity: 1, duration: 1, ease: "power2.out" }
+          );
 
-        gsap.fromTo(
-          [headingRef.current, linksRef.current],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, stagger: 0.15, duration: 0.8, ease: "power3.out" }
-        );
-      } else {
-        // Background Parallax
-        gsap.fromTo(
-          giantTextRef.current,
-          { y: "10vh", scale: 0.8, opacity: 0 },
-          {
-            y: "0vh",
-            scale: 1,
-            opacity: 1,
-            ease: "power1.out",
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: "top 80%",
-              end: "bottom bottom",
-              scrub: 1,
-            },
-          }
-        );
+          gsap.fromTo(
+            [headingRef.current, linksRef.current],
+            { y: 30, opacity: 0 },
+            { y: 0, opacity: 1, stagger: 0.15, duration: 0.8, ease: "power3.out" }
+          );
+        } else {
+          // Background Parallax
+          gsap.fromTo(
+            giantTextRef.current,
+            { y: "10vh", scale: 0.8, opacity: 0 },
+            {
+              y: "0vh",
+              scale: 1,
+              opacity: 1,
+              ease: "power1.out",
+              scrollTrigger: {
+                trigger: wrapperRef.current,
+                start: "top 80%",
+                end: "bottom bottom",
+                scrub: 1,
+              },
+            }
+          );
 
-        // Staggered Content Reveal
-        gsap.fromTo(
-          [headingRef.current, linksRef.current],
-          { y: 50, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            stagger: 0.15,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: wrapperRef.current,
-              start: "top 40%",
-              end: "bottom bottom",
-              scrub: 1,
-            },
-          }
-        );
-      }
-    }, wrapperRef);
+          // Staggered Content Reveal
+          gsap.fromTo(
+            [headingRef.current, linksRef.current],
+            { y: 50, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              stagger: 0.15,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: wrapperRef.current,
+                start: "top 40%",
+                end: "bottom bottom",
+                scrub: 1,
+              },
+            }
+          );
+        }
+      }, wrapperRef);
 
-    return () => ctx.revert();
+      return () => ctx.revert();
+    }
   }, [isOnePage]);
 
   const footerContent = (
@@ -384,7 +354,7 @@ export function CinematicFooter({
       {/* Giant background text at bottom */}
       <div
         ref={giantTextRef}
-        className="footer-giant-bg-text absolute -bottom-[5vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none"
+        className="footer-giant-bg-text absolute -bottom-[4vh] sm:-bottom-[5vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none text-center"
       >
         {giantText}
       </div>
@@ -401,9 +371,23 @@ export function CinematicFooter({
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 mt-16 sm:mt-20 w-full max-w-5xl mx-auto">
         <h2
           ref={headingRef}
-          className="text-5xl sm:text-7xl md:text-8xl font-black footer-text-glow tracking-tighter mb-10 sm:mb-12 text-center"
+          className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-10 sm:mb-12 text-center leading-[1.08]"
         >
-          {headingText}
+          {heading ? (
+            heading
+          ) : (
+            <>
+              <span className="block footer-text-glow">
+                Ubah Akun Gmail
+              </span>
+              <span className="block mt-1 sm:mt-2">
+                <span className="footer-text-glow mr-3 sm:mr-4">Jadi</span>
+                <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
+                  Penghasilan
+                </span>
+              </span>
+            </>
+          )}
         </h2>
 
         {/* Interactive Magnetic Pills Layout */}
@@ -436,65 +420,22 @@ export function CinematicFooter({
               <span>{pill2Text}</span>
             </MagneticButton>
           </div>
-
-          {/* Secondary Text Links */}
-          <div className="flex flex-wrap justify-center gap-3 md:gap-5 w-full mt-1">
-            <MagneticButton
-              as={handlePill3 ? "button" : "a"}
-              href={handlePill3 ? undefined : "#"}
-              onClick={handlePill3}
-              type={handlePill3 ? "button" : undefined}
-              className="footer-glass-pill px-6 py-3 rounded-full text-zinc-400 font-medium text-xs md:text-sm hover:text-white"
-            >
-              {pill3Text}
-            </MagneticButton>
-
-            <MagneticButton
-              as={onPill4Click ? "button" : "a"}
-              href={onPill4Click ? undefined : whatsappUrl}
-              target={onPill4Click ? undefined : "_blank"}
-              rel={onPill4Click ? undefined : "noopener noreferrer"}
-              onClick={onPill4Click}
-              type={onPill4Click ? "button" : undefined}
-              className="footer-glass-pill px-6 py-3 rounded-full text-zinc-400 font-medium text-xs md:text-sm hover:text-white"
-            >
-              {pill4Text}
-            </MagneticButton>
-
-            <MagneticButton
-              as={onPill5Click ? "button" : "a"}
-              href={onPill5Click ? undefined : supportUrl}
-              onClick={onPill5Click}
-              type={onPill5Click ? "button" : undefined}
-              className="footer-glass-pill px-6 py-3 rounded-full text-zinc-400 font-medium text-xs md:text-sm hover:text-white"
-            >
-              {pill5Text}
-            </MagneticButton>
-          </div>
         </div>
       </div>
 
       {/* 
-        3. Bottom Bar / Credits:
-        - Tombol menuju atas (scroll-to-top) SUDAH DIHILANGKAN
-        - Badge "Crafted with" dipindahkan ke sebelah KANAN menggantikan tombol menuju atas
-        - Copyright tetap di sebelah KIRI
+        3. Bottom Bar:
+        - Teks 2026 volvox di sebelah kiri sudah DIHAPUS
+        - Tombol menuju atas sudah DIHAPUS
+        - Badge "Crafted with ❤ by Winter" diposisikan di sebelah KANAN
       */}
-      <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
-        
-        {/* Copyright di sebelah KIRI */}
-        <div className="text-zinc-500 text-[10px] md:text-xs font-semibold tracking-widest uppercase text-center md:text-left">
-          {copyrightText}
-        </div>
-
-        {/* "Crafted with Love" Badge di sebelah KANAN menggantikan tombol menuju atas */}
+      <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex justify-end items-center">
         <div className="footer-glass-pill px-6 py-3 rounded-full flex items-center gap-2 cursor-default border-white/10 shadow-lg">
           <span className="text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">Crafted with</span>
           <span className="animate-footer-heartbeat text-sm md:text-base text-rose-500">❤</span>
           <span className="text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">by</span>
           <span className="text-white font-black text-xs md:text-sm tracking-normal ml-1">{craftedByText}</span>
         </div>
-
       </div>
     </footer>
   );

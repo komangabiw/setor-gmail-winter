@@ -38,18 +38,12 @@ export function LandingView({
       {/* 1 Page Dark Fullscreen View persis seperti screenshot */}
       <CinematicFooter
         singlePage={true}
-        headingText="Ready to begin?"
-        giantText="SOBERS"
+        giantText="SETOR GMAIL"
         pill1Text="Download iOS"
         pill2Text="Download Android"
-        pill3Text="Privacy Policy"
-        pill4Text="Terms of Service"
-        pill5Text="Support"
         onPill1Click={() => openAuth("register")}
         onPill2Click={() => openAuth("login")}
-        onPill3Click={() => setIsTutorialOpen(true)}
-        copyrightText="© 2026 VOLVOX. ALL RIGHTS RESERVED."
-        craftedByText="Volvox"
+        craftedByText="Winter"
       />
 
       {/* POPUP MODAL: Masuk & Daftar Akun */}
