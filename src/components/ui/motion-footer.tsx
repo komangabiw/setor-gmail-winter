@@ -259,12 +259,12 @@ MagneticButton.displayName = "MagneticButton";
 // -------------------------------------------------------------------------
 export const MarqueeItem = () => (
   <div className="flex items-center space-x-10 px-6">
-    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">-</span>
-    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">-</span>
-    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">-</span>
-    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">-</span>
-    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">-</span>
-    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
+    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
+    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
+    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
+    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
+    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
   </div>
 );
 
@@ -399,22 +399,24 @@ export function CinematicFooter({
               </span>
             </div>
 
-            {/* Headline: 2 Baris dengan highlight warna berbeda */}
+            {/* Headline: Ubah Akun / Gmail Jadi / Penghasilan */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6">
               <span className="block footer-text-glow">
-                Ubah Akun Gmail
+                Ubah Akun
               </span>
-              <span className="block mt-1 sm:mt-2">
-                <span className="footer-text-glow mr-3 sm:mr-4">Jadi</span>
-                <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
-                  Penghasilan
-                </span>
+              <span className="block footer-text-glow mt-1 sm:mt-2">
+                Gmail Jadi
+              </span>
+              <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
+                Penghasilan
               </span>
             </h1>
 
-            {/* Subtitle Ringkas */}
+            {/* Subtitle */}
             <p className="text-sm sm:text-base text-zinc-400 max-w-lg mb-8 leading-relaxed">
-              Tukar akun Gmail Anda menjadi saldo dompet digital instan. Pencairan kilat 1-2 menit via DANA, GoPay, dan OVO.
+              Buat akun Gmail dan tukar menjadi saldo
+              <br className="hidden sm:inline" />
+              {" "}Pencairan instan via E-wallet dan Bank
             </p>
 
             {/* Tombol Action: Login dan Daftar */}
@@ -449,16 +451,16 @@ export function CinematicFooter({
           <div ref={heroRightRef} className="lg:col-span-6 relative flex items-center justify-center py-8">
             <div className="relative w-full max-w-md">
               
-              {/* Center Main Card: Setoran Gmail Pro */}
+              {/* Center Main Card: Setor Gmail */}
               <div className="floating-showcase-card rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center relative z-10">
                 <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30">
                   <Mail className="size-8 stroke-[2.2]" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  Setoran Gmail Pro
+                  Setor Gmail
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 max-w-xs">
-                  Platform setoran email terpercaya &amp; transparan
+                  Platform setor gmail tercepat &amp; terpercaya
                 </p>
                 <div className="mt-5 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-1 text-xs font-bold text-emerald-300">
                   <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -466,33 +468,33 @@ export function CinematicFooter({
                 </div>
               </div>
 
-              {/* 4 FLOATING CARDS (Sesuai Gambar Referensi) */}
-              {/* 1. Kiri Atas: Cair 1-2 Menit | DANA • GoPay • OVO */}
+              {/* 4 FLOATING CARDS */}
+              {/* 1. Kiri Atas: Cair Instan | E-wallet dan Bank */}
               <div className="animate-float-1 absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
                   <Zap className="size-5 fill-amber-400" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
-                    Cair 1-2 Menit
+                    Cair Instan
                   </div>
                   <div className="text-[10px] sm:text-[11px] font-semibold text-zinc-400">
-                    DANA • GoPay • OVO
+                    E-wallet dan Bank
                   </div>
                 </div>
               </div>
 
-              {/* 2. Kanan Atas: Rp 250.000 Cair | 2 menit lalu */}
+              {/* 2. Kanan Atas: Rp 90.000 Cair | 3 menit lalu */}
               <div className="animate-float-2 absolute -top-6 -right-4 sm:-top-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
                   <Banknote className="size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
-                    Rp 250.000 Cair
+                    Rp 90.000 Cair
                   </div>
                   <div className="text-[10px] sm:text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                    <Clock className="size-3" /> 2 menit lalu
+                    <Clock className="size-3" /> 3 menit lalu
                   </div>
                 </div>
               </div>
@@ -512,14 +514,14 @@ export function CinematicFooter({
                 </div>
               </div>
 
-              {/* 4. Kanan Bawah: 1.2K Member | Aktif sekarang */}
+              {/* 4. Kanan Bawah: 3.5K Member | Aktif sekarang */}
               <div className="animate-float-1 absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-xs">
                   <Users className="size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
-                    1.2K Member
+                    3.5K Member
                   </div>
                   <div className="text-[10px] sm:text-[11px] font-semibold text-purple-400">
                     Aktif sekarang
