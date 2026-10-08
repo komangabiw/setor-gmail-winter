@@ -5,6 +5,16 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
+import {
+  LogIn,
+  UserPlus,
+  Mail,
+  Zap,
+  Banknote,
+  ShieldCheck,
+  Users,
+  Clock,
+} from "lucide-react";
 
 // Register ScrollTrigger safely for React
 if (typeof window !== "undefined") {
@@ -21,7 +31,6 @@ const STYLES = `
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   
-  /* Dynamic Variables using standard shadcn/tailwind v4 dark tokens */
   --foreground: #f8fafc;
   --background: #09090b;
   --primary: #38bdf8;
@@ -54,10 +63,14 @@ const STYLES = `
   to { transform: translateX(-50%); }
 }
 
-@keyframes footer-heartbeat {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5)); }
-  15%, 45% { transform: scale(1.2); filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8)); }
-  30% { transform: scale(1); }
+@keyframes float-subtle-1 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(0.8deg); }
+}
+
+@keyframes float-subtle-2 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(7px) rotate(-0.8deg); }
 }
 
 .animate-footer-breathe {
@@ -65,32 +78,35 @@ const STYLES = `
 }
 
 .animate-footer-scroll-marquee {
-  animation: footer-scroll-marquee 40s linear infinite;
+  animation: footer-scroll-marquee 32s linear infinite;
   display: flex;
   width: max-content;
   will-change: transform;
 }
 
-.animate-footer-heartbeat {
-  animation: footer-heartbeat 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-  display: inline-block;
+.animate-float-1 {
+  animation: float-subtle-1 5s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-subtle-2 6s ease-in-out infinite;
 }
 
 /* Theme-adaptive Grid Background */
 .footer-bg-grid {
-  background-size: 60px 60px;
+  background-size: 56px 56px;
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
 }
 
 /* Theme-adaptive Aurora Glow */
 .footer-aurora {
   background: radial-gradient(
     circle at 50% 50%, 
-    rgba(56, 189, 248, 0.14) 0%, 
+    rgba(56, 189, 248, 0.15) 0%, 
     rgba(129, 140, 248, 0.1) 40%, 
     transparent 70%
   );
@@ -106,7 +122,7 @@ const STYLES = `
   border: 1px solid var(--pill-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   color: var(--foreground);
 }
 
@@ -121,13 +137,13 @@ const STYLES = `
 
 /* Giant Background Text Masking at Bottom */
 .footer-giant-bg-text {
-  font-size: clamp(3.2rem, 15vw, 13.5rem);
-  line-height: 0.8;
+  font-size: clamp(3.2rem, 15vw, 13rem);
+  line-height: 0.75;
   font-weight: 900;
   letter-spacing: -0.04em;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 65%);
   -webkit-background-clip: text;
   background-clip: text;
   pointer-events: none;
@@ -141,6 +157,22 @@ const STYLES = `
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0px 0px 24px rgba(255, 255, 255, 0.2));
+}
+
+/* Floating Card Theming */
+.floating-showcase-card {
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7);
+  transition: all 0.35s ease;
+}
+
+.floating-showcase-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 25px 50px -10px rgba(56, 189, 248, 0.18);
 }
 `;
 
@@ -157,51 +189,52 @@ export const MagneticButton = React.forwardRef<HTMLElement, MagneticButtonProps>
     const localRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
-      if (typeof window !== "undefined") return;
-      const element = localRef.current;
-      if (!element) return;
+      if (typeof window !== "undefined") {
+        const element = localRef.current;
+        if (!element) return;
 
-      const ctx = gsap.context(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-          const rect = element.getBoundingClientRect();
-          const h = rect.width / 2;
-          const w = rect.height / 2;
-          const x = e.clientX - rect.left - h;
-          const y = e.clientY - rect.top - w;
+        const ctx = gsap.context(() => {
+          const handleMouseMove = (e: MouseEvent) => {
+            const rect = element.getBoundingClientRect();
+            const h = rect.width / 2;
+            const w = rect.height / 2;
+            const x = e.clientX - rect.left - h;
+            const y = e.clientY - rect.top - w;
 
-          gsap.to(element, {
-            x: x * 0.4,
-            y: y * 0.4,
-            rotationX: -y * 0.15,
-            rotationY: x * 0.15,
-            scale: 1.05,
-            ease: "power2.out",
-            duration: 0.4,
-          });
-        };
+            gsap.to(element, {
+              x: x * 0.35,
+              y: y * 0.35,
+              rotationX: -y * 0.12,
+              rotationY: x * 0.12,
+              scale: 1.04,
+              ease: "power2.out",
+              duration: 0.35,
+            });
+          };
 
-        const handleMouseLeave = () => {
-          gsap.to(element, {
-            x: 0,
-            y: 0,
-            rotationX: 0,
-            rotationY: 0,
-            scale: 1,
-            ease: "elastic.out(1, 0.3)",
-            duration: 1.2,
-          });
-        };
+          const handleMouseLeave = () => {
+            gsap.to(element, {
+              x: 0,
+              y: 0,
+              rotationX: 0,
+              rotationY: 0,
+              scale: 1,
+              ease: "elastic.out(1, 0.3)",
+              duration: 1.1,
+            });
+          };
 
-        element.addEventListener("mousemove", handleMouseMove as any);
-        element.addEventListener("mouseleave", handleMouseLeave);
+          element.addEventListener("mousemove", handleMouseMove as any);
+          element.addEventListener("mouseleave", handleMouseLeave);
 
-        return () => {
-          element.removeEventListener("mousemove", handleMouseMove as any);
-          element.removeEventListener("mouseleave", handleMouseLeave);
-        };
-      }, element);
+          return () => {
+            element.removeEventListener("mousemove", handleMouseMove as any);
+            element.removeEventListener("mouseleave", handleMouseLeave);
+          };
+        }, element);
 
-      return () => ctx.revert();
+        return () => ctx.revert();
+      }
     }, []);
 
     return (
@@ -225,12 +258,13 @@ MagneticButton.displayName = "MagneticButton";
 // 3. MAIN COMPONENT
 // -------------------------------------------------------------------------
 export const MarqueeItem = () => (
-  <div className="flex items-center space-x-12 px-6">
-    <span>Accountability Redefined</span> <span className="text-primary/60">✦</span>
-    <span>Transparent Tracking</span> <span className="text-secondary/60">✦</span>
-    <span>12-Step Progress</span> <span className="text-primary/60">✦</span>
-    <span>Sponsor Connection</span> <span className="text-secondary/60">✦</span>
-    <span>Absolute Privacy</span> <span className="text-primary/60">✦</span>
+  <div className="flex items-center space-x-10 px-6">
+    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">-</span>
+    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">-</span>
   </div>
 );
 
@@ -239,19 +273,13 @@ export interface CinematicFooterProps {
   singlePage?: boolean;
   /** Legacy prop alias for singlePage */
   directReveal?: boolean;
-  /** Custom heading element or text */
-  heading?: React.ReactNode;
   /** Giant masked outline text placed at the bottom */
   giantText?: string;
-  /** Primary Pill 1 label */
-  pill1Text?: string;
-  /** Primary Pill 2 label */
-  pill2Text?: string;
-  /** Primary Pill 1 action */
+  /** Primary Pill 1 action (Login) */
   onPill1Click?: () => void;
-  /** Primary Pill 2 action */
+  /** Primary Pill 2 action (Daftar) */
   onPill2Click?: () => void;
-  /** Brand name for Crafted with badge (Right side) */
+  /** Creator brand text on bottom right */
   craftedByText?: string;
   /** Compatibility alias */
   onOpenRegister?: () => void;
@@ -262,10 +290,7 @@ export interface CinematicFooterProps {
 export function CinematicFooter({
   singlePage = false,
   directReveal = false,
-  heading,
   giantText = "SETOR GMAIL",
-  pill1Text = "Download iOS",
-  pill2Text = "Download Android",
   onPill1Click,
   onPill2Click,
   craftedByText = "Winter",
@@ -275,35 +300,42 @@ export function CinematicFooter({
   const isOnePage = singlePage || directReveal;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const linksRef = useRef<HTMLDivElement>(null);
+  const heroLeftRef = useRef<HTMLDivElement>(null);
+  const heroRightRef = useRef<HTMLDivElement>(null);
 
-  // Handle compatibility actions
-  const handlePill1 = onPill1Click || onOpenRegister;
-  const handlePill2 = onPill2Click || onOpenLogin;
+  const handleLogin = onPill1Click || onOpenLogin;
+  const handleRegister = onPill2Click || onOpenRegister;
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (!wrapperRef.current) return;
-
+    if (typeof window !== "undefined" && wrapperRef.current) {
       const ctx = gsap.context(() => {
         if (isOnePage) {
           gsap.fromTo(
             giantTextRef.current,
-            { y: "5vh", scale: 0.9, opacity: 0 },
-            { y: "0vh", scale: 1, opacity: 1, duration: 1, ease: "power2.out" }
+            { y: "4vh", scale: 0.92, opacity: 0 },
+            { y: "0vh", scale: 1, opacity: 1, duration: 1.2, ease: "power2.out" }
           );
 
-          gsap.fromTo(
-            [headingRef.current, linksRef.current],
-            { y: 30, opacity: 0 },
-            { y: 0, opacity: 1, stagger: 0.15, duration: 0.8, ease: "power3.out" }
-          );
+          if (heroLeftRef.current) {
+            gsap.fromTo(
+              heroLeftRef.current,
+              { x: -30, opacity: 0 },
+              { x: 0, opacity: 1, duration: 0.9, ease: "power3.out" }
+            );
+          }
+
+          if (heroRightRef.current) {
+            gsap.fromTo(
+              heroRightRef.current,
+              { x: 30, opacity: 0 },
+              { x: 0, opacity: 1, duration: 0.9, delay: 0.15, ease: "power3.out" }
+            );
+          }
         } else {
-          // Background Parallax
+          // Scroll-triggered animations
           gsap.fromTo(
             giantTextRef.current,
-            { y: "10vh", scale: 0.8, opacity: 0 },
+            { y: "8vh", scale: 0.85, opacity: 0 },
             {
               y: "0vh",
               scale: 1,
@@ -312,24 +344,6 @@ export function CinematicFooter({
               scrollTrigger: {
                 trigger: wrapperRef.current,
                 start: "top 80%",
-                end: "bottom bottom",
-                scrub: 1,
-              },
-            }
-          );
-
-          // Staggered Content Reveal
-          gsap.fromTo(
-            [headingRef.current, linksRef.current],
-            { y: 50, opacity: 0 },
-            {
-              y: 0,
-              opacity: 1,
-              stagger: 0.15,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: wrapperRef.current,
-                start: "top 40%",
                 end: "bottom bottom",
                 scrub: 1,
               },
@@ -348,35 +362,45 @@ export function CinematicFooter({
       isOnePage ? "relative" : "fixed bottom-0 left-0 h-screen"
     )}>
       {/* Ambient Light & Grid Background */}
-      <div className="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px] pointer-events-none z-0" />
+      <div className="footer-aurora absolute left-1/2 top-1/2 h-[65vh] w-[85vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[90px] pointer-events-none z-0" />
       <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
 
-      {/* Giant background text at bottom */}
+      {/* 
+        Giant background text at bottom:
+        Dinaikkan sedikit ke atas (-bottom-[1vh]), tapi tetap sebagian terpotong batas bawah.
+      */}
       <div
         ref={giantTextRef}
-        className="footer-giant-bg-text absolute -bottom-[4vh] sm:-bottom-[5vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none text-center"
+        className="footer-giant-bg-text absolute -bottom-[1.5vh] sm:-bottom-[2vh] left-1/2 -translate-x-1/2 whitespace-nowrap z-0 pointer-events-none select-none text-center"
       >
         {giantText}
       </div>
 
       {/* 1. Diagonal Sleek Marquee (Top of view) */}
-      <div className="absolute top-8 sm:top-12 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-3 sm:py-4 z-10 -rotate-2 scale-110 shadow-2xl">
-        <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.3em] text-zinc-400 uppercase">
+      <div className="absolute top-8 sm:top-12 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-3 sm:py-3.5 z-10 -rotate-2 scale-110 shadow-2xl">
+        <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.25em] text-zinc-300 uppercase">
           <MarqueeItem />
           <MarqueeItem />
         </div>
       </div>
 
-      {/* 2. Main Center Content */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 sm:px-6 mt-16 sm:mt-20 w-full max-w-5xl mx-auto">
-        <h2
-          ref={headingRef}
-          className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-10 sm:mb-12 text-center leading-[1.08]"
-        >
-          {heading ? (
-            heading
-          ) : (
-            <>
+      {/* 2. Main Center / Hero Content Area */}
+      <div className="relative z-10 flex flex-1 items-center justify-center px-6 sm:px-10 lg:px-16 pt-24 pb-16 w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
+          
+          {/* SISI KIRI: Headline & Tombol Action (Login & Daftar) */}
+          <div ref={heroLeftRef} className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left">
+            
+            {/* Top Micro-Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-950/40 px-4 py-1.5 backdrop-blur-md mb-6 shadow-sm">
+              <span className="size-2 rounded-full bg-sky-400 animate-ping" />
+              <span className="text-xs font-bold text-sky-300 tracking-wide">
+                Platform Setor Gmail Terpercaya 2026
+              </span>
+            </div>
+
+            {/* Headline: 2 Baris dengan highlight warna berbeda */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6">
               <span className="block footer-text-glow">
                 Ubah Akun Gmail
               </span>
@@ -386,55 +410,138 @@ export function CinematicFooter({
                   Penghasilan
                 </span>
               </span>
-            </>
-          )}
-        </h2>
+            </h1>
 
-        {/* Interactive Magnetic Pills Layout */}
-        <div ref={linksRef} className="flex flex-col items-center gap-5 sm:gap-6 w-full">
-          {/* Primary Action Pills */}
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 w-full">
-            <MagneticButton
-              as={handlePill1 ? "button" : "a"}
-              href={handlePill1 ? undefined : "#"}
-              onClick={handlePill1}
-              type={handlePill1 ? "button" : undefined}
-              className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-sm md:text-base flex items-center gap-3 group"
-            >
-              <svg className="w-5 sm:w-6 h-5 sm:h-6 text-zinc-400 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.04 2.26-.79 3.59-.76 1.56.04 2.87.67 3.55 1.76-3.13 1.77-2.62 5.92.35 7.14-.65 1.58-1.57 3.1-2.57 4.03zm-3.21-14.7c-.55 1.4-1.89 2.37-3.25 2.28.09-1.5 1.05-2.82 2.38-3.4 1.25-.57 2.66-.41 3.25.04-.15.35-.26.72-.38 1.08z" />
-              </svg>
-              <span>{pill1Text}</span>
-            </MagneticButton>
-            
-            <MagneticButton
-              as={handlePill2 ? "button" : "a"}
-              href={handlePill2 ? undefined : "#"}
-              onClick={handlePill2}
-              type={handlePill2 ? "button" : undefined}
-              className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-sm md:text-base flex items-center gap-3 group"
-            >
-              <svg className="w-5 sm:w-6 h-5 sm:h-6 text-zinc-400 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0222 3.503C15.5902 8.242 13.8533 7.85 12 7.85c-1.8533 0-3.5902.392-5.1369 1.1004L4.841 5.4475a.416.416 0 00-.5676-.1521.416.416 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3436-4.1021-2.6893-7.5743-6.1185-9.4396" />
-              </svg>
-              <span>{pill2Text}</span>
-            </MagneticButton>
+            {/* Subtitle Ringkas */}
+            <p className="text-sm sm:text-base text-zinc-400 max-w-lg mb-8 leading-relaxed">
+              Tukar akun Gmail Anda menjadi saldo dompet digital instan. Pencairan kilat 1-2 menit via DANA, GoPay, dan OVO.
+            </p>
+
+            {/* Tombol Action: Login dan Daftar */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 w-full">
+              {/* Tombol Login */}
+              <MagneticButton
+                as={handleLogin ? "button" : "a"}
+                href={handleLogin ? undefined : "#login"}
+                onClick={handleLogin}
+                type={handleLogin ? "button" : undefined}
+                className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-4.5 rounded-full font-bold text-sm sm:text-base flex items-center gap-3 group border-white/10 hover:border-sky-400/40"
+              >
+                <LogIn className="w-5 h-5 text-sky-400 group-hover:text-white transition-colors" />
+                <span>Login</span>
+              </MagneticButton>
+
+              {/* Tombol Daftar */}
+              <MagneticButton
+                as={handleRegister ? "button" : "a"}
+                href={handleRegister ? undefined : "#daftar"}
+                onClick={handleRegister}
+                type={handleRegister ? "button" : undefined}
+                className="footer-glass-pill px-8 sm:px-10 py-4 sm:py-4.5 rounded-full font-bold text-sm sm:text-base flex items-center gap-3 group border-white/10 hover:border-emerald-400/40"
+              >
+                <UserPlus className="w-5 h-5 text-emerald-400 group-hover:text-white transition-colors" />
+                <span>Daftar</span>
+              </MagneticButton>
+            </div>
           </div>
+
+          {/* SISI KANAN / BESIDE: Showcase & Floating Cards persis sesuai gambar referensi */}
+          <div ref={heroRightRef} className="lg:col-span-6 relative flex items-center justify-center py-8">
+            <div className="relative w-full max-w-md">
+              
+              {/* Center Main Card: Setoran Gmail Pro */}
+              <div className="floating-showcase-card rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center relative z-10">
+                <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/30">
+                  <Mail className="size-8 stroke-[2.2]" />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  Setoran Gmail Pro
+                </h3>
+                <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 max-w-xs">
+                  Platform setoran email terpercaya &amp; transparan
+                </p>
+                <div className="mt-5 flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/40 px-3.5 py-1 text-xs font-bold text-emerald-300">
+                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Server Aktif &amp; Siap Proses
+                </div>
+              </div>
+
+              {/* 4 FLOATING CARDS (Sesuai Gambar Referensi) */}
+              {/* 1. Kiri Atas: Cair 1-2 Menit | DANA • GoPay • OVO */}
+              <div className="animate-float-1 absolute -top-6 -left-4 sm:-top-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
+                  <Zap className="size-5 fill-amber-400" />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs sm:text-sm font-bold text-white">
+                    Cair 1-2 Menit
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-zinc-400">
+                    DANA • GoPay • OVO
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Kanan Atas: Rp 250.000 Cair | 2 menit lalu */}
+              <div className="animate-float-2 absolute -top-6 -right-4 sm:-top-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
+                  <Banknote className="size-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs sm:text-sm font-bold text-white">
+                    Rp 250.000 Cair
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <Clock className="size-3" /> 2 menit lalu
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Kiri Bawah: 100% Aman | SSL Terenkripsi */}
+              <div className="animate-float-2 absolute -bottom-6 -left-4 sm:-bottom-8 sm:-left-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs sm:text-sm font-bold text-white">
+                    100% Aman
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-zinc-400">
+                    SSL Terenkripsi
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Kanan Bawah: 1.2K Member | Aktif sekarang */}
+              <div className="animate-float-1 absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-8 z-20 floating-showcase-card rounded-2xl p-3 sm:p-3.5 flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-xs">
+                  <Users className="size-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs sm:text-sm font-bold text-white">
+                    1.2K Member
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-purple-400">
+                    Aktif sekarang
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
 
       {/* 
         3. Bottom Bar:
-        - Teks 2026 volvox di sebelah kiri sudah DIHAPUS
-        - Tombol menuju atas sudah DIHAPUS
-        - Badge "Crafted with ❤ by Winter" diposisikan di sebelah KANAN
+        - Teks copyright sebelah kiri SUDAH DIHAPUS
+        - Badge diubah menjadi "Crafted by Winter" dan diposisikan di sebelah KANAN
       */}
       <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex justify-end items-center">
-        <div className="footer-glass-pill px-6 py-3 rounded-full flex items-center gap-2 cursor-default border-white/10 shadow-lg">
-          <span className="text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">Crafted with</span>
-          <span className="animate-footer-heartbeat text-sm md:text-base text-rose-500">❤</span>
-          <span className="text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">by</span>
-          <span className="text-white font-black text-xs md:text-sm tracking-normal ml-1">{craftedByText}</span>
+        <div className="footer-glass-pill px-6 py-2.5 rounded-full flex items-center gap-1.5 cursor-default border-white/10 shadow-lg">
+          <span className="text-zinc-400 text-[10px] md:text-xs font-semibold uppercase tracking-wider">Crafted by</span>
+          <span className="text-white font-black text-xs md:text-sm tracking-normal ml-0.5">{craftedByText}</span>
         </div>
       </div>
     </footer>

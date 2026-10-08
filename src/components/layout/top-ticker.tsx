@@ -10,42 +10,19 @@ interface TopTickerProps {
 export function TopTicker({ className }: TopTickerProps) {
   const tickerItems = (
     <>
-      <span className="text-white font-extrabold">PLATFORM SETOR GMAIL #1</span>
-      <span className="text-sky-400 font-black">✦</span>
+      <span className="text-white font-extrabold">Pencairan Instan</span>
+      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-emerald-400 font-extrabold">Admin Support 24/7</span>
+      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-cyan-300 font-extrabold">Verifikasi Cepat</span>
+      <span className="text-sky-400 font-bold">-</span>
 
-      <span className="text-emerald-400 font-extrabold">PENCAIRAN KILAT 1-2 MENIT</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span>HARGA TERBAIK RP 4.500 / AKUN</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span className="text-white font-extrabold">100% AMAN &amp; TERPERCAYA</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span className="text-emerald-300">DUKUNGAN 24/7 ONLINE</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span className="text-purple-300">BONUS REFERRAL RP 150 / AKUN</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span>ACCOUNTABILITY REDEFINED</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span>ABSOLUTE PRIVACY</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <span>TRANSPARENT TRACKING</span>
-      <span className="text-sky-400 font-black">✦</span>
-
-      <a
-        href="https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sky-400 hover:text-sky-300 transition-colors underline-offset-4 hover:underline"
-      >
-        SALURAN WHATSAPP RESMI WINTER
-      </a>
-      <span className="text-sky-400 font-black">✦</span>
+      <span className="text-white font-extrabold">Pencairan Instan</span>
+      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-emerald-400 font-extrabold">Admin Support 24/7</span>
+      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-cyan-300 font-extrabold">Verifikasi Cepat</span>
+      <span className="text-sky-400 font-bold">-</span>
     </>
   );
 

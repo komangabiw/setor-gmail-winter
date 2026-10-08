@@ -35,14 +35,12 @@ export function LandingView({
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[#09090b] text-[#f8fafc] select-none">
-      {/* 1 Page Dark Fullscreen View persis seperti screenshot */}
+      {/* 1 Page Dark Fullscreen View */}
       <CinematicFooter
         singlePage={true}
         giantText="SETOR GMAIL"
-        pill1Text="Download iOS"
-        pill2Text="Download Android"
-        onPill1Click={() => openAuth("register")}
-        onPill2Click={() => openAuth("login")}
+        onPill1Click={() => openAuth("login")}
+        onPill2Click={() => openAuth("register")}
         craftedByText="Winter"
       />
 
