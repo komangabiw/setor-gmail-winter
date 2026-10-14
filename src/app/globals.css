@@ -1,4 +1,18 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-destructive-foreground: oklch(1 0 0);
+  --color-color-destructive-foreground: var(----color-destructive-foreground);
+}
+
+:root {
+  --destructive-foreground: oklch(1 0 0);
+}
+
+.dark {
+  --destructive-foreground: oklch(1 0 0);
+}
 
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -24,12 +38,12 @@
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
 
-  --color-ink-400: #94a3b8;
-  --color-ink-500: #64748b;
-  --color-ink-600: #475569;
-  --color-ink-700: #334155;
-  --color-ink-800: #1e293b;
-  --color-ink-900: #0f172a;
+  --color-ink-400: #64748b;
+  --color-ink-500: #94a3b8;
+  --color-ink-600: #cbd5e1;
+  --color-ink-700: #e2e8f0;
+  --color-ink-800: #f1f5f9;
+  --color-ink-900: #ffffff;
 
   --radius-4xl: 2rem;
 
@@ -163,18 +177,14 @@
   }
 
   body {
-    /* Page background: soft light-blue gradient (#E0F2FE -> #FFFFFF).
-       Applied on <body> so it spans the full viewport on wide screens,
-       not just the centred content column. */
-    background-color: #f0f9ff;
-    background-image: linear-gradient(
-      180deg,
-      #e0f2fe 0%,
-      #f0f9ff 38%,
-      #ffffff 78%
-    );
+    background-color: #09090b;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 56px 56px, 56px 56px;
     background-attachment: fixed;
-    color: var(--color-ink-800);
+    color: #f8fafc;
     font-family: var(--font-sans);
     overscroll-behavior-y: none;
   }
@@ -197,16 +207,24 @@
 }
 
 @layer components {
-  /* Page background: soft light-blue gradient (#E0F2FE -> #FFFFFF) */
+  /* Page background: dark #09090b with grid */
   .app-bg {
-    background-image: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 38%, #ffffff 78%);
+    background-color: #09090b;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 56px 56px, 56px 56px;
     background-attachment: fixed;
   }
 
   .card {
     border-radius: 1.5rem;
-    background-color: #ffffff;
-    box-shadow: var(--shadow-card);
+    background-color: rgba(18, 18, 21, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   }
 
   .card-hover {

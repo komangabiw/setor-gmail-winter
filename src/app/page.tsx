@@ -97,8 +97,8 @@ export default function HomePage() {
 
   if (isAuthenticated === null) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-sky-50/60 to-white">
-        <Loader2 className="size-8 animate-spin text-sky-600" />
+      <div className="flex min-h-dvh items-center justify-center bg-[#09090b]">
+        <Loader2 className="size-8 animate-spin text-sky-400" />
       </div>
     );
   }

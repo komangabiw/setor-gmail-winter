@@ -86,8 +86,8 @@ const REFERRAL_TABS: { value: ReferralTab; label: string; icon: React.ReactNode 
 
 function BannerStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/15 px-2.5 py-2.5 text-center backdrop-blur-sm">
-      <dt className="text-[0.6rem] font-semibold tracking-wide text-white/70 uppercase">
+    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/10 px-2.5 py-2.5 text-center backdrop-blur-sm">
+      <dt className="text-[0.6rem] font-semibold tracking-wide text-zinc-400 uppercase">
         {label}
       </dt>
       <dd className="mt-0.5 text-[0.82rem] font-bold text-white tabular-nums md:text-[0.9rem]">
@@ -112,11 +112,11 @@ function CopyField({
 }) {
   return (
     <div className="space-y-1.5">
-      <span className="text-[0.78rem] font-medium text-ink-700">{label}</span>
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/60 p-2 pl-3.5">
-        <span className="shrink-0 text-ink-400">{icon}</span>
+      <span className="text-[0.78rem] font-medium text-zinc-300">{label}</span>
+      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 pl-3.5">
+        <span className="shrink-0 text-sky-400">{icon}</span>
         <span
-          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-ink-800 ${
+          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-white ${
             mono ? "font-mono tracking-widest" : ""
           }`}
           title={value}
@@ -309,21 +309,21 @@ export function ProfilView() {
       <div className="space-y-5 pt-4 sm:pt-6">
         {/* Card 1: Main Profile Card */}
         <Reveal delay={40}>
-          <section className="relative overflow-hidden rounded-3xl border border-sky-100/90 bg-white p-4.5 shadow-card sm:p-5.5">
+          <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#121217]/85 p-4.5 shadow-2xl backdrop-blur-xl sm:p-5.5">
             {/* Ambient subtle glow */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 size-72 rounded-full bg-gradient-to-b from-sky-200/30 via-sky-100/10 to-transparent blur-3xl"
+              className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 size-72 rounded-full bg-sky-500/10 blur-3xl"
             />
 
             {/* Header: Corner Kiri (Profil) & Corner Kanan (Keluar Akun) */}
             <div className="relative flex items-center justify-between">
               {/* Corner Kiri: Profil */}
               <div className="flex items-center gap-2">
-                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-sky-500 text-white shadow-xs">
+                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-xs">
                   <User className="size-3.5 stroke-[2.2]" />
                 </span>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Profil Akun</h3>
+                <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Profil Akun</h3>
               </div>
 
               {/* Corner Kanan: Keluar Akun */}
@@ -352,9 +352,9 @@ export function ProfilView() {
                   });
                   window.location.href = "/login";
                 }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/90 bg-rose-50/80 px-3 py-1 text-xs font-bold text-rose-600 shadow-2xs transition-all hover:bg-rose-100 active:scale-95 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-400 shadow-2xs transition-all hover:bg-rose-500/20 active:scale-95 cursor-pointer whitespace-nowrap"
               >
-                <LogOut className="size-3 text-rose-500" />
+                <LogOut className="size-3 text-rose-400" />
                 <span>Keluar Akun</span>
               </button>
             </div>
@@ -369,7 +369,7 @@ export function ProfilView() {
               ) : (
                 <>
                   {/* Avatar circle with image or initial fallback & camera button */}
-                  <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-200/60">
+                  <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-500/30">
                     {avatarImage ? (
                       <img
                         src={avatarImage}
@@ -388,14 +388,14 @@ export function ProfilView() {
                       onClick={() => fileInputRef.current?.click()}
                       aria-label="Upload foto profil"
                       title="Upload / ganti foto profil"
-                      className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-white bg-sky-500 text-white shadow-xs hover:bg-sky-600 active:scale-90 transition-all cursor-pointer"
+                      className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-[#121217] bg-sky-500 text-white shadow-xs hover:bg-sky-400 active:scale-90 transition-all cursor-pointer"
                     >
                       <Camera className="size-3" />
                     </button>
                   </div>
 
                   {/* Nama user */}
-                  <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                  <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-white">
                     {userProfile.name}
                   </h2>
 
@@ -404,17 +404,17 @@ export function ProfilView() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-2.5 py-0.5 text-[0.72rem] font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[0.72rem] font-semibold text-zinc-300 shadow-2xs transition-colors hover:bg-white/10 active:scale-95 cursor-pointer"
                       >
-                        <Camera className="size-3 text-sky-600" />
+                        <Camera className="size-3 text-sky-400" />
                         <span>Ganti Foto</span>
                       </button>
                       <button
                         type="button"
                         onClick={handleDeletePhoto}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-400 shadow-2xs transition-colors hover:bg-rose-500/20 active:scale-95 cursor-pointer"
                       >
-                        <Trash2 className="size-3 text-rose-500" />
+                        <Trash2 className="size-3 text-rose-400" />
                         <span>Hapus</span>
                       </button>
                     </div>
@@ -426,7 +426,7 @@ export function ProfilView() {
             {/* Info Grid: 3 Kolom Sejajar (UID, EMAIL, TANGGAL GABUNG) */}
             <div className="relative mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               {/* Kolom 1: UID Card */}
-              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+              <div className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/40 p-3 transition-colors hover:bg-white/5 hover:border-white/20">
                 {isLoading ? (
                   <div className="space-y-1.5 py-0.5 w-full">
                     <Skeleton className="h-2.5 w-20" />
@@ -435,13 +435,13 @@ export function ProfilView() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
-                        <KeyRound className="size-3 text-sky-500" />
+                      <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-zinc-400">
+                        <KeyRound className="size-3 text-sky-400" />
                         <span>UID</span>
                       </div>
                       <CopyValue value={userProfile.uid} />
                     </div>
-                    <p className="mt-1 break-all font-mono text-[11px] leading-relaxed font-semibold text-slate-800">
+                    <p className="mt-1 break-all font-mono text-[11px] leading-relaxed font-semibold text-white">
                       {userProfile.uid}
                     </p>
                   </>
@@ -449,7 +449,7 @@ export function ProfilView() {
               </div>
 
               {/* Kolom 2: Email Card */}
-              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+              <div className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/40 p-3 transition-colors hover:bg-white/5 hover:border-white/20">
                 {isLoading ? (
                   <div className="space-y-1.5 py-0.5 w-full">
                     <Skeleton className="h-2.5 w-24" />
@@ -457,11 +457,11 @@ export function ProfilView() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
-                      <Mail className="size-3 text-sky-500" />
+                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-zinc-400">
+                      <Mail className="size-3 text-sky-400" />
                       <span>Email</span>
                     </div>
-                    <p className="mt-1 break-all text-[11px] sm:text-xs leading-relaxed font-semibold text-slate-800">
+                    <p className="mt-1 break-all text-[11px] sm:text-xs leading-relaxed font-semibold text-white">
                       {userProfile.email}
                     </p>
                   </>
@@ -469,7 +469,7 @@ export function ProfilView() {
               </div>
 
               {/* Kolom 3: Tanggal Bergabung */}
-              <div className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-colors hover:bg-sky-50/30 hover:border-sky-200">
+              <div className="flex flex-col justify-between rounded-xl border border-white/10 bg-black/40 p-3 transition-colors hover:bg-white/5 hover:border-white/20">
                 {isLoading ? (
                   <div className="space-y-1.5 py-0.5 w-full">
                     <Skeleton className="h-2.5 w-24" />
@@ -477,11 +477,11 @@ export function ProfilView() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-slate-500">
-                      <Calendar className="size-3 text-sky-500" />
+                    <div className="flex items-center gap-1.5 text-[0.68rem] font-semibold text-zinc-400">
+                      <Calendar className="size-3 text-sky-400" />
                       <span>Tanggal Bergabung</span>
                     </div>
-                    <p className="mt-1 text-[11px] sm:text-xs leading-relaxed font-semibold text-slate-800">
+                    <p className="mt-1 text-[11px] sm:text-xs leading-relaxed font-semibold text-white">
                       {userProfile.joinedAt || "-"}
                     </p>
                   </>
@@ -505,23 +505,23 @@ export function ProfilView() {
           />
 
           {/* Misi Referral: Gradient Mission Banner + Progress */}
-          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-sky-600 to-brand-700 p-5 shadow-card md:p-6">
+          <section className="relative overflow-hidden rounded-3xl border border-sky-500/30 bg-gradient-to-br from-[#121217]/95 via-sky-950/40 to-blue-950/50 p-5 shadow-2xl backdrop-blur-xl md:p-6">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-white/15 blur-3xl"
+              className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-sky-500/15 blur-3xl"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-white/10 blur-2xl"
+              className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-blue-500/10 blur-2xl"
             />
 
             <div className="relative space-y-4">
               <div className="flex items-start gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm">
                   <Gift className="size-5" strokeWidth={2.2} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[0.66rem] font-bold tracking-[0.16em] text-white/75 uppercase">
+                  <p className="text-[0.66rem] font-bold tracking-[0.16em] text-sky-300/80 uppercase">
                     {mission.headline}
                   </p>
                   <h2 className="mt-1 text-base leading-snug font-bold tracking-tight text-white sm:text-lg">
@@ -538,10 +538,10 @@ export function ProfilView() {
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-label="Progres misi referral"
-                  className="h-2.5 w-full overflow-hidden rounded-full bg-white/25"
+                  className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
                 >
                   <div
-                    className="h-full rounded-full bg-white transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                     style={{ width: `${Math.max(progress, 4)}%` }}
                   />
                 </div>
@@ -577,9 +577,9 @@ export function ProfilView() {
           {/* Kode Referral & Link Undangan */}
           <Card>
             <CardContent className="space-y-3.5 p-4 sm:p-5 md:p-6">
-              <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/70 p-3.5">
-                <Info className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden="true" />
-                <p className="text-[0.73rem] leading-relaxed text-sky-900">
+              <div className="flex items-start gap-2.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3.5">
+                <Info className="mt-0.5 size-4 shrink-0 text-sky-400" aria-hidden="true" />
+                <p className="text-[0.73rem] leading-relaxed text-sky-300">
                   {mission.requirement}
                 </p>
               </div>

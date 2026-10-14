@@ -62,9 +62,9 @@ const transactionIcons: Record<TransactionRecord["type"], LucideIcon> = {
 };
 
 const transactionTones: Record<TransactionRecord["type"], string> = {
-  deposit: "bg-emerald-50 text-emerald-600",
-  withdrawal: "bg-rose-50 text-rose-600",
-  bonus: "bg-amber-50 text-amber-600",
+  deposit: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  withdrawal: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+  bonus: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
 };
 
 type TabValue = "penarikan" | "transaksi";
@@ -82,7 +82,7 @@ function WithdrawalRow({ record, index }: { record: WithdrawalRecord; index: num
 
   return (
     <div
-      className="animate-fade-up flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-sky-50/50 sm:gap-4 sm:px-5 md:px-6 md:py-4"
+      className="animate-fade-up flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-white/5 sm:gap-4 sm:px-5 md:px-6 md:py-4"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <span
@@ -96,15 +96,15 @@ function WithdrawalRow({ record, index }: { record: WithdrawalRecord; index: num
         {config.name}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.82rem] font-bold text-ink-900">
+        <p className="truncate text-[0.82rem] font-bold text-white">
           Penarikan {config.name}
         </p>
-        <p className="mt-0.5 truncate text-[0.7rem] text-ink-500 font-mono">
+        <p className="mt-0.5 truncate text-[0.7rem] text-zinc-400 font-mono">
           {record.accountNumber} · {formatDateTime(record.createdAt)}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="text-[0.85rem] font-bold tracking-tight text-rose-600 tabular-nums">
+        <span className="text-[0.85rem] font-bold tracking-tight text-rose-400 tabular-nums">
           -{formatIDR(record.amount)}
         </span>
         <StatusBadge
@@ -125,7 +125,7 @@ function TransactionRow({ record, index }: { record: TransactionRecord; index: n
 
   return (
     <div
-      className="animate-fade-up flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-sky-50/50 sm:gap-4 sm:px-5 md:px-6 md:py-4"
+      className="animate-fade-up flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-white/5 sm:gap-4 sm:px-5 md:px-6 md:py-4"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <span
@@ -137,15 +137,15 @@ function TransactionRow({ record, index }: { record: TransactionRecord; index: n
         <Icon className="size-4.5" strokeWidth={2.1} aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.82rem] font-semibold text-ink-800">{record.title}</p>
-        <p className="mt-0.5 truncate text-[0.7rem] text-ink-500">
+        <p className="truncate text-[0.82rem] font-semibold text-white">{record.title}</p>
+        <p className="mt-0.5 truncate text-[0.7rem] text-zinc-400">
           {record.description} · {formatDateTime(record.createdAt)}
         </p>
       </div>
       <span
         className={cn(
           "shrink-0 text-[0.85rem] font-bold tracking-tight tabular-nums",
-          isCredit ? "text-emerald-600" : "text-rose-600",
+          isCredit ? "text-emerald-400" : "text-rose-400",
         )}
       >
         {isCredit ? "+" : "-"}
@@ -277,7 +277,7 @@ export function SaldoView() {
         title="Saldo & Penarikan"
         subtitle="Kelola saldo, pilihan e-wallet penarikan, dan riwayat mutasi kamu."
         right={
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-card">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#121217]/80 border border-white/10 text-sky-400 shadow-card">
             <Wallet className="size-5" strokeWidth={2.2} aria-hidden="true" />
           </span>
         }
@@ -285,17 +285,17 @@ export function SaldoView() {
 
       {/* 1 Table / Card Terpadu: Saldo Saat Ini & Pilihan E-Wallet Penarikan */}
       <Reveal delay={40} className="w-full">
-        <Card className="relative overflow-hidden border border-slate-200/90 bg-white shadow-card rounded-3xl">
+        <Card className="relative overflow-hidden border border-white/10 bg-[#121217]/85 shadow-2xl backdrop-blur-xl rounded-3xl">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-gradient-to-br from-sky-100/70 to-brand-100/40 blur-3xl"
+            className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-sky-500/10 blur-3xl"
           />
 
           <div className="relative p-5 sm:p-6 md:p-7">
             {/* Baris Atas: Saldo Saat Ini & Tombol Tarik Saldo */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-5">
               <div>
-                <p className="text-[0.72rem] font-bold tracking-wider text-ink-500 uppercase">
+                <p className="text-[0.72rem] font-bold tracking-wider text-zinc-400 uppercase">
                   Saldo Saat Ini
                 </p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-3">
@@ -304,12 +304,12 @@ export function SaldoView() {
                       <Skeleton className="h-9 w-44 rounded-xl" />
                     </div>
                   ) : (
-                    <span className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-ink-900 tabular-nums leading-none">
+                    <span className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-white tabular-nums leading-none">
                       {formatIDR(wallet.balance)}
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/90 bg-sky-50/80 px-2.5 py-0.5 text-xs font-semibold text-sky-800">
-                    <Target className="size-3 text-sky-600" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-400">
+                    <Target className="size-3 text-sky-400" aria-hidden="true" />
                     Minimal Penarikan: {formatIDR(wallet.minimumWithdrawal)}
                   </span>
                 </div>
@@ -318,7 +318,7 @@ export function SaldoView() {
               <div>
                 <Button
                   size="lg"
-                  className="shadow-md shadow-sky-500/20 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl px-6 py-2.5 cursor-pointer"
+                  className="shadow-lg shadow-sky-500/25 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-2xl px-6 py-2.5 cursor-pointer"
                   onClick={() => setIsWithdrawModalOpen(true)}
                   leftIcon={<ArrowUpRight className="size-4" aria-hidden="true" />}
                 >
@@ -331,15 +331,15 @@ export function SaldoView() {
             <form onSubmit={handleSave} className="mt-5 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="flex size-6 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                  <span className="flex size-6 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
                     <Smartphone className="size-3.5" aria-hidden="true" />
                   </span>
-                  <label className="text-xs sm:text-sm font-bold text-ink-900">
+                  <label className="text-xs sm:text-sm font-bold text-white">
                     Pilih E-Wallet
                   </label>
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/90 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-800 shadow-2xs">
-                  <span className="size-1.5 rounded-full bg-amber-500" />
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
+                  <span className="size-1.5 rounded-full bg-amber-400" />
                   Gopay dan Ovo pajak transfer 1000
                 </span>
               </div>
@@ -379,7 +379,7 @@ export function SaldoView() {
                   <div className="flex items-center gap-2 flex-1">
                     {/* Hanya Logo Indo tanpa +62 */}
                     <div
-                      className="flex items-center justify-center size-10.5 bg-slate-50 border border-slate-200 rounded-xl shrink-0 select-none shadow-2xs"
+                      className="flex items-center justify-center size-10.5 bg-black/30 border border-white/10 rounded-xl shrink-0 select-none shadow-2xs"
                       title="Indonesia"
                     >
                       <IndonesiaFlag className="w-5.5 h-3.5" />
@@ -397,8 +397,8 @@ export function SaldoView() {
                         onChange={handlePhoneChange}
                         aria-invalid={hasStartedTyping && !phoneValid}
                         className={cn(
-                          "font-mono text-xs sm:text-sm h-10.5 rounded-xl border-slate-200",
-                          hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-200"
+                          "font-mono text-xs sm:text-sm h-10.5 rounded-xl border-white/10 bg-black/40 text-white placeholder:text-zinc-500 focus:border-sky-500/50",
+                          hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-400/20"
                         )}
                       />
                     </div>
@@ -419,8 +419,8 @@ export function SaldoView() {
                     className={cn(
                       "shrink-0 h-10.5 font-bold rounded-xl px-5 text-xs sm:text-sm cursor-pointer transition-all",
                       isSaved
-                        ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20 active:scale-98"
-                        : "border-slate-200"
+                        ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 active:scale-98"
+                        : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
                     {isSaved ? `Nomor ${config.name} Tersimpan` : `Simpan Akun ${config.name}`}
@@ -429,24 +429,24 @@ export function SaldoView() {
 
                 {/* Notifikasi Real-time Validasi Format Nomor */}
                 {isPrefixInvalid && (
-                  <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+                  <p className="mt-1.5 text-[0.72rem] text-rose-400 font-semibold flex items-center gap-1.5">
                     <AlertCircle className="size-3.5 shrink-0" />
                     Angka depan harus diawali 08
                   </p>
                 )}
                 {isTooShort && (
-                  <p className="mt-1.5 text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
+                  <p className="mt-1.5 text-[0.72rem] text-amber-400 font-semibold flex items-center gap-1.5">
                     <AlertTriangle className="size-3.5 shrink-0" />
                     Nomor kurang dari 10 digit (saat ini {currentNumber.length} digit, minimal 10 digit)
                   </p>
                 )}
                 {phoneValid && (
-                  <p className="mt-1.5 text-[0.68rem] text-emerald-600 font-semibold flex items-center gap-1">
+                  <p className="mt-1.5 text-[0.68rem] text-emerald-400 font-semibold flex items-center gap-1">
                     <CircleCheck className="size-3" /> {isSaved ? `Nomor akun ${config.name} valid dan tersimpan.` : `Format nomor ${config.name} valid (${currentNumber.length} digit).`}
                   </p>
                 )}
                 {!hasStartedTyping && (
-                  <p className="mt-1.5 text-[0.7rem] text-ink-500">
+                  <p className="mt-1.5 text-[0.7rem] text-zinc-400">
                     Nomor akun {config.name} harus diawali 08 dan memiliki 10–13 digit angka.
                   </p>
                 )}
@@ -458,7 +458,7 @@ export function SaldoView() {
 
       {/* Tabs + tables */}
       <Reveal delay={190} className="mt-5">
-        <div className="flex gap-1 rounded-full bg-sky-100/70 p-1 md:gap-1.5 md:p-1.5">
+        <div className="flex gap-1 rounded-2xl bg-[#121217]/90 border border-white/10 p-1 md:gap-1.5 md:p-1.5">
           {tabs.map((item) => {
             const isActive = tab === item.value;
             return (
@@ -468,10 +468,10 @@ export function SaldoView() {
                 onClick={() => setTab(item.value)}
                 aria-pressed={isActive}
                 className={cn(
-                  "flex-1 rounded-full px-3 py-2 text-[0.82rem] font-semibold transition-[background-color,color,box-shadow] duration-300 md:py-2.5 md:text-[0.88rem]",
+                  "flex-1 rounded-xl px-3 py-2 text-[0.82rem] font-semibold transition-[background-color,color,box-shadow] duration-300 md:py-2.5 md:text-[0.88rem]",
                   isActive
-                    ? "bg-white text-brand-700 shadow-[0_2px_8px_-2px_rgb(14_165_233/0.35)]"
-                    : "text-ink-500 hover:text-ink-700"
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
                 )}
               >
                 {item.label}
@@ -514,11 +514,11 @@ export function SaldoView() {
 function HistorySkeletonList({ title }: { title: string }) {
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
-        <p className="text-[0.8rem] font-semibold text-ink-800">{title}</p>
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-white">{title}</p>
         <Skeleton className="h-4 w-14 rounded-full" />
       </div>
-      <div className="divide-y divide-slate-100/90">
+      <div className="divide-y divide-white/10">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 md:px-6 md:py-4">
             <Skeleton className="size-10 rounded-xl shrink-0" />
@@ -550,13 +550,13 @@ function WithdrawalList({ items }: { items: WithdrawalRecord[] }) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
-        <p className="text-[0.8rem] font-semibold text-ink-800">Riwayat Penarikan</p>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.68rem] font-semibold text-ink-500 tabular-nums">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-white">Riwayat Penarikan</p>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.68rem] font-semibold text-zinc-300 tabular-nums">
           {items.length} data
         </span>
       </div>
-      <div className="divide-y divide-slate-100/90">
+      <div className="divide-y divide-white/10">
         {items.map((record, index) => (
           <WithdrawalRow key={record.id} record={record} index={index} />
         ))}
@@ -569,7 +569,7 @@ function TransactionList({ items }: { items: TransactionRecord[] }) {
   if (items.length === 0) {
     return (
       <EmptyState
-        icon={<ReceiptText className="size-7 text-sky-600" strokeWidth={1.8} aria-hidden="true" />}
+        icon={<ReceiptText className="size-7 text-sky-400" strokeWidth={1.8} aria-hidden="true" />}
         title="Belum ada transaksi"
         description="Semua aktivitas saldo akan tercatat di sini."
       />
@@ -578,13 +578,13 @@ function TransactionList({ items }: { items: TransactionRecord[] }) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
-        <p className="text-[0.8rem] font-semibold text-ink-800">Riwayat Transaksi</p>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.68rem] font-semibold text-ink-500 tabular-nums">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-white">Riwayat Transaksi</p>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[0.68rem] font-semibold text-zinc-300 tabular-nums">
           {items.length} data
         </span>
       </div>
-      <div className="divide-y divide-slate-100/90">
+      <div className="divide-y divide-white/10">
         {items.map((record, index) => (
           <TransactionRow key={record.id} record={record} index={index} />
         ))}

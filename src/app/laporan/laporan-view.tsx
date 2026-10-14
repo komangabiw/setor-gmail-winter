@@ -72,14 +72,14 @@ export function LaporanView() {
       <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-6">
         {/* Left: ticket list */}
         <Reveal delay={40} className="h-full">
-          <Card className="flex h-full min-h-[400px] flex-col">
+          <Card className="flex h-full min-h-[400px] flex-col border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-xl">
             <CardContent className="flex flex-1 flex-col gap-4 md:p-6">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-[0.7rem] font-bold tracking-[0.14em] text-ink-400 uppercase">
+                <h2 className="text-[0.7rem] font-bold tracking-[0.14em] text-zinc-400 uppercase">
                   Tiket Saya
                 </h2>
                 {reports.length > 0 && (
-                  <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[0.68rem] font-bold text-sky-700 tabular-nums">
+                  <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 text-[0.68rem] font-bold text-sky-400 tabular-nums">
                     {reports.length}
                   </span>
                 )}
@@ -88,16 +88,16 @@ export function LaporanView() {
               {isTicketsLoading ? (
                 <div className="space-y-2.5">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border border-slate-200/90 bg-white p-3.5 space-y-2">
+                    <div key={i} className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <Skeleton className="h-4 w-36" />
-                        <Skeleton className="h-4 w-12 rounded-full" />
+                        <Skeleton className="h-4 w-36 bg-white/10" />
+                        <Skeleton className="h-4 w-12 rounded-full bg-white/10" />
                       </div>
-                      <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-3 w-3/4" />
+                      <Skeleton className="h-3 w-full bg-white/10" />
+                      <Skeleton className="h-3 w-3/4 bg-white/10" />
                       <div className="flex items-center gap-2 pt-1">
-                        <Skeleton className="h-2.5 w-16" />
-                        <Skeleton className="h-2.5 w-14" />
+                        <Skeleton className="h-2.5 w-16 bg-white/10" />
+                        <Skeleton className="h-2.5 w-14 bg-white/10" />
                       </div>
                     </div>
                   ))}
@@ -124,15 +124,15 @@ export function LaporanView() {
                           className={cn(
                             "group w-full rounded-2xl border p-3.5 text-left transition-[border-color,background-color,transform] duration-300 ease-out active:scale-[0.99]",
                             isActive
-                              ? "border-sky-300 bg-sky-50/80 shadow-sm"
-                              : "border-slate-200/90 bg-white hover:border-sky-200 hover:bg-sky-50/40",
+                              ? "border-sky-500/50 bg-sky-950/40 shadow-xs ring-1 ring-sky-500/30"
+                              : "border-white/10 bg-black/40 hover:border-white/20 hover:bg-white/5",
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <p
                               className={cn(
                                 "line-clamp-1 text-[0.85rem] font-semibold",
-                                isActive ? "text-sky-900" : "text-ink-800",
+                                isActive ? "text-sky-300 font-bold" : "text-zinc-200",
                               )}
                             >
                               {report.subject}
@@ -141,11 +141,11 @@ export function LaporanView() {
                               {meta.label}
                             </StatusBadge>
                           </div>
-                          <p className="mt-1 line-clamp-2 text-[0.73rem] leading-relaxed text-ink-500">
+                          <p className="mt-1 line-clamp-2 text-[0.73rem] leading-relaxed text-zinc-400">
                             {report.description}
                           </p>
-                          <div className="mt-2 flex items-center gap-2 text-[0.65rem] text-ink-400">
-                            <span className="font-mono">{report.code}</span>
+                          <div className="mt-2 flex items-center gap-2 text-[0.65rem] text-zinc-500">
+                            <span className="font-mono text-zinc-400">{report.code}</span>
                             <span aria-hidden="true">·</span>
                             <span>{report.category}</span>
                             <span aria-hidden="true">·</span>
@@ -163,23 +163,23 @@ export function LaporanView() {
 
         {/* Right: ticket detail */}
         <Reveal delay={90} className="h-full">
-          <Card className="flex h-full min-h-[400px] flex-col">
+          <Card className="flex h-full min-h-[400px] flex-col border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-xl">
             <CardContent className="flex flex-1 flex-col md:p-6">
               {isTicketsLoading ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Skeleton className="h-5 w-48" />
-                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-48 bg-white/10" />
+                    <Skeleton className="h-5 w-16 rounded-full bg-white/10" />
                   </div>
-                  <Skeleton className="h-3 w-36" />
+                  <Skeleton className="h-3 w-36 bg-white/10" />
                   <div className="space-y-2 pt-2">
-                    <Skeleton className="h-3.5 w-full" />
-                    <Skeleton className="h-3.5 w-5/6" />
-                    <Skeleton className="h-3.5 w-4/6" />
+                    <Skeleton className="h-3.5 w-full bg-white/10" />
+                    <Skeleton className="h-3.5 w-5/6 bg-white/10" />
+                    <Skeleton className="h-3.5 w-4/6 bg-white/10" />
                   </div>
-                  <div className="pt-6 border-t border-slate-100 space-y-3">
-                    <Skeleton className="h-16 w-3/4 rounded-2xl" />
-                    <Skeleton className="h-16 w-3/4 rounded-2xl ml-auto" />
+                  <div className="pt-6 border-t border-white/10 space-y-3">
+                    <Skeleton className="h-16 w-3/4 rounded-2xl bg-white/10" />
+                    <Skeleton className="h-16 w-3/4 rounded-2xl ml-auto bg-white/10" />
                   </div>
                 </div>
               ) : !selected ? (
@@ -193,7 +193,7 @@ export function LaporanView() {
                     <button
                       type="button"
                       onClick={() => setModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-sky-50 px-3.5 py-1.5 text-[0.78rem] font-semibold text-sky-700 transition-colors hover:bg-sky-100 active:scale-95"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3.5 py-1.5 text-[0.78rem] font-semibold text-sky-300 transition-colors hover:bg-sky-500/20 active:scale-95"
                     >
                       <Send className="size-3.5" />
                       Buat Laporan Baru
@@ -224,7 +224,7 @@ function TicketDetail({ ticket }: { ticket: ReportTicket }) {
     <div className="space-y-5">
       <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[1.02rem] leading-snug font-bold tracking-tight text-ink-900">
+          <h3 className="text-[1.02rem] leading-snug font-bold tracking-tight text-white">
             {ticket.subject}
           </h3>
           <StatusBadge tone={meta.tone} dot>
@@ -232,10 +232,10 @@ function TicketDetail({ ticket }: { ticket: ReportTicket }) {
           </StatusBadge>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem] text-ink-500">
-          <span className="font-mono font-semibold text-ink-600">{ticket.code}</span>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem] text-zinc-400">
+          <span className="font-mono font-semibold text-zinc-300">{ticket.code}</span>
           <span aria-hidden="true">·</span>
-          <span className="rounded-full bg-sky-50 px-2 py-0.5 font-semibold text-sky-700">
+          <span className="rounded-full bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 font-semibold text-sky-300">
             {ticket.category}
           </span>
           <span aria-hidden="true">·</span>
@@ -243,17 +243,17 @@ function TicketDetail({ ticket }: { ticket: ReportTicket }) {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-slate-50/80 p-4">
-        <p className="text-[0.68rem] font-bold tracking-[0.1em] text-ink-400 uppercase">
+      <div className="rounded-2xl bg-black/40 border border-white/10 p-4">
+        <p className="text-[0.68rem] font-bold tracking-[0.1em] text-zinc-400 uppercase">
           Deskripsi Masalah
         </p>
-        <p className="mt-1.5 text-[0.83rem] leading-relaxed whitespace-pre-wrap text-ink-700">
+        <p className="mt-1.5 text-[0.83rem] leading-relaxed whitespace-pre-wrap text-zinc-200">
           {ticket.description}
         </p>
         {ticket.attachmentName && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-            <Paperclip className="size-3.5 shrink-0 text-sky-500" aria-hidden="true" />
-            <span className="truncate text-[0.73rem] font-medium text-ink-700">
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+            <Paperclip className="size-3.5 shrink-0 text-sky-400" aria-hidden="true" />
+            <span className="truncate text-[0.73rem] font-medium text-zinc-200">
               {ticket.attachmentName}
             </span>
           </div>
@@ -261,15 +261,15 @@ function TicketDetail({ ticket }: { ticket: ReportTicket }) {
       </div>
 
       <div className="space-y-3">
-        <p className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-[0.1em] text-ink-400 uppercase">
+        <p className="flex items-center gap-1.5 text-[0.68rem] font-bold tracking-[0.1em] text-zinc-400 uppercase">
           <MessageCircle className="size-3.5" aria-hidden="true" />
           Balasan
         </p>
 
         {ticket.replies.length === 0 ? (
-          <div className="flex items-start gap-2.5 rounded-2xl border border-dashed border-slate-200 px-4 py-3.5">
-            <Clock className="mt-0.5 size-4 shrink-0 text-ink-300" aria-hidden="true" />
-            <p className="text-[0.76rem] leading-relaxed text-ink-500">
+          <div className="flex items-start gap-2.5 rounded-2xl border border-white/10 bg-black/40 px-4 py-3.5">
+            <Clock className="mt-0.5 size-4 shrink-0 text-zinc-400" aria-hidden="true" />
+            <p className="text-[0.76rem] leading-relaxed text-zinc-400">
               Belum ada balasan. Admin biasanya merespons dalam 1x24 jam.
             </p>
           </div>
@@ -281,19 +281,19 @@ function TicketDetail({ ticket }: { ticket: ReportTicket }) {
                 className={cn(
                   "rounded-2xl p-3.5",
                   reply.from === "admin"
-                    ? "border border-sky-200 bg-sky-50/70"
-                    : "border border-slate-200 bg-white",
+                    ? "border border-sky-500/30 bg-sky-950/40"
+                    : "border border-white/10 bg-black/40",
                 )}
               >
                 <div className="mb-1.5 flex items-center gap-2">
-                  <span className="text-[0.7rem] font-bold text-ink-700">
+                  <span className="text-[0.7rem] font-bold text-zinc-200">
                     {reply.from === "admin" ? "Admin" : "Kamu"}
                   </span>
-                  <span className="text-[0.65rem] text-ink-400">
+                  <span className="text-[0.65rem] text-zinc-400">
                     {formatDateTime(reply.createdAt)}
                   </span>
                 </div>
-                <p className="text-[0.79rem] leading-relaxed whitespace-pre-wrap text-ink-700">
+                <p className="text-[0.79rem] leading-relaxed whitespace-pre-wrap text-zinc-300">
                   {reply.body}
                 </p>
               </li>

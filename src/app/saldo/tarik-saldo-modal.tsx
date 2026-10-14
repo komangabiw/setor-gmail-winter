@@ -310,21 +310,21 @@ export function TarikSaldoModal({
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 md:px-6"
       >
         {/* Info Saldo & Input Penarikan Langsung di Saldo Tersedia */}
-        <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4 space-y-2.5">
+        <div className="rounded-2xl border border-sky-500/30 bg-sky-950/30 p-4 space-y-2.5 backdrop-blur-md">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[0.68rem] font-bold tracking-wider text-sky-700 uppercase">
+              <p className="text-[0.68rem] font-bold tracking-wider text-sky-400 uppercase">
                 Saldo Tersedia
               </p>
-              <p className="text-sm font-bold text-sky-600 tabular-nums">
+              <p className="text-sm font-bold text-sky-300 tabular-nums">
                 {formatIDR(balance)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[0.68rem] font-bold tracking-wider text-sky-700 uppercase">
+              <p className="text-[0.68rem] font-bold tracking-wider text-sky-400 uppercase">
                 Minimal Penarikan
               </p>
-              <p className="text-sm font-bold text-sky-600 tabular-nums">
+              <p className="text-sm font-bold text-sky-300 tabular-nums">
                 {formatIDR(minimum)}
               </p>
             </div>
@@ -334,7 +334,7 @@ export function TarikSaldoModal({
           <div className="flex items-center gap-2">
             <label
               htmlFor="tarik-saldo-input"
-              className="flex h-12 items-center justify-center px-3.5 rounded-2xl border border-sky-200/90 bg-white font-bold text-base text-sky-800 shadow-2xs select-none shrink-0 cursor-pointer"
+              className="flex h-12 items-center justify-center px-3.5 rounded-2xl border border-sky-500/30 bg-sky-500/10 font-bold text-base text-sky-300 shadow-2xs select-none shrink-0 cursor-pointer"
             >
               Rp
             </label>
@@ -347,8 +347,8 @@ export function TarikSaldoModal({
                 value={amountInput}
                 onChange={handleAmountChange}
                 className={cn(
-                  "font-black text-xl h-12 bg-white text-ink-900 tabular-nums border-sky-200/90 shadow-2xs focus:bg-white px-4",
-                  hasStartedAmount && !isAmountValid && "border-rose-400 focus-visible:ring-rose-200"
+                  "font-black text-xl h-12 bg-black/40 text-white tabular-nums border-white/10 shadow-2xs focus:bg-black/50 focus:border-sky-500/50 px-4",
+                  hasStartedAmount && !isAmountValid && "border-rose-500 focus-visible:ring-rose-500/30"
                 )}
               />
             </div>
@@ -356,7 +356,7 @@ export function TarikSaldoModal({
 
           {/* Quick preset chips: Tepat 3 pilihan (2 rekomendasi terbaik + 1 Semua) */}
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-            <span className="text-[0.68rem] text-ink-400 font-medium mr-0.5">Pilihan Cepat:</span>
+            <span className="text-[0.68rem] text-zinc-400 font-medium mr-0.5">Pilihan Cepat:</span>
             {presets.map((val) => {
               const isSelected = withdrawAmount === val;
               return (
@@ -367,8 +367,8 @@ export function TarikSaldoModal({
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
                     isSelected
-                      ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
-                      : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
+                      : "bg-white/5 text-zinc-300 border-white/10 hover:border-white/20 hover:bg-white/10"
                   )}
                 >
                   {formatIDR(val)}
@@ -381,8 +381,8 @@ export function TarikSaldoModal({
               className={cn(
                 "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
                 withdrawAmount === balance && balance > 0
-                  ? "bg-sky-500 text-white border-sky-500 shadow-2xs"
-                  : "bg-white text-ink-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50/50"
+                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
+                  : "bg-white/5 text-zinc-300 border-white/10 hover:border-white/20 hover:bg-white/10"
               )}
             >
               Semua ({formatIDR(balance)})
@@ -391,25 +391,25 @@ export function TarikSaldoModal({
 
           {/* Real-time Validation Helper */}
           {hasStartedAmount && isExceedingBalance && (
-            <p className="text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+            <p className="text-[0.72rem] text-rose-400 font-semibold flex items-center gap-1.5">
               <AlertCircle className="size-3.5 shrink-0" />
               Nominal melebihi saldo tersedia (maksimal {formatIDR(balance)})
             </p>
           )}
           {hasStartedAmount && isBelowMinimum && (
-            <p className="text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
+            <p className="text-[0.72rem] text-amber-400 font-semibold flex items-center gap-1.5">
               <AlertTriangle className="size-3.5 shrink-0" />
               Nominal minimal penarikan adalah {formatIDR(minimum)}
             </p>
           )}
           {hasStartedAmount && isExceedingMax && (
-            <p className="text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+            <p className="text-[0.72rem] text-rose-400 font-semibold flex items-center gap-1.5">
               <AlertCircle className="size-3.5 shrink-0" />
               Maksimal penarikan instan adalah Rp5.000.000
             </p>
           )}
           {!hasStartedAmount && (
-            <p className="text-[0.7rem] text-ink-500">
+            <p className="text-[0.7rem] text-zinc-400">
               {reached
                 ? "Saldo sudah mencukupi untuk melakukan penarikan."
                 : `Kurang ${formatIDR(remaining)} lagi untuk mencapai batas minimal penarikan.`}
@@ -420,11 +420,11 @@ export function TarikSaldoModal({
         {/* Pilihan E-Wallet */}
         <div>
           <div className="flex items-center justify-between mb-2 gap-2">
-            <label className="text-[0.76rem] font-bold text-ink-900">
+            <label className="text-[0.76rem] font-bold text-zinc-200">
               Pilih E-Wallet
             </label>
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200/90 bg-amber-50/90 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-800 shadow-2xs">
-              <span className="size-1.5 rounded-full bg-amber-500" />
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
+              <span className="size-1.5 rounded-full bg-amber-400" />
               Gopay dan Ovo dikenakan pajak transfer 1000
             </span>
           </div>
@@ -460,14 +460,14 @@ export function TarikSaldoModal({
         <div>
           <label
             htmlFor="tarik-ewallet-number"
-            className="block text-[0.78rem] font-bold text-ink-800 mb-1.5"
+            className="block text-[0.78rem] font-bold text-zinc-200 mb-1.5"
           >
             Nomor {config.name} Penerima
           </label>
           <div className="flex items-center gap-2">
             {/* Hanya Logo Indo tanpa +62 */}
             <div
-              className="flex items-center justify-center size-10 bg-slate-50 border border-slate-200 rounded-xl shrink-0 select-none shadow-2xs"
+              className="flex items-center justify-center size-10 bg-black/40 border border-white/10 rounded-xl shrink-0 select-none shadow-2xs"
               title="Indonesia"
             >
               <IndonesiaFlag className="w-5.5 h-3.5" />
@@ -482,8 +482,8 @@ export function TarikSaldoModal({
                 onChange={handleNumberChange}
                 maxLength={PHONE_MAX_LENGTH}
                 className={cn(
-                  "font-mono text-sm h-10",
-                  hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-200"
+                  "font-mono text-sm h-10 bg-black/40 text-white border-white/10",
+                  hasStartedTyping && !phoneValid && "border-rose-500 focus-visible:ring-rose-500/30"
                 )}
               />
             </div>
@@ -491,58 +491,58 @@ export function TarikSaldoModal({
 
           {/* Notifikasi Real-time Format Nomor Akun */}
           {isPrefixInvalid && (
-            <p className="mt-1.5 text-[0.72rem] text-rose-600 font-semibold flex items-center gap-1.5">
+            <p className="mt-1.5 text-[0.72rem] text-rose-400 font-semibold flex items-center gap-1.5">
               <AlertCircle className="size-3.5 shrink-0" />
               Angka depan harus diawali 08
             </p>
           )}
           {isTooShort && (
-            <p className="mt-1.5 text-[0.72rem] text-amber-600 font-semibold flex items-center gap-1.5">
+            <p className="mt-1.5 text-[0.72rem] text-amber-400 font-semibold flex items-center gap-1.5">
               <AlertTriangle className="size-3.5 shrink-0" />
               Nomor kurang dari 10 digit (saat ini {currentNumber.length} digit, minimal 10 digit)
             </p>
           )}
           {phoneValid && (
-            <p className="mt-1.5 text-[0.72rem] text-emerald-600 font-semibold flex items-center gap-1.5">
+            <p className="mt-1.5 text-[0.72rem] text-emerald-400 font-semibold flex items-center gap-1.5">
               <CheckCircle2 className="size-3.5 shrink-0" />
               Format nomor {config.name} sudah benar ({currentNumber.length} digit)
             </p>
           )}
           {!hasStartedTyping && (
-            <p className="mt-1.5 text-[0.7rem] text-ink-500">
+            <p className="mt-1.5 text-[0.7rem] text-zinc-400">
               Nomor akun {config.name} harus diawali 08 dan memiliki 10–13 digit angka.
             </p>
           )}
         </div>
 
         {/* Rincian Penarikan */}
-        <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-3.5 space-y-2 text-xs">
-          <p className="font-bold text-ink-900 border-b border-slate-200/70 pb-1.5">
+        <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2 text-xs">
+          <p className="font-bold text-white border-b border-white/10 pb-1.5">
             Rincian Penarikan
           </p>
-          <div className="flex justify-between text-ink-600">
+          <div className="flex justify-between text-zinc-400">
             <span>Metode Penarikan</span>
             <span className="font-bold" style={{ color: config.brandColor }}>
               {config.name}
             </span>
           </div>
-          <div className="flex justify-between text-ink-600">
+          <div className="flex justify-between text-zinc-400">
             <span>Saldo Ditarik</span>
-            <span className="font-semibold text-ink-900 tabular-nums">
+            <span className="font-semibold text-white tabular-nums">
               {formatIDR(withdrawAmount)}
             </span>
           </div>
           {taxFee > 0 && (
-            <div className="flex justify-between text-ink-600">
+            <div className="flex justify-between text-zinc-400">
               <span>Pajak Transfer</span>
-              <span className="font-semibold text-amber-600 tabular-nums">
+              <span className="font-semibold text-amber-400 tabular-nums">
                 -{formatIDR(taxFee)}
               </span>
             </div>
           )}
-          <div className="flex justify-between text-ink-900 font-bold border-t border-slate-200/70 pt-2 text-[0.84rem]">
+          <div className="flex justify-between text-white font-bold border-t border-white/10 pt-2 text-[0.84rem]">
             <span>Estimasi Diterima</span>
-            <span className="text-emerald-700 font-black tabular-nums">
+            <span className="text-emerald-400 font-black tabular-nums">
               {formatIDR(netAmount)}
             </span>
           </div>
@@ -555,6 +555,7 @@ export function TarikSaldoModal({
             variant="secondary"
             onClick={onClose}
             disabled={isLoading}
+            className="border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
           >
             Batal
           </Button>
@@ -571,8 +572,8 @@ export function TarikSaldoModal({
             className={cn(
               "font-semibold transition-all",
               canWithdraw
-                ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20 cursor-pointer active:scale-98"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-md shadow-sky-500/20 cursor-pointer active:scale-98"
+                : "bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed shadow-none"
             )}
           >
             {isLoading ? "Memproses..." : "Konfirmasi Tarik"}

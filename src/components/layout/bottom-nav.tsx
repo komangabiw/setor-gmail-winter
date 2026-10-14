@@ -36,7 +36,7 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
       aria-current={active ? "page" : undefined}
       className={cn(
         "group relative flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[0.62rem] font-semibold transition-colors duration-300 ease-out",
-        active ? "text-brand-600" : "text-ink-400 hover:text-ink-600",
+        active ? "text-sky-400" : "text-zinc-400 hover:text-zinc-200",
       )}
     >
       <span className="flex items-center justify-center">
@@ -93,7 +93,7 @@ export function BottomNav() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-1 rounded-[1.75rem] border border-white/70 bg-white/85 px-2 pt-2.5 pb-2 shadow-nav backdrop-blur-xl sm:gap-2 sm:px-3">
+          <div className="flex items-center gap-1 rounded-[1.75rem] border border-white/10 bg-[#121215]/90 px-2 pt-2.5 pb-2 shadow-2xl backdrop-blur-xl sm:gap-2 sm:px-3">
             {leftItems.map((item) => (
               <NavLink key={item.href} item={item} pathname={pathname} />
             ))}
@@ -107,7 +107,7 @@ export function BottomNav() {
               <span
                 className={cn(
                   "text-[0.62rem] font-semibold leading-none transition-colors duration-300",
-                  setorActive ? "text-brand-600" : "text-ink-400",
+                  setorActive ? "text-sky-400" : "text-zinc-400",
                 )}
               >
                 Setor

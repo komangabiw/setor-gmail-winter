@@ -53,23 +53,23 @@ export function ReferralView() {
 
       {/* Gradient mission banner + progress */}
       <Reveal delay={40}>
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-sky-600 to-brand-700 p-5 shadow-card md:p-6">
+        <section className="relative overflow-hidden rounded-3xl border border-sky-500/30 bg-gradient-to-br from-[#121217]/95 via-sky-950/40 to-blue-950/50 p-5 shadow-2xl backdrop-blur-xl md:p-6">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-white/15 blur-3xl"
+            className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-sky-500/15 blur-3xl"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-white/10 blur-2xl"
+            className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-blue-500/10 blur-2xl"
           />
 
           <div className="relative space-y-4">
             <div className="flex items-start gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm">
                 <Gift className="size-5" strokeWidth={2.2} aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p className="text-[0.66rem] font-bold tracking-[0.16em] text-white/75 uppercase">
+                <p className="text-[0.66rem] font-bold tracking-[0.16em] text-sky-300/80 uppercase">
                   {mission.headline}
                 </p>
                 <h2 className="mt-1 text-lg leading-snug font-bold tracking-tight text-white md:text-xl">
@@ -86,10 +86,10 @@ export function ReferralView() {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label="Progres misi referral"
-                className="h-2.5 w-full overflow-hidden rounded-full bg-white/25"
+                className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
               >
                 <div
-                  className="h-full rounded-full bg-white transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   style={{ width: `${Math.max(progress, 4)}%` }}
                 />
               </div>
@@ -132,9 +132,9 @@ export function ReferralView() {
       <Reveal delay={120} className="mt-4">
         <Card>
           <CardContent className="space-y-3.5 md:p-6">
-            <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/70 p-3.5">
-              <Info className="mt-0.5 size-4 shrink-0 text-sky-600" aria-hidden="true" />
-              <p className="text-[0.73rem] leading-relaxed text-sky-900">
+            <div className="flex items-start gap-2.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3.5">
+              <Info className="mt-0.5 size-4 shrink-0 text-sky-400" aria-hidden="true" />
+              <p className="text-[0.73rem] leading-relaxed text-sky-300">
                 {mission.requirement}
               </p>
             </div>
@@ -176,8 +176,8 @@ export function ReferralView() {
 
 function BannerStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/15 px-2.5 py-2.5 text-center backdrop-blur-sm">
-      <dt className="text-[0.6rem] font-semibold tracking-wide text-white/70 uppercase">
+    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/10 px-2.5 py-2.5 text-center backdrop-blur-sm">
+      <dt className="text-[0.6rem] font-semibold tracking-wide text-zinc-400 uppercase">
         {label}
       </dt>
       <dd className="mt-0.5 text-[0.82rem] font-bold text-white tabular-nums md:text-[0.9rem]">
@@ -202,11 +202,11 @@ function CopyField({
 }) {
   return (
     <div className="space-y-1.5">
-      <span className="text-[0.78rem] font-medium text-ink-700">{label}</span>
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/60 p-2 pl-3.5">
-        <span className="shrink-0 text-ink-400">{icon}</span>
+      <span className="text-[0.78rem] font-medium text-zinc-300">{label}</span>
+      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 pl-3.5">
+        <span className="shrink-0 text-sky-400">{icon}</span>
         <span
-          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-ink-800 ${
+          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-white ${
             mono ? "font-mono tracking-widest" : ""
           }`}
           title={value}

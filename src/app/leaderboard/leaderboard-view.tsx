@@ -22,22 +22,22 @@ const PODIUM_ORDER = [1, 0, 2] as const;
 
 const podiumStyles = {
   1: {
-    card: "order-1 mt-0 items-stretch sm:-mt-6 bg-gradient-to-b from-amber-50 to-white border-amber-200 shadow-lg shadow-amber-500/10",
-    avatar: "size-16 sm:size-20 ring-4 ring-amber-400 ring-offset-2 ring-offset-white",
-    name: "text-[0.82rem] sm:text-[0.95rem]",
-    revenue: "text-[0.95rem] sm:text-[1.15rem] text-amber-700",
+    card: "order-1 mt-0 items-stretch sm:-mt-6 bg-gradient-to-b from-amber-950/40 via-[#121217]/90 to-[#09090b]/95 border-amber-500/40 shadow-xl shadow-amber-500/10",
+    avatar: "size-16 sm:size-20 ring-4 ring-amber-400 ring-offset-2 ring-offset-black",
+    name: "text-[0.82rem] sm:text-[0.95rem] text-white",
+    revenue: "text-[0.95rem] sm:text-[1.15rem] text-amber-400 font-bold",
   },
   2: {
-    card: "order-0 mt-5 items-stretch bg-gradient-to-b from-slate-50 to-white border-slate-200",
-    avatar: "size-13 sm:size-16 ring-4 ring-slate-300 ring-offset-2 ring-offset-white",
-    name: "text-[0.76rem] sm:text-[0.85rem]",
-    revenue: "text-[0.85rem] sm:text-base text-slate-700",
+    card: "order-0 mt-5 items-stretch bg-gradient-to-b from-slate-900/40 via-[#121217]/90 to-[#09090b]/95 border-slate-500/30",
+    avatar: "size-13 sm:size-16 ring-4 ring-slate-400 ring-offset-2 ring-offset-black",
+    name: "text-[0.76rem] sm:text-[0.85rem] text-white",
+    revenue: "text-[0.85rem] sm:text-base text-slate-200 font-bold",
   },
   3: {
-    card: "order-2 mt-5 items-stretch bg-gradient-to-b from-orange-50 to-white border-orange-200",
-    avatar: "size-13 sm:size-16 ring-4 ring-orange-300 ring-offset-2 ring-offset-white",
-    name: "text-[0.76rem] sm:text-[0.85rem]",
-    revenue: "text-[0.85rem] sm:text-base text-orange-700",
+    card: "order-2 mt-5 items-stretch bg-gradient-to-b from-orange-950/40 via-[#121217]/90 to-[#09090b]/95 border-orange-500/40",
+    avatar: "size-13 sm:size-16 ring-4 ring-orange-400 ring-offset-2 ring-offset-black",
+    name: "text-[0.76rem] sm:text-[0.85rem] text-white",
+    revenue: "text-[0.85rem] sm:text-base text-orange-400 font-bold",
   },
 } as const;
 
@@ -54,7 +54,7 @@ export function LeaderboardView() {
         title="Leaderboard"
         subtitle="Peringkat penyedia Gmail terbaik"
         right={
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/20">
             <Trophy className="size-5" strokeWidth={2.2} aria-hidden="true" />
           </span>
         }
@@ -93,7 +93,7 @@ export function LeaderboardView() {
 
                   <p
                     className={cn(
-                      "line-clamp-2 w-full font-bold text-ink-900 mt-1",
+                      "line-clamp-2 w-full font-bold mt-1",
                       style.name,
                     )}
                     title={entry.name}
@@ -103,15 +103,15 @@ export function LeaderboardView() {
 
                   <p
                     className={cn(
-                      "w-full font-bold tracking-tight tabular-nums",
+                      "w-full tracking-tight tabular-nums",
                       style.revenue,
                     )}
                   >
                     {formatIDR(entry.revenue)}
                   </p>
 
-                  <p className="w-full text-[0.65rem] text-ink-500 sm:text-[0.7rem]">
-                    <span className="font-semibold text-ink-700 tabular-nums">
+                  <p className="w-full text-[0.65rem] text-zinc-400 sm:text-[0.7rem]">
+                    <span className="font-semibold text-zinc-200 tabular-nums">
                       {entry.gmailAccepted}
                     </span>{" "}
                     Gmail diterima
@@ -134,32 +134,32 @@ export function LeaderboardView() {
       {/* #4 downwards (Top 4 to 50) */}
       {rest.length > 0 && (
         <Reveal delay={120} className="mt-5">
-          <Card>
+          <Card className="border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-xl">
             <CardContent className="space-y-2.5 md:p-6">
               <h2 className="sr-only">Peringkat Lainnya</h2>
               <ul className="space-y-2.5">
                 {rest.map((entry) => (
                   <li
                     key={entry.rank}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3 transition-[border-color,transform] duration-300 ease-out hover:border-sky-200 active:scale-[0.995]"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 transition-[border-color,background-color,transform] duration-300 ease-out hover:border-white/20 hover:bg-white/5 active:scale-[0.995]"
                   >
                     {/* Sebelah kiri: Hanya foto profil dan nama */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar entry={entry} className="size-11 ring-2 ring-white" />
+                      <Avatar entry={entry} className="size-11 ring-2 ring-white/20" />
                       <p
-                        className="truncate text-[0.85rem] font-semibold text-ink-800"
+                        className="truncate text-[0.85rem] font-semibold text-zinc-200"
                         title={entry.name}
                       >
                         {entry.name}
                       </p>
                     </div>
 
-                    {/* Sebelah kanan: Total uang di atas, Gmail diterima di bawah menggantikan total pendapatan */}
+                    {/* Sebelah kanan: Total uang di atas, Gmail diterima di bawah */}
                     <div className="shrink-0 text-right">
-                      <p className="text-[0.88rem] font-bold text-ink-900 tabular-nums">
+                      <p className="text-[0.88rem] font-bold text-white tabular-nums">
                         {formatIDR(entry.revenue)}
                       </p>
-                      <p className="mt-0.5 text-[0.68rem] font-medium text-ink-500 tabular-nums">
+                      <p className="mt-0.5 text-[0.68rem] font-medium text-zinc-400 tabular-nums">
                         {entry.gmailAccepted} Gmail diterima
                       </p>
                     </div>

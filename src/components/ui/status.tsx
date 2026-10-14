@@ -4,19 +4,19 @@ import { cn } from "@/lib/utils";
 export type Tone = "success" | "warning" | "danger" | "info" | "neutral";
 
 const toneClasses: Record<Tone, string> = {
-  success: "bg-emerald-50 text-emerald-700 border-emerald-200/90",
-  warning: "bg-amber-50 text-amber-700 border-amber-200/90",
-  danger: "bg-rose-50 text-rose-700 border-rose-200/90",
-  info: "bg-sky-50 text-sky-700 border-sky-200/90",
-  neutral: "bg-slate-50 text-ink-600 border-slate-200/90",
+  success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+  warning: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+  danger: "bg-rose-500/10 text-rose-400 border-rose-500/25",
+  info: "bg-sky-500/10 text-sky-400 border-sky-500/25",
+  neutral: "bg-white/5 text-zinc-300 border-white/10",
 };
 
 const dotClasses: Record<Tone, string> = {
-  success: "bg-emerald-500",
-  warning: "bg-amber-500",
-  danger: "bg-rose-500",
-  info: "bg-sky-500",
-  neutral: "bg-ink-400",
+  success: "bg-emerald-400",
+  warning: "bg-amber-400",
+  danger: "bg-rose-400",
+  info: "bg-sky-400",
+  neutral: "bg-zinc-400",
 };
 
 export function StatusBadge({

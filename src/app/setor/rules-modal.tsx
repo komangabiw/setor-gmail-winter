@@ -54,23 +54,23 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
       </div>
 
       {/* Rules as stylish bullet points without numeric 1-7, vertically centered */}
-      <ul className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-5 py-5 md:px-6">
+      <ul className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-5 py-5 md:px-6 bg-[#111116]">
         {RULES.map((ruleItem, index) => (
           <li
             key={index}
-            className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5 transition-colors hover:border-sky-200 hover:bg-sky-50/30"
+            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-3.5 transition-colors hover:border-white/20 hover:bg-white/5"
           >
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-xs">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-xs">
               <CheckCircle2 className="size-3.5 stroke-[2.5]" aria-hidden="true" />
             </span>
-            <div className="text-[0.8rem] leading-relaxed text-ink-700">
+            <div className="text-[0.8rem] leading-relaxed text-zinc-200">
               {ruleItem.type === "password" ? (
                 <>
                   Password Gmail wajib menggunakan:{" "}
-                  <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-100 px-2 py-0.5 font-mono text-[0.82rem] font-extrabold text-amber-900 shadow-xs">
+                  <span className="inline-flex items-center rounded-md border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 font-mono text-[0.82rem] font-extrabold text-amber-200 shadow-xs">
                     {defaultPassword}
                   </span>{" "}
-                  <span className="font-bold text-rose-600">
+                  <span className="font-bold text-rose-400">
                     (huruf kecil semua)
                   </span>
                   .
@@ -81,7 +81,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
                   <Link
                     href="/checker"
                     onClick={onClose}
-                    className="font-bold text-sky-600 underline underline-offset-2 transition-colors hover:text-sky-700"
+                    className="font-bold text-sky-400 underline underline-offset-2 transition-colors hover:text-sky-300"
                   >
                     disini
                   </Link>
@@ -95,13 +95,13 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
       </ul>
 
       {/* Notes */}
-      <div className="shrink-0 space-y-2.5 border-t border-slate-100 bg-amber-50/70 px-5 py-4 md:px-6">
+      <div className="shrink-0 space-y-2.5 border-t border-amber-500/30 bg-amber-950/40 px-5 py-4 md:px-6">
         <div className="flex items-center gap-2">
           <TriangleAlert
-            className="size-4 shrink-0 text-amber-600"
+            className="size-4 shrink-0 text-amber-400"
             aria-hidden="true"
           />
-          <p className="text-[0.75rem] font-bold tracking-wide text-amber-900 uppercase">
+          <p className="text-[0.75rem] font-bold tracking-wide text-amber-300 uppercase">
             Catatan Tambahan
           </p>
         </div>
@@ -109,11 +109,11 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
           {NOTES.map((note) => (
             <li
               key={note}
-              className="flex items-start gap-2 text-[0.73rem] leading-relaxed text-amber-900/85"
+              className="flex items-start gap-2 text-[0.73rem] leading-relaxed text-amber-200/90"
             >
               <span
                 aria-hidden="true"
-                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-amber-500"
+                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-amber-400"
               />
               {note}
             </li>
@@ -122,8 +122,8 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
       </div>
 
       {/* Action */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4 md:px-6">
-        <p className="hidden items-center gap-1.5 text-[0.7rem] leading-tight text-ink-400 sm:flex">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-[#111116] px-5 py-4 md:px-6">
+        <p className="hidden items-center gap-1.5 text-[0.7rem] leading-tight text-zinc-400 sm:flex">
           <Info className="size-3.5 shrink-0" aria-hidden="true" />
           Pelanggaran rules -&gt; ditolak
         </p>
@@ -131,7 +131,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
           type="button"
           onClick={handleProceed}
           fullWidth
-          className="sm:w-auto"
+          className="sm:w-auto bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white"
           rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}
         >
           Saya sudah paham, lanjut setor

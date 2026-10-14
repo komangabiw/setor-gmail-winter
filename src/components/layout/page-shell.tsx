@@ -97,7 +97,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white/60 px-6 text-center",
+        "flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-[#121217]/70 backdrop-blur-md shadow-xl px-6 text-center",
         compact ? "gap-2.5 py-7" : "gap-3 py-12",
         className,
       )}
@@ -105,7 +105,7 @@ export function EmptyState({
       {icon && (
         <span
           className={cn(
-            "flex items-center justify-center rounded-2xl bg-sky-100/80 text-sky-500",
+            "flex items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20",
             compact ? "size-10" : "size-14",
           )}
         >

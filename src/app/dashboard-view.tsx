@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Card, SectionHeading } from "@/components/ui/card";
+import { StatusSummaryGrid, type StatusCardItem } from "@/components/ui/status-summary-cards";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
 import { RulesModal } from "./setor/rules-modal";
 import { TarikSaldoModal } from "./saldo/tarik-saldo-modal";
@@ -99,6 +100,36 @@ export function DashboardView() {
     });
   };
 
+  const dashboardStatusItems: StatusCardItem[] = React.useMemo(
+    () => [
+      {
+        title: "Total Setoran",
+        value: userStats.total,
+        bg: "bg-zinc-950",
+        svgType: "circles",
+      },
+      {
+        title: "Diterima",
+        value: userStats.diterima,
+        bg: "bg-emerald-600",
+        svgType: "blur2",
+      },
+      {
+        title: "Pending",
+        value: userStats.pending,
+        bg: "bg-amber-600",
+        svgType: "blur4",
+      },
+      {
+        title: "Ditolak",
+        value: userStats.ditolak,
+        bg: "bg-rose-600",
+        svgType: "blur3",
+      },
+    ],
+    [userStats],
+  );
+
   return (
     <PageShell>
       {/* Hero row: balance card + setor CTA (stacked on mobile, 2 cols on desktop) */}
@@ -109,25 +140,25 @@ export function DashboardView() {
             {/* Decorative gradient wash */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-gradient-to-br from-sky-200/60 to-brand-200/40 blur-2xl"
+              className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-gradient-to-br from-sky-500/15 to-brand-500/10 blur-3xl"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-sky-100/80 blur-2xl"
+              className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-sky-500/10 blur-3xl"
             />
 
             <div className="relative p-5 sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[0.72rem] font-semibold tracking-wide text-ink-500 uppercase">
+                  <p className="text-[0.72rem] font-semibold tracking-wide text-zinc-400 uppercase">
                     Saldo Kamu
                   </p>
                   {isWalletLoading ? (
                     <div className="mt-2 py-0.5">
-                      <Skeleton className="h-8 w-36 rounded-lg" />
+                      <Skeleton className="h-8 w-36 rounded-lg bg-zinc-800" />
                     </div>
                   ) : (
-                    <p className="mt-1.5 text-[2rem] leading-none font-bold tracking-tight text-ink-900 tabular-nums sm:text-[2.35rem] md:text-[2.6rem]">
+                    <p className="mt-1.5 text-[2rem] leading-none font-bold tracking-tight text-white tabular-nums sm:text-[2.35rem] md:text-[2.6rem]">
                       {formatIDR(wallet.balance)}
                     </p>
                   )}
@@ -139,7 +170,7 @@ export function DashboardView() {
 
               {/* Harga / Gmail tanpa ikon dan tanpa badge Min. Tarik */}
               <div className="mt-3.5 flex items-center">
-                <div className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-700">
+                <div className="inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-400">
                   Harga / Gmail: Rp4.500
                 </div>
               </div>
@@ -148,14 +179,14 @@ export function DashboardView() {
                 <button
                   type="button"
                   onClick={() => setTarikModalOpen(true)}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand-600 px-4 text-[0.98rem] font-medium text-white shadow-sm shadow-brand-600/20 transition-[transform,box-shadow,background-color] duration-300 ease-out hover:bg-brand-700 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/60 active:scale-[0.995]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 text-[0.98rem] font-medium text-white shadow-md shadow-sky-500/20 transition-[transform,box-shadow,background-color] duration-300 ease-out hover:from-sky-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 active:scale-[0.995]"
                 >
                   <Wallet className="size-4" aria-hidden="true" />
                   Tarik Saldo
                 </button>
                 <Link
                   href="/riwayat"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-slate-200/90 bg-white px-4 text-[0.98rem] font-medium text-ink-800 shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-300 ease-out hover:bg-slate-50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 active:scale-[0.995]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-[0.98rem] font-medium text-zinc-200 shadow-sm transition-[transform,box-shadow,background-color,border-color] duration-300 ease-out hover:bg-white/10 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30 active:scale-[0.995]"
                 >
                   <History className="size-4" aria-hidden="true" />
                   Riwayat
@@ -169,22 +200,26 @@ export function DashboardView() {
         <Reveal delay={110}>
           <Link
             href="/setor"
-            className="group flex h-full flex-col justify-between gap-4 rounded-3xl bg-gradient-to-br from-sky-400 to-brand-600 p-5 text-white shadow-float transition-[transform,box-shadow] duration-300 ease-out hover:shadow-[0_14px_36px_-8px_rgb(2_132_199/0.45)] active:scale-[0.99] sm:p-6"
+            className="group relative flex h-full flex-col justify-between gap-4 rounded-3xl border border-sky-500/30 bg-gradient-to-br from-[#121217]/95 via-sky-950/40 to-blue-950/50 p-5 text-white shadow-2xl backdrop-blur-xl transition-[transform,box-shadow,border-color] duration-300 ease-out hover:border-sky-500/50 hover:shadow-sky-500/10 active:scale-[0.99] sm:p-6 overflow-hidden"
           >
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[0.68rem] font-bold tracking-wide uppercase">
-                <Sparkles className="size-3" aria-hidden="true" />
+            {/* Ambient Cyan Glow */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-16 -right-12 size-48 rounded-full bg-sky-500/15 blur-3xl"
+            />
+            <div className="relative min-w-0">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/15 px-2.5 py-1 text-[0.68rem] font-bold tracking-wide uppercase text-sky-300">
+                <Sparkles className="size-3 text-sky-400" aria-hidden="true" />
                 Aksi Cepat
               </span>
-              <p className="mt-3 text-lg leading-tight font-bold sm:text-xl">
+              <p className="mt-3 text-lg leading-tight font-bold sm:text-xl text-white">
                 Siap Setor Gmail?
               </p>
-              <p className="mt-1 text-[0.78rem] leading-relaxed text-white/85">
-                Generate Gmail dan kirim sekarang. Proses cepat, saldo langsung masuk setelah
-                dicek.
+              <p className="mt-1 text-[0.78rem] leading-relaxed text-zinc-300">
+                Generate Gmail dan kirim sekarang. Proses cepat, saldo langsung masuk setelah dicek.
               </p>
             </div>
-            <span className="flex w-full items-center justify-between gap-3 rounded-2xl bg-white/15 px-4 py-3 text-[0.85rem] font-semibold transition-colors duration-300 group-hover:bg-white/25">
+            <span className="relative flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-[0.85rem] font-semibold text-white shadow-lg shadow-sky-500/25 transition-all duration-300 group-hover:from-sky-400 group-hover:to-blue-500">
               Mulai Setor Sekarang
               <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/20 transition-transform duration-300 ease-out group-hover:translate-x-1">
                 <ChevronRight className="size-4" aria-hidden="true" />
@@ -201,83 +236,7 @@ export function DashboardView() {
           subtitle="Pantau aktivitas setoran kamu"
           icon={<ShieldCheck className="size-4" aria-hidden="true" />}
         />
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {/* Total Setoran */}
-          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-sky-200/80 bg-sky-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-            {isStatsLoading ? (
-              <div className="flex flex-col items-center py-0.5 w-full">
-                <Skeleton className="h-2.5 w-16" />
-                <Skeleton className="h-7 w-12 mt-1.5" />
-              </div>
-            ) : (
-              <>
-                <p className="text-[0.68rem] font-bold tracking-wider text-sky-800 uppercase text-center">
-                  Total Setoran
-                </p>
-                <p className="mt-1 text-2xl font-black text-sky-700 tabular-nums sm:text-3xl text-center">
-                  {userStats.total}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Diterima */}
-          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-            {isStatsLoading ? (
-              <div className="flex flex-col items-center py-0.5 w-full">
-                <Skeleton className="h-2.5 w-16" />
-                <Skeleton className="h-7 w-12 mt-1.5" />
-              </div>
-            ) : (
-              <>
-                <p className="text-[0.68rem] font-bold tracking-wider text-emerald-800 uppercase text-center">
-                  Diterima
-                </p>
-                <p className="mt-1 text-2xl font-black text-emerald-600 tabular-nums sm:text-3xl text-center">
-                  {userStats.diterima}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Ditolak */}
-          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-            {isStatsLoading ? (
-              <div className="flex flex-col items-center py-0.5 w-full">
-                <Skeleton className="h-2.5 w-16" />
-                <Skeleton className="h-7 w-12 mt-1.5" />
-              </div>
-            ) : (
-              <>
-                <p className="text-[0.68rem] font-bold tracking-wider text-rose-800 uppercase text-center">
-                  Ditolak
-                </p>
-                <p className="mt-1 text-2xl font-black text-rose-600 tabular-nums sm:text-3xl text-center">
-                  {userStats.ditolak}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Pending */}
-          <div className="flex flex-col items-center justify-center text-center rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 transition-transform duration-200 hover:-translate-y-0.5">
-            {isStatsLoading ? (
-              <div className="flex flex-col items-center py-0.5 w-full">
-                <Skeleton className="h-2.5 w-16" />
-                <Skeleton className="h-7 w-12 mt-1.5" />
-              </div>
-            ) : (
-              <>
-                <p className="text-[0.68rem] font-bold tracking-wider text-amber-800 uppercase text-center">
-                  Pending
-                </p>
-                <p className="mt-1 text-2xl font-black text-amber-600 tabular-nums sm:text-3xl text-center">
-                  {userStats.pending}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+        <StatusSummaryGrid items={dashboardStatusItems} isLoading={isStatsLoading} />
       </Reveal>
 
       {/* Quick menu grid */}
@@ -288,7 +247,7 @@ export function DashboardView() {
           icon={<Sparkles className="size-4" aria-hidden="true" />}
         />
         {/* Quick menu card wrapper */}
-        <div className="mt-4 rounded-3xl border border-slate-100/90 bg-white p-4 sm:p-5 shadow-card">
+        <div className="mt-4 rounded-3xl border border-white/10 bg-[#121215]/80 p-4 sm:p-5 shadow-2xl backdrop-blur-md">
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4">
             {quickMenuItems.map((item, index) => {
               const Icon = iconMap[item.iconName];
@@ -313,14 +272,14 @@ export function DashboardView() {
                       aria-hidden="true"
                     />
                   </span>
-                  <span className="mt-2 text-center text-[0.68rem] leading-tight font-bold text-ink-700 transition-colors duration-200 group-hover:text-ink-950 sm:text-[0.74rem]">
+                  <span className="mt-2 text-center text-[0.68rem] leading-tight font-bold text-zinc-300 transition-colors duration-200 group-hover:text-white sm:text-[0.74rem]">
                     {item.label}
                   </span>
                 </>
               );
               const style = { animationDelay: `${200 + index * 30}ms` };
               const shared =
-                "group flex min-w-0 flex-col items-center justify-center rounded-2xl py-2 px-1 transition-all duration-200 hover:bg-slate-50/70 active:scale-95 animate-fade-up";
+                "group flex min-w-0 flex-col items-center justify-center rounded-2xl py-2 px-1 transition-all duration-200 hover:bg-white/5 active:scale-95 animate-fade-up";
 
               if (item.action === "rules") {
                 return (

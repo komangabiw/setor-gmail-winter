@@ -11,18 +11,18 @@ export function TopTicker({ className }: TopTickerProps) {
   const tickerItems = (
     <>
       <span className="text-white font-extrabold">Pencairan Instan</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
       <span className="text-emerald-400 font-extrabold">Admin Support 24/7</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
       <span className="text-cyan-300 font-extrabold">Verifikasi Cepat</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
 
       <span className="text-white font-extrabold">Pencairan Instan</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
       <span className="text-emerald-400 font-extrabold">Admin Support 24/7</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
       <span className="text-cyan-300 font-extrabold">Verifikasi Cepat</span>
-      <span className="text-sky-400 font-bold">-</span>
+      <span className="text-sky-400 font-bold">✦</span>
     </>
   );
 

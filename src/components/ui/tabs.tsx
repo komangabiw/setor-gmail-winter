@@ -115,7 +115,7 @@ export function Tabs<T extends string>({
       ref={listRef}
       role="tablist"
       className={cn(
-        "relative flex gap-1 rounded-full bg-sky-100/70 p-1",
+        "relative flex gap-1 rounded-full bg-[#121217]/90 border border-white/10 p-1",
         className,
       )}
     >
@@ -123,7 +123,7 @@ export function Tabs<T extends string>({
         <span
           aria-hidden="true"
           className={cn(
-            "absolute top-1 bottom-1 rounded-full bg-white shadow-[0_2px_8px_-2px_rgb(14_165_233/0.35)] transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "absolute top-1 bottom-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 shadow-lg shadow-sky-500/25 transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
             indicatorClassName,
           )}
           style={{ left: indicator.left, width: indicator.width }}
@@ -142,8 +142,8 @@ export function Tabs<T extends string>({
             className={cn(
               "relative z-10 flex-1 rounded-full px-3 py-2 text-[0.85rem] font-semibold whitespace-nowrap transition-colors duration-300 cursor-pointer",
               isActive
-                ? (activeClassName || "text-brand-700")
-                : (inactiveClassName || "text-ink-500 hover:text-ink-700"),
+                ? (activeClassName || "text-white")
+                : (inactiveClassName || "text-zinc-400 hover:text-white"),
             )}
           >
             <span className="flex items-center justify-center gap-1.5">

@@ -365,7 +365,7 @@ export function CheckerView() {
         title="Email Checker"
         subtitle="Periksa status keaktifan email Gmail apapun secara akurat dan real-time langsung ke server Google."
         right={
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-card">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#121217]/80 border border-white/10 text-sky-400 shadow-card">
             <ShieldCheck className="size-5" strokeWidth={2.2} aria-hidden="true" />
           </span>
         }
@@ -373,10 +373,10 @@ export function CheckerView() {
 
       {/* Input Card */}
       <Reveal delay={40}>
-        <Card className="rounded-3xl border border-slate-200/90 bg-white shadow-card">
+        <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-2xl">
           <CardContent className="space-y-4 p-5 sm:p-6">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-bold text-ink-900">
+              <label className="text-sm font-bold text-white">
                 Daftar Gmail yang Akan Dicek
               </label>
 
@@ -385,7 +385,7 @@ export function CheckerView() {
                 <button
                   type="button"
                   onClick={handlePasteGenerated}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100/90 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 border border-sky-200/80 shadow-2xs"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 border border-sky-500/25 shadow-2xs"
                   title="Tempel email hasil generate dari tab Setor"
                 >
                   <ArrowDownToLine className="size-3.5" />
@@ -399,7 +399,7 @@ export function CheckerView() {
               duration={5}
               color="var(--color-blue-500, #0ea5e9)"
               onClick={() => textareaRef.current?.focus()}
-              className="w-full rounded-2xl shadow-sm cursor-text"
+              className="w-full rounded-2xl shadow-sm cursor-text border border-white/10 bg-black/40"
             >
               <textarea
                 ref={textareaRef}
@@ -412,16 +412,16 @@ export function CheckerView() {
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-white border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-slate-900 placeholder:text-slate-400 relative z-30 pointer-events-auto cursor-text select-text"
+                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-black/40 border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-white placeholder:text-zinc-500 relative z-30 pointer-events-auto cursor-text select-text"
               />
             </ShineBorder>
 
-            <p className="text-[0.78rem] leading-relaxed text-ink-500 px-0.5">
+            <p className="text-[0.78rem] leading-relaxed text-zinc-400 px-0.5">
               {lineCount > 0 ? (
                 <span
                   className={cn(
                     "tabular-nums font-semibold",
-                    lineCount >= MAX_LINES ? "text-amber-600 font-bold" : "text-ink-700"
+                    lineCount >= MAX_LINES ? "text-amber-400 font-bold" : "text-zinc-300"
                   )}
                 >
                   {lineCount} email terdeteksi · 1 per baris · maks {MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.
@@ -462,17 +462,17 @@ export function CheckerView() {
       {/* Real-time Progress Bar */}
       {isRunning && (
         <Reveal className="mt-4">
-          <Card className="rounded-3xl border border-sky-100 bg-white p-5 shadow-card">
+          <Card className="rounded-3xl border border-sky-500/30 bg-[#121217]/90 backdrop-blur-xl p-5 shadow-xl">
             <CardContent className="space-y-3 p-0">
               <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-ink-800">
-                  <ShieldCheck className="size-4 animate-pulse text-sky-500" aria-hidden="true" />
+                <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-200">
+                  <ShieldCheck className="size-4 animate-pulse text-sky-400" aria-hidden="true" />
                   <span>Memeriksa Akun Gmail:</span>
-                  <span className="font-mono text-sky-600 font-bold">
+                  <span className="font-mono text-sky-400 font-bold">
                     {scanned} / {totalToScan} email
                   </span>
                 </span>
-                <span className="text-xs sm:text-sm font-black text-sky-600 tabular-nums">
+                <span className="text-xs sm:text-sm font-black text-sky-400 tabular-nums">
                   {progress}%
                 </span>
               </div>
@@ -484,15 +484,15 @@ export function CheckerView() {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label="Progress pemeriksaan email"
-                className="h-3 w-full overflow-hidden rounded-full bg-sky-100/80 p-0.5"
+                className="h-3 w-full overflow-hidden rounded-full bg-black/50 border border-white/10 p-0.5"
               >
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-brand-600 transition-all duration-200 ease-out shadow-xs"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 via-sky-400 to-blue-500 transition-all duration-200 ease-out shadow-xs shadow-sky-500/30"
                   style={{ width: `${progress}%` }}
                 />
               </div>
 
-              <p className="text-[0.72rem] text-ink-400 text-center">
+              <p className="text-[0.72rem] text-zinc-400 text-center">
                 Mengecek status keberadaan akun secara real-time
               </p>
             </CardContent>
@@ -504,23 +504,23 @@ export function CheckerView() {
       {(hasRun || results.length > 0) && (
         <Reveal className="mt-5 space-y-5" delay={40}>
           {/* Rekap Status */}
-          <Card className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-card">
+          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
             <CardContent className="space-y-4 p-0">
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold tracking-tight text-ink-900">
+                  <h2 className="text-sm sm:text-base font-bold tracking-tight text-white">
                     Rekap Status
                   </h2>
-                  <p className="text-xs text-ink-500">
+                  <p className="text-xs text-zinc-400">
                     Ringkasan hasil pemeriksaan akun Gmail
                   </p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-bold text-ink-700 tabular-nums">
+                <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 font-mono text-xs font-bold text-zinc-300 tabular-nums">
                   {summary.total} email diperiksa
                 </span>
               </div>
 
-              {/* 3 Status Cards: LIVE, UNREGISTERED, INVALID (Tanpa Icon & Sublabel) */}
+              {/* 3 Status Cards: LIVE, UNREGISTERED, INVALID */}
               <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
                 <SummaryStat
                   label="LIVE"
@@ -560,7 +560,7 @@ export function CheckerView() {
                       <ClipboardCopy className="size-4" aria-hidden="true" />
                     )
                   }
-                  className="rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                  className="rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs shadow-emerald-500/20"
                 >
                   {copiedLive ? "Gmail Valid Berhasil Disalin!" : `Salin Gmail Valid (${summary.liveCount})`}
                 </Button>
@@ -574,12 +574,12 @@ export function CheckerView() {
                   disabled={summary.dieCount === 0 || isRunning}
                   leftIcon={
                     copiedUnregistered ? (
-                      <Check className="size-4 text-rose-600" aria-hidden="true" />
+                      <Check className="size-4 text-rose-300" aria-hidden="true" />
                     ) : (
-                      <ClipboardCopy className="size-4 text-rose-600" aria-hidden="true" />
+                      <ClipboardCopy className="size-4 text-rose-300" aria-hidden="true" />
                     )
                   }
-                  className="rounded-2xl font-bold border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-xs"
+                  className="rounded-2xl font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:border-rose-500/50 shadow-xs"
                 >
                   {copiedUnregistered ? "Gmail Unregistered Disalin!" : `Salin Gmail Unregistered (${summary.dieCount})`}
                 </Button>
@@ -590,7 +590,7 @@ export function CheckerView() {
                 <div className="pt-0.5">
                   <Link
                     href="/setor"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-xs sm:text-sm font-bold text-sky-700 shadow-2xs hover:bg-sky-100 active:scale-95 transition-all whitespace-nowrap"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-5 py-3 text-xs sm:text-sm font-bold text-sky-300 shadow-xs hover:bg-sky-500/20 active:scale-95 transition-all whitespace-nowrap"
                   >
                     <span>Lanjut ke Setor ({summary.liveCount} Gmail Valid)</span>
                     <ArrowRight className="size-4" />
@@ -601,27 +601,27 @@ export function CheckerView() {
           </Card>
 
           {/* Detail Hasil Table / List */}
-          <Card className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-card">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl overflow-hidden shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-ink-900">
+                <h3 className="text-sm sm:text-base font-bold text-white">
                   Detail Hasil Pemeriksaan
                 </h3>
-                <p className="text-xs text-ink-500">
+                <p className="text-xs text-zinc-400">
                   Status spesifik per alamat email
                 </p>
               </div>
 
               {/* Filter Tabs: Semua / Live / Unregistered / Invalid */}
-              <div className="flex flex-wrap items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
+              <div className="flex flex-wrap items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
                 <button
                   type="button"
                   onClick={() => setActiveFilter("all")}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
                     activeFilter === "all"
-                      ? "bg-white text-ink-900 shadow-2xs"
-                      : "text-ink-500 hover:text-ink-900"
+                      ? "bg-white/15 text-white shadow-xs"
+                      : "text-zinc-400 hover:text-white"
                   )}
                 >
                   Semua ({results.length})
@@ -632,8 +632,8 @@ export function CheckerView() {
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
                     activeFilter === "live"
-                      ? "bg-emerald-600 text-white shadow-2xs"
-                      : "text-emerald-700 hover:bg-emerald-50"
+                      ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-xs"
+                      : "text-emerald-400 hover:bg-emerald-500/10"
                   )}
                 >
                   Live ({summary.liveCount})
@@ -644,8 +644,8 @@ export function CheckerView() {
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
                     activeFilter === "die"
-                      ? "bg-rose-600 text-white shadow-2xs"
-                      : "text-rose-700 hover:bg-rose-50"
+                      ? "bg-rose-500/20 border border-rose-500/40 text-rose-300 shadow-xs"
+                      : "text-rose-400 hover:bg-rose-500/10"
                   )}
                 >
                   Unregistered ({summary.dieCount})
@@ -656,8 +656,8 @@ export function CheckerView() {
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
                     activeFilter === "invalid"
-                      ? "bg-slate-700 text-white shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-200/60"
+                      ? "bg-white/15 border border-white/20 text-zinc-200 shadow-xs"
+                      : "text-zinc-400 hover:bg-white/5"
                   )}
                 >
                   Invalid ({summary.invalidCount})
@@ -667,21 +667,21 @@ export function CheckerView() {
 
             {/* List */}
             {filteredResults.length === 0 ? (
-              <div className="p-8 text-center text-xs text-ink-400">
+              <div className="p-8 text-center text-xs text-zinc-400">
                 Tidak ada hasil dengan status {activeFilter === "die" ? "UNREGISTERED" : activeFilter.toUpperCase()}.
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
+              <ul className="divide-y divide-white/10 max-h-[420px] overflow-y-auto">
                 {filteredResults.map((result) => {
                   const meta = checkStatusMeta[result.status];
                   return (
                     <li
                       key={result.index}
-                      className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50/60 transition-colors"
+                      className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-white/5 transition-colors"
                     >
                       {/* Left: Index & Email Address */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-6 shrink-0 text-xs font-mono font-semibold text-slate-400">
+                        <span className="w-6 shrink-0 text-xs font-mono font-semibold text-zinc-500">
                           {result.index}.
                         </span>
                         <div className="min-w-0">
@@ -689,17 +689,17 @@ export function CheckerView() {
                             className={cn(
                               "truncate font-mono text-xs sm:text-[0.84rem] font-medium",
                               result.status === "live"
-                                ? "text-ink-900 font-semibold"
+                                ? "text-white font-semibold"
                                 : result.status === "die"
-                                ? "text-slate-700"
-                                : "text-slate-400"
+                                ? "text-zinc-300"
+                                : "text-zinc-500"
                             )}
                             title={result.email}
                           >
                             {result.email}
                           </p>
                           {result.message && (
-                            <p className="text-[0.68rem] text-ink-400 truncate">
+                            <p className="text-[0.68rem] text-zinc-400 truncate">
                               {result.message}
                             </p>
                           )}
@@ -720,10 +720,10 @@ export function CheckerView() {
                           type="button"
                           onClick={() => handleCopySingle(result.email, result.index)}
                           title="Salin email ini"
-                          className="flex size-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-sky-600 hover:border-sky-300 transition-all cursor-pointer active:scale-90 shrink-0 shadow-2xs"
+                          className="flex size-7 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-zinc-400 hover:text-sky-300 hover:border-sky-500/40 transition-all cursor-pointer active:scale-90 shrink-0 shadow-2xs"
                         >
                           {copiedIndex === result.index ? (
-                            <Check className="size-3.5 text-emerald-600" />
+                            <Check className="size-3.5 text-emerald-400" />
                           ) : (
                             <Copy className="size-3.5" />
                           )}
@@ -768,14 +768,14 @@ function SummaryStat({
 }) {
   const toneClasses = {
     success: active
-      ? "border-emerald-500 bg-emerald-100/90 text-emerald-900 ring-2 ring-emerald-400"
-      : "border-emerald-200 bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100/60",
+      ? "border-emerald-500/60 bg-emerald-950/60 text-emerald-300 ring-2 ring-emerald-500/40"
+      : "border-emerald-500/25 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50",
     danger: active
-      ? "border-rose-500 bg-rose-100/90 text-rose-900 ring-2 ring-rose-400"
-      : "border-rose-200 bg-rose-50/70 text-rose-800 hover:bg-rose-100/60",
+      ? "border-rose-500/60 bg-rose-950/60 text-rose-300 ring-2 ring-rose-500/40"
+      : "border-rose-500/25 bg-rose-950/30 text-rose-300 hover:bg-rose-950/50",
     neutral: active
-      ? "border-slate-500 bg-slate-200/90 text-slate-900 ring-2 ring-slate-400"
-      : "border-slate-200 bg-slate-50/70 text-ink-700 hover:bg-slate-100/60",
+      ? "border-sky-500/60 bg-sky-950/60 text-sky-200 ring-2 ring-sky-500/40"
+      : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10",
   } as const;
 
   return (

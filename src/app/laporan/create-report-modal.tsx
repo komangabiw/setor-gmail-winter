@@ -477,13 +477,13 @@ export function CreateReportModal({
       <form
         id="create-report-form"
         onSubmit={handleSubmit}
-        className="min-h-0 flex-1 overflow-y-auto bg-white"
+        className="min-h-0 flex-1 overflow-y-auto bg-[#111116]"
       >
         <div className="space-y-5 px-6 py-5">
           {/* Category cards */}
           <div>
-            <label className="mb-2 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700">
-              <Tag className="size-3.5" />
+            <label className="mb-2 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-zinc-300">
+              <Tag className="size-3.5 text-sky-400" />
               Kategori Laporan
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -498,16 +498,16 @@ export function CreateReportModal({
                     className={cn(
                       "group relative flex items-center gap-2.5 rounded-2xl border p-2.5 sm:p-3 text-left transition-all duration-200 active:scale-[0.98] cursor-pointer",
                       isActive
-                        ? "border-sky-500 bg-gradient-to-br from-sky-50 to-blue-50/90 text-sky-950 font-semibold shadow-sm ring-2 ring-sky-400/25"
-                        : "border-slate-200/80 bg-slate-50/70 text-slate-700 hover:border-slate-300 hover:bg-white hover:shadow-xs",
+                        ? "border-sky-500/60 bg-sky-950/50 text-white font-semibold shadow-xs ring-1 ring-sky-500/30"
+                        : "border-white/10 bg-black/40 text-zinc-300 hover:border-white/20 hover:bg-white/5",
                     )}
                   >
                     <span
                       className={cn(
                         "flex size-8 shrink-0 items-center justify-center rounded-xl transition-all duration-200",
                         isActive
-                          ? "bg-sky-500 text-white shadow-sm shadow-sky-300"
-                          : cn(meta.bg, meta.color)
+                          ? "bg-sky-500 text-white shadow-sm shadow-sky-500/30"
+                          : "bg-white/10 text-zinc-300"
                       )}
                     >
                       {meta.icon}
@@ -516,7 +516,7 @@ export function CreateReportModal({
                       {cat}
                     </span>
                     {isActive && (
-                      <span className="size-2 shrink-0 rounded-full bg-sky-500 shadow-xs" />
+                      <span className="size-2 shrink-0 rounded-full bg-sky-400 shadow-xs shadow-sky-400/50" />
                     )}
                   </button>
                 );
@@ -528,11 +528,11 @@ export function CreateReportModal({
           <div>
             <label
               htmlFor="report-subject"
-              className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700"
+              className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-zinc-300"
             >
-              <FileText className="size-3.5" />
+              <FileText className="size-3.5 text-sky-400" />
               Judul Laporan
-              <span className="ml-auto font-normal normal-case tracking-normal text-red-500">
+              <span className="ml-auto font-normal normal-case tracking-normal text-rose-400">
                 Wajib *
               </span>
             </label>
@@ -544,7 +544,7 @@ export function CreateReportModal({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ringkas masalah Anda dalam satu kalimat..."
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 text-[0.88rem] text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+              className="h-11 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-[0.88rem] text-white shadow-sm outline-none transition-all placeholder:text-zinc-500 focus:border-sky-500/60 focus:bg-black/60 focus:ring-2 focus:ring-sky-500/20"
             />
           </div>
 
@@ -552,11 +552,11 @@ export function CreateReportModal({
           <div>
             <label
               htmlFor="report-description"
-              className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700"
+              className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-zinc-300"
             >
-              <AlertCircle className="size-3.5" />
+              <AlertCircle className="size-3.5 text-sky-400" />
               Deskripsi Masalah
-              <span className="ml-auto font-normal normal-case tracking-normal text-red-500">
+              <span className="ml-auto font-normal normal-case tracking-normal text-rose-400">
                 Wajib *
               </span>
             </label>
@@ -568,16 +568,16 @@ export function CreateReportModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Jelaskan masalah selengkap mungkin..."
-              className="min-h-[110px] w-full resize-y rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-[0.88rem] leading-relaxed text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+              className="min-h-[110px] w-full resize-y rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-[0.88rem] leading-relaxed text-white shadow-sm outline-none transition-all placeholder:text-zinc-500 focus:border-sky-500/60 focus:bg-black/60 focus:ring-2 focus:ring-sky-500/20"
             />
           </div>
 
           {/* Image attachment */}
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-slate-700">
-              <ImageIcon className="size-3.5" />
+            <label className="mb-1.5 flex items-center gap-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-zinc-300">
+              <ImageIcon className="size-3.5 text-sky-400" />
               Lampiran Gambar
-              <span className="ml-1 font-normal normal-case tracking-normal text-slate-400">
+              <span className="ml-1 font-normal normal-case tracking-normal text-zinc-400">
                 (Opsional)
               </span>
             </label>
@@ -591,9 +591,9 @@ export function CreateReportModal({
             />
 
             {file ? (
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50 p-2.5 pr-3.5">
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-sky-500/30 bg-sky-950/40 p-2.5 pr-3.5">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <div className="relative flex size-12 shrink-0 overflow-hidden rounded-xl border border-sky-200 bg-slate-100 shadow-2xs">
+                  <div className="relative flex size-12 shrink-0 overflow-hidden rounded-xl border border-sky-500/30 bg-black/50 shadow-2xs">
                     {previewUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -602,14 +602,14 @@ export function CreateReportModal({
                         className="size-full object-cover"
                       />
                     ) : (
-                      <div className="flex size-full items-center justify-center bg-sky-100 text-sky-600">
+                      <div className="flex size-full items-center justify-center bg-sky-950 text-sky-400">
                         <ImageIcon className="size-5" />
                       </div>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p
-                      className="truncate text-[0.84rem] font-semibold text-sky-950"
+                      className="truncate text-[0.84rem] font-semibold text-sky-300"
                       title={file.name}
                     >
                       {file.name}
@@ -627,7 +627,7 @@ export function CreateReportModal({
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   aria-label="Hapus file"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-500 transition-colors hover:bg-sky-200 hover:text-sky-800 cursor-pointer"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sky-500/20 text-sky-300 transition-colors hover:bg-sky-500/30 hover:text-white cursor-pointer"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -653,30 +653,30 @@ export function CreateReportModal({
                 className={cn(
                   "flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed px-4 py-5 text-center transition-all duration-200",
                   isDragging
-                    ? "scale-[1.01] border-sky-400 bg-sky-50"
-                    : "border-slate-200 bg-slate-50/60 hover:border-sky-300 hover:bg-sky-50/50"
+                    ? "scale-[1.01] border-sky-400 bg-sky-950/40"
+                    : "border-white/10 bg-black/40 hover:border-sky-500/40 hover:bg-white/5"
                 )}
               >
                 <div
                   className={cn(
                     "flex size-10 items-center justify-center rounded-xl transition-colors",
-                    isDragging ? "bg-sky-100" : "bg-white shadow-sm"
+                    isDragging ? "bg-sky-500/20 text-sky-400" : "bg-white/5 text-zinc-400"
                   )}
                 >
                   <ImageIcon
                     className={cn(
                       "size-5",
-                      isDragging ? "text-sky-500" : "text-slate-400"
+                      isDragging ? "text-sky-400" : "text-zinc-400"
                     )}
                   />
                 </div>
                 <div>
-                  <p className="text-[0.82rem] font-medium text-slate-700">
+                  <p className="text-[0.82rem] font-medium text-zinc-200">
                     {isDragging
                       ? "Lepas gambar di sini"
                       : "Klik atau seret gambar ke sini"}
                   </p>
-                  <p className="mt-0.5 text-[0.7rem] text-slate-400">
+                  <p className="mt-0.5 text-[0.7rem] text-zinc-400">
                     Hanya gambar (PNG, JPG, WEBP) — maks. 10MB
                   </p>
                 </div>
@@ -687,7 +687,7 @@ export function CreateReportModal({
       </form>
 
       {/* ── Footer: 1 full-width row ────────────────────────── */}
-      <div className="flex shrink-0 flex-col gap-2.5 border-t border-slate-100 bg-white px-6 py-4">
+      <div className="flex shrink-0 flex-col gap-2.5 border-t border-white/10 bg-[#111116] px-6 py-4">
         <button
           type="submit"
           form="create-report-form"
@@ -695,8 +695,8 @@ export function CreateReportModal({
           className={cn(
             "group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3 text-[0.88rem] font-semibold text-white shadow-lg transition-all duration-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70",
             step === "done"
-              ? "bg-emerald-500 shadow-emerald-200"
-              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-sky-200/70 hover:from-sky-400 hover:to-blue-500 hover:shadow-xl hover:shadow-sky-300/50"
+              ? "bg-emerald-500 shadow-emerald-500/20"
+              : "bg-gradient-to-r from-sky-500 to-blue-600 shadow-sky-500/20 hover:from-sky-400 hover:to-blue-500 hover:shadow-xl hover:shadow-sky-500/30"
           )}
         >
           {!isSending && (
@@ -724,7 +724,7 @@ export function CreateReportModal({
           )}
         </button>
 
-        <p className="text-center text-[0.72rem] text-slate-400">
+        <p className="text-center text-[0.72rem] text-zinc-400">
           Laporan dikirim langsung ke Admin.
         </p>
       </div>

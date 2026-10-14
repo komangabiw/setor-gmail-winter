@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Card, SectionHeading } from "@/components/ui/card";
+import { StatusSummaryGrid, type StatusCardItem } from "@/components/ui/status-summary-cards";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, StatBox } from "@/components/ui/status";
 import { PageShell, PageHeader, Reveal, EmptyState } from "@/components/layout/page-shell";
@@ -94,37 +95,37 @@ function DepositRow({ record, index }: { record: DepositRecord; index: number })
 
   return (
     <div
-      className="animate-fade-up group flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-sky-50/50 sm:gap-4 sm:px-5 md:px-6 md:py-4"
+      className="animate-fade-up group flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-white/5 sm:gap-4 sm:px-5 md:px-6 md:py-4"
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <span
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 md:size-11",
-          record.status === "diterima" && "bg-emerald-50 text-emerald-600",
-          record.status === "pending" && "bg-amber-50 text-amber-600",
-          record.status === "dicek" && "bg-sky-50 text-sky-600",
-          record.status === "ditolak" && "bg-rose-50 text-rose-600",
+          record.status === "diterima" && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+          record.status === "pending" && "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+          record.status === "dicek" && "bg-sky-500/10 text-sky-400 border border-sky-500/20",
+          record.status === "ditolak" && "bg-rose-500/10 text-rose-400 border border-rose-500/20",
         )}
       >
         <Mail className="size-4.5" strokeWidth={2.1} aria-hidden="true" />
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-mono text-[0.82rem] font-medium text-ink-800">
+        <p className="truncate font-mono text-[0.82rem] font-semibold text-zinc-100">
           {record.gmail}
         </p>
-        <p className="mt-0.5 truncate text-[0.7rem] text-ink-500">
+        <p className="mt-0.5 truncate text-[0.7rem] text-zinc-400">
           {formatDateTime(record.createdAt)} · {record.category === "good" ? "Good" : "Bebas"}
         </p>
         {isRejected && record.note && (
-          <p className="mt-1 truncate text-[0.7rem] font-medium text-rose-600">
+          <p className="mt-1 truncate text-[0.7rem] font-medium text-rose-400">
             {record.note}
           </p>
         )}
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <span className="text-[0.85rem] font-bold tracking-tight text-ink-900 tabular-nums">
+        <span className="text-[0.85rem] font-bold tracking-tight text-white tabular-nums">
           {formatIDR(record.amount)}
         </span>
         <StatusBadge tone={meta.tone} icon={meta.icon} dot pulse={record.status === "pending"}>
@@ -165,6 +166,36 @@ export function RiwayatView() {
     return base;
   }, [deposits, range]);
 
+  const riwayatStatusItems: StatusCardItem[] = React.useMemo(
+    () => [
+      {
+        title: "Diterima",
+        value: counts.diterima,
+        bg: "bg-emerald-600",
+        svgType: "blur2",
+      },
+      {
+        title: "Pending",
+        value: counts.pending,
+        bg: "bg-amber-600",
+        svgType: "blur4",
+      },
+      {
+        title: "Di Cek",
+        value: counts.dicek,
+        bg: "bg-blue-600",
+        svgType: "circles",
+      },
+      {
+        title: "Ditolak",
+        value: counts.ditolak,
+        bg: "bg-rose-600",
+        svgType: "blur3",
+      },
+    ],
+    [counts],
+  );
+
   const activeFilter = status !== "semua" || query.trim().length > 0;
 
   const resetFilters = () => {
@@ -178,7 +209,7 @@ export function RiwayatView() {
         title="Riwayat Setoran"
         subtitle={`${counts.semua} setoran dalam periode ini`}
         right={
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-card">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#121215]/80 border border-white/10 text-sky-400 shadow-card">
             <HistoryIcon className="size-5" strokeWidth={2.2} aria-hidden="true" />
           </span>
         }
@@ -188,7 +219,7 @@ export function RiwayatView() {
       <Reveal delay={40}>
         <div className="relative">
           <Search
-            className="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-ink-400 transition-colors duration-300 peer-focus:text-sky-500"
+            className="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-zinc-500 transition-colors duration-300 peer-focus:text-sky-400"
             aria-hidden="true"
           />
           <input
@@ -197,14 +228,14 @@ export function RiwayatView() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari Gmail..."
             aria-label="Cari Gmail"
-            className="h-12 w-full rounded-2xl border border-slate-200/90 bg-white pr-11 pl-11 text-[0.95rem] text-ink-800 shadow-card transition-[border-color,box-shadow] duration-300 outline-none placeholder:text-ink-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100/80 [&::-webkit-search-cancel-button]:hidden"
+            className="h-12 w-full rounded-2xl border border-white/10 bg-[#121215]/80 pr-11 pl-11 text-[0.95rem] text-white shadow-card transition-[border-color,box-shadow] duration-300 outline-none placeholder:text-zinc-500 focus:border-sky-500/50 focus:ring-4 focus:ring-sky-500/10 [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               aria-label="Hapus pencarian"
-              className="absolute top-1/2 right-2.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-xl text-ink-400 transition-[background-color,color,transform] duration-300 hover:bg-slate-100 hover:text-ink-600 active:scale-90"
+              className="absolute top-1/2 right-2.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-xl text-zinc-400 transition-[background-color,color,transform] duration-300 hover:bg-white/10 hover:text-white active:scale-90"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -226,15 +257,15 @@ export function RiwayatView() {
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-[0.78rem] font-semibold transition-[background-color,border-color,color,transform,box-shadow] duration-300 ease-out active:scale-95",
                   isActive
-                    ? "border-brand-500 bg-brand-600 text-white shadow-sm shadow-brand-600/25"
-                    : "border-slate-200/90 bg-white text-ink-600 shadow-sm hover:border-sky-300 hover:text-sky-700",
+                    ? "border-sky-500/40 bg-gradient-to-r from-sky-500 to-brand-600 text-white shadow-md shadow-sky-500/20"
+                    : "border-white/10 bg-[#121215]/80 text-zinc-300 shadow-sm hover:border-white/20 hover:text-white",
                 )}
               >
                 {filter.label}
                 <span
                   className={cn(
                     "rounded-full px-1.5 py-0.5 text-[0.62rem] font-bold tabular-nums transition-colors duration-300",
-                    isActive ? "bg-white/20 text-white" : "bg-slate-100 text-ink-500",
+                    isActive ? "bg-white/20 text-white" : "bg-white/10 text-zinc-400",
                   )}
                 >
                   {counts[filter.value]}
@@ -247,8 +278,8 @@ export function RiwayatView() {
 
       {/* Time range filter */}
       <Reveal delay={120} className="mt-4">
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-1.5 shadow-card md:gap-3 md:p-2">
-          <span className="flex shrink-0 items-center gap-1.5 pl-2 pr-1 text-[0.72rem] font-semibold text-ink-500">
+        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#121215]/80 p-1.5 shadow-card md:gap-3 md:p-2">
+          <span className="flex shrink-0 items-center gap-1.5 pl-2 pr-1 text-[0.72rem] font-semibold text-zinc-400">
             <CalendarDays className="size-3.5" aria-hidden="true" />
           </span>
           {timeRanges.map((option) => {
@@ -263,7 +294,7 @@ export function RiwayatView() {
                   "flex-1 rounded-xl px-2 py-2 text-[0.76rem] font-semibold transition-[background-color,color,box-shadow] duration-300",
                   isActive
                     ? "bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-sm"
-                    : "text-ink-500 hover:bg-sky-50 hover:text-sky-700",
+                    : "text-zinc-400 hover:bg-white/5 hover:text-white",
                 )}
               >
                 {option.label}
@@ -280,36 +311,18 @@ export function RiwayatView() {
           subtitle="Pantau aktivitas setoran kamu"
           icon={<ShieldCheck className="size-4" aria-hidden="true" />}
         />
-        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3 md:gap-4">
-          {isDepositsLoading ? (
-            <>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-6 w-10 mt-2" />
-                </div>
-              ))}
-            </>
-          ) : (
-            <>
-              <StatBox label="Diterima" value={counts.diterima} tone="success" />
-              <StatBox label="Pending" value={counts.pending} tone="warning" />
-              <StatBox label="Di Cek" value={counts.dicek} tone="info" />
-              <StatBox label="Ditolak" value={counts.ditolak} tone="danger" />
-            </>
-          )}
-        </div>
+        <StatusSummaryGrid items={riwayatStatusItems} isLoading={isDepositsLoading} />
       </Reveal>
 
       {/* List */}
       <Reveal delay={200} className="mt-5">
         {isDepositsLoading ? (
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-3.5 w-32" />
             </div>
-            <div className="divide-y divide-slate-100/90">
+            <div className="divide-y divide-white/10">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 md:px-6 md:py-4">
                   <Skeleton className="size-10 md:size-11 rounded-2xl shrink-0" />
@@ -327,13 +340,13 @@ export function RiwayatView() {
           </Card>
         ) : filtered.length > 0 ? (
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
-              <p className="text-[0.8rem] font-semibold text-ink-800">Daftar Setoran</p>
-              <span className="text-[0.72rem] text-ink-500">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+              <p className="text-[0.8rem] font-semibold text-white">Daftar Setoran</p>
+              <span className="text-[0.72rem] text-zinc-400">
                 {filtered.length} data · {range === "today" ? "Hari ini" : range === "7d" ? "7 Hari" : "30 Hari"}
               </span>
             </div>
-            <div className="divide-y divide-slate-100/90">
+            <div className="divide-y divide-white/10">
               {filtered.map((record, index) => (
                 <DepositRow key={record.id} record={record} index={index} />
               ))}
