@@ -16,9 +16,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status";
-import { ShineBorder } from "@/components/ui/shine-border-04";
 import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
 import { type CheckResult, type CheckStatus, checkStatusMeta } from "@/lib/checker";
 import { splitLines } from "@/lib/email";
@@ -375,46 +373,71 @@ export function CheckerView() {
       <Reveal delay={40}>
         <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-2xl">
           <CardContent className="space-y-4 p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-bold text-white">
-                Daftar Gmail yang Akan Dicek
-              </label>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4 text-sky-400" />
+                <label className="text-xs sm:text-sm font-bold text-white">
+                  Daftar Gmail yang Akan Dicek
+                </label>
+                {lineCount > 0 && (
+                  <span
+                    className={cn(
+                      "text-[0.7rem] px-2 py-0.5 rounded-full font-semibold tabular-nums border",
+                      lineCount >= MAX_LINES
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                        : "bg-white/10 border-white/10 text-zinc-300"
+                    )}
+                  >
+                    {lineCount} Gmail{lineCount >= MAX_LINES ? " (Maks. 100)" : ""}
+                  </span>
+                )}
+              </div>
 
-              {/* Tombol Paste Generate Gmail muncul jika ada email yang sudah di-generate di Setor */}
-              {storedGenerated.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handlePasteGenerated}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 border border-sky-500/25 shadow-2xs"
-                  title="Tempel email hasil generate dari tab Setor"
-                >
-                  <ArrowDownToLine className="size-3.5" />
-                  <span>Paste Hasil Generate ({storedGenerated.length})</span>
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {/* Tombol Paste Generate Gmail muncul jika ada email yang sudah di-generate di Setor */}
+                {storedGenerated.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handlePasteGenerated}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 text-xs font-bold text-sky-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
+                    title="Tempel email hasil generate dari tab Setor"
+                  >
+                    <ArrowDownToLine className="size-3.5" />
+                    <span>Paste Hasil Generate ({storedGenerated.length})</span>
+                  </button>
+                )}
+
+                {input.trim().length > 0 && !isRunning && (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="inline-flex items-center gap-1 p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer text-xs"
+                    title="Kosongkan kolom"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <ShineBorder
-              borderWidth={2}
-              duration={5}
-              color="var(--color-blue-500, #0ea5e9)"
-              onClick={() => textareaRef.current?.focus()}
-              className="w-full rounded-2xl shadow-sm cursor-text border border-white/10 bg-black/40"
-            >
-              <textarea
-                ref={textareaRef}
-                rows={7}
-                spellCheck={false}
-                autoCapitalize="off"
-                autoCorrect="off"
-                placeholder={"contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com"}
-                value={input}
-                onChange={handleTextareaChange}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-                className="w-full min-h-40 resize-y px-4 py-3 leading-relaxed font-mono text-xs sm:text-sm bg-black/40 border-0 outline-none focus:outline-none focus:ring-0 rounded-2xl text-white placeholder:text-zinc-500 relative z-30 pointer-events-auto cursor-text select-text"
-              />
-            </ShineBorder>
+            <textarea
+              ref={textareaRef}
+              rows={8}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              placeholder={"contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com"}
+              value={input}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              className={cn(
+                "w-full min-h-[220px] rounded-2xl border p-4 font-mono text-xs sm:text-sm leading-relaxed text-white placeholder:text-zinc-500 bg-black/40 outline-none transition-all resize-y",
+                lineCount >= MAX_LINES
+                  ? "border-amber-500 focus:ring-2 focus:ring-amber-500/30"
+                  : "border-white/10 focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20"
+              )}
+            />
 
             <p className="text-[0.78rem] leading-relaxed text-zinc-400 px-0.5">
               {lineCount > 0 ? (
@@ -443,17 +466,21 @@ export function CheckerView() {
               >
                 {isRunning ? `Memeriksa ${scanned}/${totalToScan}...` : "Mulai Checker"}
               </Button>
-              <Button
+              <button
                 type="button"
-                size="lg"
-                variant="secondary"
                 onClick={handleReset}
                 disabled={isRunning || (!input && !hasRun)}
-                leftIcon={<Trash2 className="size-4 text-slate-500 group-hover:text-rose-600" aria-hidden="true" />}
-                className="rounded-2xl sm:w-auto hover:text-rose-600 hover:border-rose-200"
+                className={cn(
+                  "inline-flex items-center justify-center gap-2 h-12 px-6 text-sm sm:text-base font-semibold rounded-2xl border transition-all active:scale-95 shadow-sm sm:w-auto shrink-0 select-none cursor-pointer",
+                  isRunning || (!input && !hasRun)
+                    ? "border-white/10 bg-white/5 text-zinc-500 cursor-not-allowed opacity-40 active:scale-100"
+                    : "border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:border-rose-500/50 text-rose-300 hover:text-rose-200"
+                )}
+                title="Hapus / Bersihkan kolom"
               >
-                Hapus
-              </Button>
+                <Trash2 className="size-4 shrink-0" aria-hidden="true" />
+                <span>Hapus</span>
+              </button>
             </div>
           </CardContent>
         </Card>

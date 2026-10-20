@@ -41,9 +41,8 @@ const statusFilters: {
   icon?: React.ReactNode;
 }[] = [
   { value: "semua", label: "Semua" },
-  { value: "pending", label: "Pending" },
-  { value: "dicek", label: "Di Cek" },
   { value: "diterima", label: "Diterima" },
+  { value: "dicek", label: "Di Cek" },
   { value: "ditolak", label: "Ditolak" },
 ];
 
@@ -57,9 +56,9 @@ const statusMeta: Record<
     icon: <CircleCheck className="size-3" aria-hidden="true" />,
   },
   pending: {
-    label: "PENDING",
-    tone: "warning",
-    icon: <Clock className="size-3" aria-hidden="true" />,
+    label: "DI CEK",
+    tone: "info",
+    icon: <ScanSearch className="size-3" aria-hidden="true" />,
   },
   dicek: {
     label: "DI CEK",
@@ -102,8 +101,7 @@ function DepositRow({ record, index }: { record: DepositRecord; index: number })
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 md:size-11",
           record.status === "diterima" && "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-          record.status === "pending" && "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-          record.status === "dicek" && "bg-sky-500/10 text-sky-400 border border-sky-500/20",
+          (record.status === "pending" || record.status === "dicek") && "bg-sky-500/10 text-sky-400 border border-sky-500/20",
           record.status === "ditolak" && "bg-rose-500/10 text-rose-400 border border-rose-500/20",
         )}
       >
@@ -128,7 +126,7 @@ function DepositRow({ record, index }: { record: DepositRecord; index: number })
         <span className="text-[0.85rem] font-bold tracking-tight text-white tabular-nums">
           {formatIDR(record.amount)}
         </span>
-        <StatusBadge tone={meta.tone} icon={meta.icon} dot pulse={record.status === "pending"}>
+        <StatusBadge tone={meta.tone} icon={meta.icon} dot pulse={record.status === "pending" || record.status === "dicek"}>
           {meta.label}
         </StatusBadge>
       </div>
@@ -149,18 +147,28 @@ export function RiwayatView() {
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return deposits
-      .filter((d) => (status === "semua" ? true : d.status === status))
+      .filter((d) => {
+        if (status === "semua") return true;
+        if (status === "dicek") return d.status === "dicek" || d.status === "pending";
+        return d.status === status;
+      })
       .filter((d) => withinRange(d.createdAt, range))
       .filter((d) => (q ? d.gmail.toLowerCase().includes(q) : true))
       .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   }, [deposits, query, status, range]);
 
   const counts = React.useMemo(() => {
-    const base = { semua: 0, pending: 0, dicek: 0, diterima: 0, ditolak: 0 };
+    const base: Record<string, number> = { semua: 0, diterima: 0, dicek: 0, ditolak: 0 };
     for (const d of deposits) {
       if (withinRange(d.createdAt, range)) {
         base.semua += 1;
-        base[d.status] += 1;
+        if (d.status === "dicek" || d.status === "pending") {
+          base.dicek += 1;
+        } else if (d.status === "diterima") {
+          base.diterima += 1;
+        } else if (d.status === "ditolak") {
+          base.ditolak += 1;
+        }
       }
     }
     return base;
@@ -169,22 +177,22 @@ export function RiwayatView() {
   const riwayatStatusItems: StatusCardItem[] = React.useMemo(
     () => [
       {
+        title: "Total Setoran",
+        value: counts.semua,
+        bg: "bg-zinc-950",
+        svgType: "circles",
+      },
+      {
         title: "Diterima",
         value: counts.diterima,
         bg: "bg-emerald-600",
         svgType: "blur2",
       },
       {
-        title: "Pending",
-        value: counts.pending,
-        bg: "bg-amber-600",
-        svgType: "blur4",
-      },
-      {
         title: "Di Cek",
         value: counts.dicek,
-        bg: "bg-blue-600",
-        svgType: "circles",
+        bg: "bg-sky-600",
+        svgType: "blur4",
       },
       {
         title: "Ditolak",

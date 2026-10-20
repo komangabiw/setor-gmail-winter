@@ -115,9 +115,9 @@ export function DashboardView() {
         svgType: "blur2",
       },
       {
-        title: "Pending",
+        title: "Di Cek",
         value: userStats.pending,
-        bg: "bg-amber-600",
+        bg: "bg-sky-600",
         svgType: "blur4",
       },
       {
