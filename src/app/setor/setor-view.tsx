@@ -644,20 +644,20 @@ export function SetorView() {
 
         {/* 3. Password Wajib Card */}
         <Reveal delay={60}>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-950/30 px-3.5 py-2.5 shadow-2xs backdrop-blur-md">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3.5 py-2.5 shadow-2xs backdrop-blur-md">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
                 <span className="text-sm">🔑</span>
                 <span>Password wajib untuk Gmail yang disetor:</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-500/15 px-2.5 py-0.5 font-mono text-sm font-black tracking-wider text-amber-200 shadow-2xs select-all">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-sm font-black tracking-wider text-emerald-200 shadow-2xs select-all">
                   {defaultPassword}
                   <button
                     type="button"
                     onClick={handleCopyPassword}
                     title="Salin password wajib"
-                    className="text-amber-300 hover:text-white transition-colors cursor-pointer"
+                    className="text-emerald-300 hover:text-white transition-colors cursor-pointer"
                   >
                     {copiedPassword ? (
                       <Check className="size-3 text-emerald-400" />
@@ -666,7 +666,7 @@ export function SetorView() {
                     )}
                   </button>
                 </span>
-                <span className="text-[0.68rem] text-amber-300/80 font-semibold">
+                <span className="text-[0.68rem] text-emerald-300/80 font-semibold">
                   (huruf kecil semua)
                 </span>
               </div>
@@ -699,12 +699,12 @@ export function SetorView() {
             {/* Highlighted Password Warning under instructions */}
             <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-zinc-300 font-medium">
               <span>Password wajib:</span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-500/15 px-2.5 py-0.5 font-mono font-black text-amber-200 shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono font-black text-emerald-200 shadow-2xs">
                 {defaultPassword}
                 <button
                   type="button"
                   onClick={handleCopyPassword}
-                  className="text-amber-300 hover:text-white transition-colors cursor-pointer"
+                  className="text-emerald-300 hover:text-white transition-colors cursor-pointer"
                   title="Salin password"
                 >
                   {copiedPassword ? (

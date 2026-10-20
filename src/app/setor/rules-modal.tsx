@@ -34,7 +34,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
             <Scale className="size-5" strokeWidth={2.2} aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-0.5 text-[0.62rem] font-bold tracking-wider text-amber-950 uppercase shadow-xs">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400 px-2.5 py-0.5 text-[0.62rem] font-bold tracking-wider text-emerald-950 uppercase shadow-xs">
               <Sparkles className="size-3" />
               Wajib Baca
             </span>
@@ -67,7 +67,7 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
               {ruleItem.type === "password" ? (
                 <>
                   Password Gmail wajib menggunakan:{" "}
-                  <span className="inline-flex items-center rounded-md border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 font-mono text-[0.82rem] font-extrabold text-amber-200 shadow-xs">
+                  <span className="inline-flex items-center rounded-md border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.82rem] font-extrabold text-emerald-200 shadow-xs">
                     {defaultPassword}
                   </span>{" "}
                   <span className="font-bold text-rose-400">
@@ -95,13 +95,13 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
       </ul>
 
       {/* Notes */}
-      <div className="shrink-0 space-y-2.5 border-t border-amber-500/30 bg-amber-950/40 px-5 py-4 md:px-6">
+      <div className="shrink-0 space-y-2.5 border-t border-emerald-500/30 bg-emerald-950/40 px-5 py-4 md:px-6">
         <div className="flex items-center gap-2">
           <TriangleAlert
-            className="size-4 shrink-0 text-amber-400"
+            className="size-4 shrink-0 text-emerald-400"
             aria-hidden="true"
           />
-          <p className="text-[0.75rem] font-bold tracking-wide text-amber-300 uppercase">
+          <p className="text-[0.75rem] font-bold tracking-wide text-emerald-300 uppercase">
             Catatan Tambahan
           </p>
         </div>
@@ -109,11 +109,11 @@ export function RulesModal({ open, onClose }: RulesModalProps) {
           {NOTES.map((note) => (
             <li
               key={note}
-              className="flex items-start gap-2 text-[0.73rem] leading-relaxed text-amber-200/90"
+              className="flex items-start gap-2 text-[0.73rem] leading-relaxed text-emerald-200/90"
             >
               <span
                 aria-hidden="true"
-                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-amber-400"
+                className="mt-[0.45rem] size-1 shrink-0 rounded-full bg-emerald-400"
               />
               {note}
             </li>
