@@ -168,7 +168,7 @@ export function SetorView() {
 
   // Handle generating new batch with high-entropy guarantee
   const handleGenerate = (count = customCountInput) => {
-    const validCount = Math.max(1, Math.min(100, count));
+    const validCount = Math.max(1, Math.min(20, count));
     const list = generateBatch(validCount, generatedPool);
     setGeneratedList(list);
     saveStoredGeneratedGmails(list);
@@ -182,14 +182,14 @@ export function SetorView() {
     });
   };
 
-  // Handle Generate Lagi: appends selected count to existing batch (max 100)
+  // Handle Generate Lagi: appends selected count to existing batch (max 20)
   const handleGenerateMore = (count = customCountInput) => {
     const currentCount = generatedList.length;
-    if (currentCount >= 100) {
-      toast.error("Maksimal 100 Gmail telah tercapai!");
+    if (currentCount >= 20) {
+      toast.error("Maksimal 20 Gmail telah tercapai!");
       return;
     }
-    const maxCanAdd = 100 - currentCount;
+    const maxCanAdd = 20 - currentCount;
     const toAdd = Math.min(Math.max(1, count), maxCanAdd);
     const newBatch = generateBatch(toAdd, generatedPool);
     const combined = [...generatedList, ...newBatch];
@@ -202,8 +202,8 @@ export function SetorView() {
       return next;
     });
 
-    if (currentCount + count > 100) {
-      toast.info(`Ditambahkan ${toAdd} Gmail (maksimal 100 tercapai, total: 100 akun).`);
+    if (currentCount + count > 20) {
+      toast.info(`Ditambahkan ${toAdd} Gmail (maksimal 20 tercapai, total: 20 akun).`);
     } else {
       toast.success(`${toAdd} Gmail tambahan berhasil digenerate! Total: ${combined.length} akun.`);
     }
@@ -716,7 +716,7 @@ export function SetorView() {
               </span>
             </div>
 
-            {/* Pilih Jumlah Generate Email (Input 1-100 & Presets) */}
+            {/* Pilih Jumlah Generate Email (Input 1-20 & Presets) */}
             <div className="mt-5 rounded-2xl border border-purple-500/20 bg-purple-950/20 p-4 sm:p-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-purple-500/20">
                 <div className="flex flex-wrap items-center gap-2">
@@ -724,7 +724,7 @@ export function SetorView() {
                     Jumlah:
                   </span>
                   {/* Presets */}
-                  {[5, 10, 20, 50, 100].map((num) => (
+                  {[5, 10, 15, 20].map((num) => (
                     <button
                       key={num}
                       type="button"
@@ -745,17 +745,17 @@ export function SetorView() {
                     </button>
                   ))}
 
-                  {/* Input field 1 - 100 */}
+                  {/* Input field 1 - 20 */}
                   <div className="flex items-center gap-1 ml-1">
                     <input
                       type="number"
                       min={1}
-                      max={100}
+                      max={20}
                       value={customCountInput}
                       onChange={(e) => {
                         const val = parseInt(e.target.value, 10);
                         if (!isNaN(val)) {
-                          setCustomCountInput(Math.max(1, Math.min(100, val)));
+                          setCustomCountInput(Math.max(1, Math.min(20, val)));
                         } else {
                           setCustomCountInput(1);
                         }
@@ -916,11 +916,15 @@ export function SetorView() {
                       <button
                         type="button"
                         onClick={() => handleGenerateMore(customCountInput)}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-950/30 hover:bg-purple-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-purple-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                        disabled={generatedList.length >= 20}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-950/30 hover:bg-purple-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-purple-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer",
+                          generatedList.length >= 20 && "opacity-50 cursor-not-allowed hover:bg-purple-950/30"
+                        )}
                       >
                         <Sparkles className="size-4 text-purple-400" />
                         <span>
-                          Generate Lagi (+{Math.min(customCountInput, Math.max(0, 100 - generatedList.length))})
+                          Generate Lagi (+{Math.min(customCountInput, Math.max(0, 20 - generatedList.length))})
                         </span>
                       </button>
                     </div>
