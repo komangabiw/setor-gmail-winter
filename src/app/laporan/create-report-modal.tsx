@@ -319,48 +319,6 @@ export function CreateReportModal({
           ? userProfile.uid
           : authUser?.id || userId || userProfile?.uid) || "-";
 
-      let response: Response;
-
-      if (file) {
-        const formData = new FormData();
-        formData.append("kategori", category);
-        formData.append("judul", cleanSubject);
-        formData.append("deskripsi", cleanDescription);
-        formData.append("nama_user", namaUser);
-        formData.append("email_user", emailUser);
-        formData.append("uid_user", uidUser);
-        formData.append("file", file);
-        response = await fetch("/api/telegram-report", {
-          method: "POST",
-          body: formData,
-        });
-      } else {
-        response = await fetch("/api/telegram-report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kategori: category,
-            judul: cleanSubject,
-            deskripsi: cleanDescription,
-            nama_user: namaUser,
-            email_user: emailUser,
-            uid_user: uidUser,
-          }),
-        });
-      }
-
-      const payload = (await response.json().catch(() => null)) as {
-        ok?: boolean;
-        error?: string;
-      } | null;
-
-      if (!response.ok || !payload?.ok) {
-        toast.error(payload?.error ?? "Laporan gagal terkirim. Coba lagi.");
-        setIsSending(false);
-        setStep("form");
-        return;
-      }
-
       const stamp = Date.now();
       const ticket: ReportTicket = {
         id: `r-${stamp}`,
@@ -374,33 +332,51 @@ export function CreateReportModal({
         replies: [],
       };
 
-      // Save ticket to Supabase in background
-      (async () => {
-        try {
-          const user = await getCurrentAuthUser();
-          if (user) {
-            await insertSupportTicket(user.id, {
-              code: ticket.code,
-              category: ticket.category,
-              subject: ticket.subject,
-              description: ticket.description,
-              attachmentName: ticket.attachmentName,
-            });
-          }
-        } catch (dbErr) {
-          console.warn("Supabase ticket insertion error (fallback used):", dbErr);
+      // Simpan tiket ke Supabase jika login
+      try {
+        const user = await getCurrentAuthUser();
+        if (user) {
+          await insertSupportTicket(user.id, {
+            code: ticket.code,
+            category: ticket.category,
+            subject: ticket.subject,
+            description: ticket.description,
+            attachmentName: ticket.attachmentName,
+          });
         }
-      })();
+      } catch (dbErr) {
+        console.warn("Supabase ticket insertion error (fallback used):", dbErr);
+      }
+
+      // Format template teks pesan untuk dikirim langsung ke Telegram @winterhere
+      const telegramText =
+        `Halo Admin Setor Gmail (@winterhere),\n\n` +
+        `Saya ingin membuat laporan dengan rincian berikut:\n` +
+        `• No. Tiket: ${ticket.code}\n` +
+        `• Kategori: ${category}\n` +
+        `• Pengguna: ${namaUser} (${emailUser})\n` +
+        `• UID: ${uidUser}\n` +
+        `• Judul: ${cleanSubject}\n\n` +
+        `Deskripsi Masalah:\n${cleanDescription}\n\n` +
+        (file ? `[Catatan: Pengguna menyertakan lampiran file: ${file.name}]\n\n` : "") +
+        `Mohon bantuannya, terima kasih.`;
+
+      const telegramUrl = `https://t.me/winterhere?text=${encodeURIComponent(telegramText)}`;
+
+      // Buka chat Telegram langsung ke akun @winterhere
+      if (typeof window !== "undefined") {
+        window.open(telegramUrl, "_blank", "noopener,noreferrer");
+      }
 
       setStep("done");
-      await new Promise((r) => setTimeout(r, 900));
+      await new Promise((r) => setTimeout(r, 600));
       onSubmit(ticket);
       handleClose();
-      toast.success("Laporan berhasil dikirim ke Admin!", {
-        description: `Tiket ${ticket.code} akan segera ditinjau.`,
+      toast.success("Mengarahkan ke Telegram @winterhere...", {
+        description: `Tiket ${ticket.code} berhasil dibuat. Silakan kirim pesan ke Telegram.`,
       });
     } catch {
-      toast.error("Gagal menghubungi server. Periksa koneksi lalu coba lagi.");
+      toast.error("Terjadi kendala saat memproses laporan.");
       setIsSending(false);
       setStep("form");
     }
@@ -709,23 +685,29 @@ export function CreateReportModal({
           {step === "sending" ? (
             <>
               <LoaderCircle className="size-4 animate-spin" />
-              <span>Mengirim...</span>
+              <span>Membuka Telegram...</span>
             </>
           ) : step === "done" ? (
             <>
               <span className="text-base">✅</span>
-              <span>Terkirim!</span>
+              <span>Terbuka di Telegram!</span>
             </>
           ) : (
             <>
-              <Send className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              <span>Kirim Laporan</span>
+              <svg
+                className="size-4 fill-white transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.94z" />
+              </svg>
+              <span>Kirim ke Telegram Admin</span>
             </>
           )}
         </button>
 
         <p className="text-center text-[0.72rem] text-zinc-400">
-          Laporan dikirim langsung ke Admin.
+          Laporan akan langsung diteruskan ke chat Telegram @winterhere.
         </p>
       </div>
     </Modal>
