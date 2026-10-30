@@ -358,8 +358,8 @@ export function CinematicFooter({
 
   const footerContent = (
     <footer className={cn(
-      "flex h-full min-h-screen w-full flex-col justify-between overflow-hidden bg-[#09090b] text-[#f8fafc] cinematic-footer-wrapper select-none",
-      isOnePage ? "relative" : "fixed bottom-0 left-0 h-screen"
+      "flex min-h-dvh w-full flex-col justify-between overflow-x-hidden bg-[#09090b] text-[#f8fafc] cinematic-footer-wrapper select-none",
+      isOnePage ? "relative" : "fixed bottom-0 left-0 min-h-screen"
     )}>
       {/* Ambient Light & Grid Background */}
       <div className="footer-aurora absolute left-1/2 top-1/2 h-[65vh] w-[85vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[90px] pointer-events-none z-0" />
@@ -385,7 +385,7 @@ export function CinematicFooter({
       </div>
 
       {/* 2. Main Center / Hero Content Area */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-6 sm:px-10 lg:px-16 pt-24 pb-16 w-full max-w-7xl mx-auto">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 sm:px-10 lg:px-16 pt-20 sm:pt-24 pb-12 sm:pb-16 w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center w-full">
 
           {/* SISI KIRI: Headline & Tombol Action (Login & Daftar) */}
@@ -448,7 +448,7 @@ export function CinematicFooter({
           </div>
 
           {/* SISI KANAN / BESIDE: Showcase & Floating Cards persis sesuai gambar referensi */}
-          <div ref={heroRightRef} className="lg:col-span-6 relative flex items-center justify-center py-10 sm:py-12">
+          <div ref={heroRightRef} className="lg:col-span-6 relative flex items-center justify-center py-10 sm:py-12 pb-14 sm:pb-12">
             <div className="relative w-full max-w-[420px] sm:max-w-md mx-auto">
 
               {/* Center Main Card: Setor Gmail */}
@@ -484,8 +484,8 @@ export function CinematicFooter({
 
               {/* 4 FLOATING CARDS - Diposisikan outer orbit agar TIDAK menutupi tulisan */}
               {/* 1. Kiri Atas: Cair Instan | E-wallet dan Bank */}
-              <div className="animate-float-1 absolute -top-8 -left-4 sm:-top-10 sm:-left-10 lg:-left-14 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
-                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
+              <div className="animate-float-1 absolute -top-7 -left-1 sm:-top-10 sm:-left-8 lg:-left-12 z-20 floating-showcase-card rounded-2xl p-2 sm:p-3.5 flex items-center gap-2 sm:gap-3">
+                <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-xs">
                   <Zap className="size-4 sm:size-5 fill-amber-400" />
                 </div>
                 <div className="text-left">
@@ -499,8 +499,8 @@ export function CinematicFooter({
               </div>
 
               {/* 2. Kanan Atas: Rp 90.000 Cair | 3 menit lalu */}
-              <div className="animate-float-2 absolute -top-8 -right-4 sm:-top-10 sm:-right-10 lg:-right-14 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
-                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
+              <div className="animate-float-2 absolute -top-7 -right-1 sm:-top-10 sm:-right-8 lg:-right-12 z-20 floating-showcase-card rounded-2xl p-2 sm:p-3.5 flex items-center gap-2 sm:gap-3">
+                <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
                   <Banknote className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
@@ -514,8 +514,8 @@ export function CinematicFooter({
               </div>
 
               {/* 3. Kiri Bawah: 100% Aman | SSL Terenkripsi */}
-              <div className="animate-float-2 absolute -bottom-9 -left-4 sm:-bottom-11 sm:-left-10 lg:-left-14 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
-                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
+              <div className="animate-float-2 absolute -bottom-8 -left-1 sm:-bottom-11 sm:-left-8 lg:-left-12 z-20 floating-showcase-card rounded-2xl p-2 sm:p-3.5 flex items-center gap-2 sm:gap-3">
+                <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
                   <ShieldCheck className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
@@ -529,8 +529,8 @@ export function CinematicFooter({
               </div>
 
               {/* 4. Kanan Bawah: 3.5K Member | Aktif sekarang */}
-              <div className="animate-float-1 absolute -bottom-9 -right-4 sm:-bottom-11 sm:-right-10 lg:-right-14 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
-                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
+              <div className="animate-float-1 absolute -bottom-8 -right-1 sm:-bottom-11 sm:-right-8 lg:-right-12 z-20 floating-showcase-card rounded-2xl p-2 sm:p-3.5 flex items-center gap-2 sm:gap-3">
+                <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
                   <Users className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
@@ -554,7 +554,7 @@ export function CinematicFooter({
         - Teks copyright sebelah kiri SUDAH DIHAPUS
         - Badge diubah menjadi "Crafted by Winter" dan diposisikan di sebelah KANAN
       */}
-      <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex justify-end items-center">
+      <div className="relative z-20 w-full pb-8 px-6 md:px-12 flex justify-center sm:justify-end items-center">
         <div className="footer-glass-pill px-6 py-2.5 rounded-full flex items-center gap-1.5 cursor-default border-white/10 shadow-lg">
           <span className="text-zinc-400 text-[10px] md:text-xs font-semibold uppercase tracking-wider">Crafted by</span>
           <span className="text-white font-black text-xs md:text-sm tracking-normal ml-0.5">{craftedByText}</span>
@@ -567,7 +567,7 @@ export function CinematicFooter({
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       {isOnePage ? (
-        <div ref={wrapperRef} className="relative h-screen w-full overflow-hidden bg-[#09090b]">
+        <div ref={wrapperRef} className="relative min-h-dvh w-full overflow-x-hidden bg-[#09090b]">
           {footerContent}
         </div>
       ) : (

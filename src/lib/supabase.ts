@@ -747,77 +747,19 @@ export async function fetchUserTransactions(userId?: string): Promise<{
 }
 
 /* ------------------------------------------------------------------ */
-/* 6. Support Tickets / Laporan Helpers (A01, A03, A07, A09)          */
+/* 6. Support Tickets / Laporan Helpers                               */
+/* Note: Laporan sekarang 100% direct ke Telegram Admin @winterhere   */
 /* ------------------------------------------------------------------ */
 
-export async function fetchUserTickets(userId?: string): Promise<{
+export async function fetchUserTickets(_userId?: string): Promise<{
   tickets: ReportTicket[];
   isFallback: boolean;
 }> {
-  try {
-    const user = await getCurrentAuthUser();
-    if (!user) {
-      return { tickets: [], isFallback: true };
-    }
-
-    // A01/A07: Prevent IDOR
-    if (userId && userId !== user.id) {
-      console.warn(`[SECURITY] IDOR blocked: user ${user.id} attempted to view tickets ${userId}`);
-      return { tickets: [], isFallback: true };
-    }
-
-    const targetUid = user.id;
-
-    if (!isSupabaseConfigured) {
-      return { tickets: [], isFallback: true };
-    }
-
-    const { data, error } = await supabase
-      .from("support_tickets")
-      .select(`
-        id, ticket_code, category, subject, description, status,
-        attachment_name, created_at,
-        ticket_replies (id, sender_type, message, created_at)
-      `)
-      .eq("user_id", targetUid)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return { tickets: [], isFallback: true };
-    }
-
-    const tickets: ReportTicket[] = (data || []).map((t) => {
-      const replies = Array.isArray(t.ticket_replies)
-        ? t.ticket_replies.map((r: { id: string; sender_type: string; message: string; created_at: string }) => ({
-            id: r.id,
-            from: (r.sender_type === "admin" ? "admin" : "user") as "admin" | "user",
-            body: r.message,
-            createdAt: r.created_at,
-          }))
-        : [];
-
-      return {
-        id: t.id,
-        code: t.ticket_code,
-        category: t.category as ReportTicket["category"],
-        subject: t.subject,
-        description: t.description,
-        status: t.status as ReportTicket["status"],
-        attachmentName: t.attachment_name || undefined,
-        createdAt: t.created_at,
-        replies,
-      };
-    });
-
-    return { tickets, isFallback: false };
-  } catch (err) {
-    console.error("[TICKETS FETCH ERROR]", err);
-    return { tickets: [], isFallback: true };
-  }
+  return { tickets: [], isFallback: false };
 }
 
 export async function insertSupportTicket(
-  userId: string,
+  _userId: string,
   params: {
     code: string;
     category: string;
@@ -827,53 +769,6 @@ export async function insertSupportTicket(
     attachmentUrl?: string;
   }
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  if (!isSupabaseConfigured) {
-    return { success: true, id: `t-${Date.now()}` };
-  }
-
-  try {
-    const user = await getCurrentAuthUser();
-    // A01/A07: Verify authenticated user
-    if (!user || user.id !== userId) {
-      return { success: false, error: "Akses ditolak: Sesi tidak sah." };
-    }
-
-    // A03: Sanitize all ticket inputs
-    const cleanCode = sanitizeInputText(params.code, 50);
-    const cleanCategory = sanitizeInputText(params.category, 50);
-    const cleanSubject = sanitizeInputText(params.subject, 150);
-    const cleanDescription = sanitizeInputText(params.description, 2000);
-    const cleanAttachmentName = params.attachmentName ? sanitizeInputText(params.attachmentName, 200) : null;
-    const cleanAttachmentUrl = params.attachmentUrl ? sanitizeInputText(params.attachmentUrl, 500) : null;
-
-    if (!cleanSubject || !cleanDescription) {
-      return { success: false, error: "Judul dan deskripsi tiket wajib diisi." };
-    }
-
-    const { data, error } = await supabase
-      .from("support_tickets")
-      .insert({
-        ticket_code: cleanCode,
-        user_id: user.id,
-        category: cleanCategory,
-        subject: cleanSubject,
-        description: cleanDescription,
-        attachment_name: cleanAttachmentName,
-        attachment_url: cleanAttachmentUrl,
-        status: "baru",
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      return { success: false, error: sanitizeErrorMessage(error) };
-    }
-
-    return { success: true, id: data.id };
-  } catch (err: unknown) {
-    return {
-      success: false,
-      error: sanitizeErrorMessage(err, "Gagal membuat tiket laporan."),
-    };
-  }
+  // Laporan diarahkan langsung ke Telegram admin @winterhere
+  return { success: true, id: params.code || `t-${Date.now()}` };
 }
