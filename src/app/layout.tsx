@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Setor Gmail Winter - Setor Gmail Aman, Cepat & Trusted",
-    template: "%s | Setor Gmail Winter",
+    default: "Setor Gmail by Winter - Aman, Cepat & Trusted",
+    template: "%s | Setor Gmail by Winter",
   },
   description:
-    "Setor Gmail Winter. Setor Gmail dengan harga transparan, penarikan cepat via DANA, GoPay, OVO, ShopeePay.",
+    "Setor Gmail by Winter. Setor Gmail dengan harga transparan, penarikan cepat via DANA, GoPay, OVO, ShopeePay.",
   applicationName: "Setor Gmail",
   icons: {
     icon: [

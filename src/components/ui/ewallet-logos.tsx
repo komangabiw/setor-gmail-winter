@@ -195,13 +195,11 @@ export function IndonesiaFlag({ className = "w-5 h-3.5" }: { className?: string 
 }
 
 /**
- * Urutan resmi E-Wallet: Dana -> ShopeePay -> GoPay -> OVO
+ * Urutan resmi E-Wallet yang didukung penarikan: DANA -> GoPay
  */
 export const EWALLET_ORDER: EWalletMethod[] = [
   "DANA",
-  "SHOPEEPAY",
   "GOPAY",
-  "OVO",
 ];
 
 /**

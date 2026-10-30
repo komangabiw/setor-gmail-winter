@@ -227,6 +227,12 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
       uidUser = ((formData.get("uid_user") || formData.get("uidUser") || formData.get("uid") || "") as string).trim();
       const fileEntry = formData.get("file");
       if (fileEntry instanceof File && fileEntry.size > 0) {
+        if (fileEntry.size > 10 * 1024 * 1024) {
+          return new Response(JSON.stringify({ ok: false, error: "Ukuran file bukti maksimal 10MB." }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
         attachedFile = fileEntry;
       }
     } catch {
@@ -369,6 +375,7 @@ function applySecurityHeaders(response: Response, origin?: string | null): Respo
   newHeaders.set("X-Frame-Options", "DENY");
   newHeaders.set("Referrer-Policy", "origin-when-cross-origin");
   newHeaders.set("X-XSS-Protection", "1; mode=block");
+  newHeaders.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
 
   if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".pages.dev"))) {
     newHeaders.set("Access-Control-Allow-Origin", origin);
@@ -479,6 +486,13 @@ async function handleWithdrawalApi(request: Request, env: Env): Promise<Response
     const amount = Number(body.amount);
     const method = String(body.method || "").toUpperCase();
     const accountNumber = String(body.accountNumber || "").trim();
+
+    if (!["DANA", "GOPAY", "OVO", "SHOPEEPAY"].includes(method)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Metode e-wallet tidak valid." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     if (!amount || isNaN(amount) || amount < 5000 || amount > 5000000) {
       return new Response(

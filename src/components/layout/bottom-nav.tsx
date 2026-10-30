@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, History, Wallet, User, Send } from "lucide-react";
+import { Home, History, ShieldCheck, User, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -17,7 +17,7 @@ const leftItems: NavItem[] = [
 ];
 
 const rightItems: NavItem[] = [
-  { href: "/saldo", label: "Saldo", icon: Wallet },
+  { href: "/checker", label: "Checker", icon: ShieldCheck },
   { href: "/profil", label: "Profil", icon: User },
 ];
 
@@ -35,15 +35,17 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[0.62rem] font-semibold transition-colors duration-300 ease-out",
-        active ? "text-sky-400" : "text-zinc-400 hover:text-zinc-200",
+        "group relative flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[0.62rem] font-semibold transition-all duration-300 ease-out focus-visible:outline-none",
+        active
+          ? "text-sky-400 border border-sky-400/40 bg-sky-400/10 shadow-[0_0_14px_rgba(56,189,248,0.3)] font-bold"
+          : "text-zinc-400 hover:text-zinc-200 border border-transparent",
       )}
     >
       <span className="flex items-center justify-center">
         <Icon
           className={cn(
             "size-[1.35rem] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-active:scale-90",
-            active && "scale-105",
+            active ? "scale-105 text-sky-400" : "text-zinc-400 group-hover:text-zinc-200",
           )}
           strokeWidth={active ? 2.4 : 2}
           aria-hidden="true"
@@ -54,7 +56,7 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-/** Floating bottom navigation: Beranda · Riwayat · [Setor] · Saldo · Profil */
+/** Floating bottom navigation: Beranda · Riwayat · [Setor] · Checker · Profil */
 export function BottomNav() {
   const pathname = usePathname();
   const setorActive = isActive(pathname, "/setor");
@@ -74,14 +76,14 @@ export function BottomNav() {
             className={cn(
               "group absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[58%] rounded-full p-[5px] shadow-float transition-[transform,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-95",
               setorActive
-                ? "bg-gradient-to-br from-brand-500 to-brand-700"
-                : "bg-gradient-to-br from-sky-400 to-brand-600",
+                ? "bg-gradient-to-tr from-sky-400 via-sky-500 to-blue-600 shadow-[0_0_26px_rgba(56,189,248,0.6)]"
+                : "bg-gradient-to-tr from-sky-400 via-sky-500 to-blue-600 shadow-[0_0_20px_rgba(56,189,248,0.45)]",
             )}
           >
             <span
               className={cn(
                 "flex size-12 items-center justify-center rounded-full text-white transition-colors duration-300 sm:size-14",
-                "bg-gradient-to-br from-sky-400 to-brand-600 group-hover:from-sky-300 group-hover:to-brand-500",
+                "bg-gradient-to-tr from-sky-400 via-sky-500 to-blue-600 group-hover:from-sky-300 group-hover:to-blue-500",
                 setorActive && "from-transparent to-transparent",
               )}
             >
@@ -93,7 +95,7 @@ export function BottomNav() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-1 rounded-[1.75rem] border border-white/10 bg-[#121215]/90 px-2 pt-2.5 pb-2 shadow-2xl backdrop-blur-xl sm:gap-2 sm:px-3">
+          <div className="flex items-center gap-1 rounded-[1.75rem] border border-white/10 bg-[#121215]/95 px-2 pt-2.5 pb-2 shadow-2xl backdrop-blur-xl sm:gap-2 sm:px-3">
             {leftItems.map((item) => (
               <NavLink key={item.href} item={item} pathname={pathname} />
             ))}
@@ -107,7 +109,7 @@ export function BottomNav() {
               <span
                 className={cn(
                   "text-[0.62rem] font-semibold leading-none transition-colors duration-300",
-                  setorActive ? "text-sky-400" : "text-zinc-400",
+                  setorActive ? "text-sky-400 font-bold" : "text-zinc-400",
                 )}
               >
                 Setor

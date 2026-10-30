@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   LoaderCircle,
   ImageIcon,
-  Send,
   X,
   AlertCircle,
   Tag,

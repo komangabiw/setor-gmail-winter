@@ -147,8 +147,6 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const [isHistoryLoading, setIsHistoryLoading] = React.useState<boolean>(true);
   const [isTicketsLoading, setIsTicketsLoading] = React.useState<boolean>(true);
 
-  const isFetchedRef = React.useRef(false);
-
   // 1. Instant hydration from localStorage on mount (Stale-While-Revalidate)
   React.useEffect(() => {
     try {

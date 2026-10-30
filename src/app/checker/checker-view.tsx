@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status";
-import { EmptyState, PageShell, PageHeader, Reveal } from "@/components/layout/page-shell";
+import { EmptyState, PageShell, Reveal } from "@/components/layout/page-shell";
 import { type CheckResult, type CheckStatus, checkStatusMeta } from "@/lib/checker";
 import { splitLines } from "@/lib/email";
 import { getStoredGeneratedGmails } from "@/lib/generated-storage";
@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 
 /** Pacing santai & bertahap: 2 email per request dengan jeda halus agar progres terlihat stabil dan pasti */
 const BATCH_SIZE = 2;
-const MAX_LINES = 100;
+const MAX_LINES = 10;
 
 export function CheckerView() {
   const [input, setInput] = React.useState("");
@@ -302,11 +302,11 @@ export function CheckerView() {
       return;
     }
 
-    // If already at or above 100 lines, reject pasting additional lines
+    // If already at or above MAX_LINES lines, reject pasting additional lines
     if (currentLines.length >= MAX_LINES) {
       event.preventDefault();
       toast.error(`Maksimal ${MAX_LINES} baris email tercapai!`, {
-        description: "Tidak dapat menempel baris lebih dari 100.",
+        description: `Tidak dapat menempel baris lebih dari ${MAX_LINES}.`,
       });
       return;
     }
@@ -359,18 +359,10 @@ export function CheckerView() {
 
   return (
     <PageShell>
-      <PageHeader
-        title="Email Checker"
-        subtitle="Periksa status keaktifan email Gmail apapun secara akurat dan real-time langsung ke server Google."
-        right={
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#121217]/80 border border-white/10 text-sky-400 shadow-card">
-            <ShieldCheck className="size-5" strokeWidth={2.2} aria-hidden="true" />
-          </span>
-        }
-      />
-
-      {/* Input Card */}
-      <Reveal delay={40}>
+      <div className="flex flex-col justify-center min-h-[calc(100dvh-10rem)] py-6 sm:py-10">
+        <div className="w-full my-auto space-y-5">
+          {/* Input Card */}
+          <Reveal delay={40}>
         <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl shadow-2xl">
           <CardContent className="space-y-4 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
@@ -385,10 +377,10 @@ export function CheckerView() {
                       "text-[0.7rem] px-2 py-0.5 rounded-full font-semibold tabular-nums border",
                       lineCount >= MAX_LINES
                         ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
-                        : "bg-white/10 border-white/10 text-zinc-300"
+                        : "bg-sky-500/10 border-sky-500/30 text-sky-200"
                     )}
                   >
-                    {lineCount} Gmail{lineCount >= MAX_LINES ? " (Maks. 100)" : ""}
+                    {lineCount} Gmail{lineCount >= MAX_LINES ? ` (Maks. ${MAX_LINES})` : ""}
                   </span>
                 )}
               </div>
@@ -399,10 +391,10 @@ export function CheckerView() {
                   <button
                     type="button"
                     onClick={handlePasteGenerated}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 text-xs font-bold text-sky-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3 py-1.5 text-xs font-bold text-sky-200 shadow-2xs transition-all active:scale-95 cursor-pointer"
                     title="Tempel email hasil generate dari tab Setor"
                   >
-                    <ArrowDownToLine className="size-3.5" />
+                    <ArrowDownToLine className="size-3.5 text-sky-300" />
                     <span>Paste Hasil Generate ({storedGenerated.length})</span>
                   </button>
                 )}
@@ -447,11 +439,11 @@ export function CheckerView() {
                     lineCount >= MAX_LINES ? "text-amber-400 font-bold" : "text-zinc-300"
                   )}
                 >
-                  {lineCount} email terdeteksi · 1 per baris · maks {MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.
-                  {lineCount >= MAX_LINES && " (Maksimal 100 baris tercapai)"}
+                  {lineCount} email terdeteksi · 1 per baris · maks {MAX_LINES} email per cek.
+                  {lineCount >= MAX_LINES && ` (Maksimal ${MAX_LINES} baris tercapai)`}
                 </span>
               ) : (
-                `1 per baris · maks ${MAX_LINES} email per cek. Memeriksa status keaktifan Gmail langsung ke server Google.`
+                `1 per baris · maks ${MAX_LINES} email per cek.`
               )}
             </p>
 
@@ -461,8 +453,8 @@ export function CheckerView() {
                 fullWidth
                 isLoading={isRunning}
                 onClick={handleStart}
-                leftIcon={isRunning ? undefined : <Play className="size-4" aria-hidden="true" />}
-                className="bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-2xl shadow-md shadow-sky-500/20"
+                leftIcon={isRunning ? undefined : <Play className="size-4 fill-current" aria-hidden="true" />}
+                className="bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white font-bold rounded-2xl border border-sky-400/30 shadow-md shadow-sky-500/25 active:scale-95 transition-all cursor-pointer"
               >
                 {isRunning ? `Memeriksa ${scanned}/${totalToScan}...` : "Mulai Checker"}
               </Button>
@@ -489,17 +481,17 @@ export function CheckerView() {
       {/* Real-time Progress Bar */}
       {isRunning && (
         <Reveal className="mt-4">
-          <Card className="rounded-3xl border border-sky-500/30 bg-[#121217]/90 backdrop-blur-xl p-5 shadow-xl">
+          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 shadow-2xl">
             <CardContent className="space-y-3 p-0">
               <div className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-200">
                   <ShieldCheck className="size-4 animate-pulse text-sky-400" aria-hidden="true" />
                   <span>Memeriksa Akun Gmail:</span>
-                  <span className="font-mono text-sky-400 font-bold">
+                  <span className="font-mono text-sky-300 font-bold">
                     {scanned} / {totalToScan} email
                   </span>
                 </span>
-                <span className="text-xs sm:text-sm font-black text-sky-400 tabular-nums">
+                <span className="text-xs sm:text-sm font-black text-sky-300 tabular-nums">
                   {progress}%
                 </span>
               </div>
@@ -514,7 +506,7 @@ export function CheckerView() {
                 className="h-3 w-full overflow-hidden rounded-full bg-black/50 border border-white/10 p-0.5"
               >
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sky-500 via-sky-400 to-blue-500 transition-all duration-200 ease-out shadow-xs shadow-sky-500/30"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 transition-all duration-200 ease-out shadow-xs shadow-sky-500/30"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -531,7 +523,7 @@ export function CheckerView() {
       {(hasRun || results.length > 0) && (
         <Reveal className="mt-5 space-y-5" delay={40}>
           {/* Rekap Status */}
-          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
+          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-2xl">
             <CardContent className="space-y-4 p-0">
               <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div>
@@ -617,7 +609,7 @@ export function CheckerView() {
                 <div className="pt-0.5">
                   <Link
                     href="/setor"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-5 py-3 text-xs sm:text-sm font-bold text-sky-300 shadow-xs hover:bg-sky-500/20 active:scale-95 transition-all whitespace-nowrap"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-5 py-3 text-xs sm:text-sm font-bold text-sky-200 shadow-xs active:scale-95 transition-all whitespace-nowrap"
                   >
                     <span>Lanjut ke Setor ({summary.liveCount} Gmail Valid)</span>
                     <ArrowRight className="size-4" />
@@ -628,7 +620,7 @@ export function CheckerView() {
           </Card>
 
           {/* Detail Hasil Table / List */}
-          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl overflow-hidden shadow-xl">
+          <Card className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl overflow-hidden shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-white">
@@ -767,15 +759,17 @@ export function CheckerView() {
 
       {/* Empty State when never run */}
       {!hasRun && (
-        <Reveal className="mt-5" delay={80}>
+        <Reveal delay={80}>
           <EmptyState
             compact
-            icon={<Inbox className="size-5" aria-hidden="true" />}
+            className="border-white/10 bg-[#121217]/85"
+            icon={<Inbox className="size-5 text-sky-400" aria-hidden="true" />}
             title="Belum ada hasil pemeriksaan"
-            description="Masukkan daftar Gmail di atas lalu klik Mulai Checker untuk memverifikasi akun secara real-time."
           />
         </Reveal>
       )}
+        </div>
+      </div>
     </PageShell>
   );
 }

@@ -8,8 +8,6 @@ import {
   History,
   ShieldCheck,
   Scale,
-  Trophy,
-  Gift,
   FileText,
   ChevronRight,
   Send,
@@ -25,10 +23,6 @@ import {
   quickMenuItems,
   type QuickMenuIconName,
 } from "@/lib/mock-data";
-import {
-  getCurrentAuthUser,
-  fetchUserWallet,
-} from "@/lib/supabase";
 import { cn, formatIDR } from "@/lib/utils";
 import { useUserProfile } from "@/context/user-profile-context";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,8 +31,6 @@ const iconMap: Record<QuickMenuIconName, LucideIcon> = {
   send: Send,
   scale: Scale,
   "shield-check": ShieldCheck,
-  trophy: Trophy,
-  gift: Gift,
   "file-text": FileText,
 };
 
@@ -56,27 +48,17 @@ const quickMenuThemes: Record<
     hoverShadow: "group-hover:shadow-sky-500/40",
   },
   rules: {
-    bgGradient: "bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600",
-    shadow: "shadow-md shadow-purple-500/25",
-    hoverShadow: "group-hover:shadow-purple-500/40",
+    bgGradient: "bg-gradient-to-br from-violet-500 to-fuchsia-600",
+    shadow: "shadow-md shadow-fuchsia-500/25",
+    hoverShadow: "group-hover:shadow-fuchsia-500/40",
   },
   checker: {
-    bgGradient: "bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600",
-    shadow: "shadow-md shadow-teal-500/25",
-    hoverShadow: "group-hover:shadow-teal-500/40",
-  },
-  leaderboard: {
-    bgGradient: "bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500",
-    shadow: "shadow-md shadow-amber-500/25",
-    hoverShadow: "group-hover:shadow-amber-500/40",
-  },
-  referral: {
-    bgGradient: "bg-gradient-to-br from-pink-400 via-rose-500 to-rose-600",
-    shadow: "shadow-md shadow-rose-500/25",
-    hoverShadow: "group-hover:shadow-rose-500/40",
+    bgGradient: "bg-gradient-to-br from-emerald-400 to-teal-600",
+    shadow: "shadow-md shadow-emerald-500/25",
+    hoverShadow: "group-hover:shadow-emerald-500/40",
   },
   laporan: {
-    bgGradient: "bg-gradient-to-br from-cyan-400 via-cyan-500 to-sky-600",
+    bgGradient: "bg-gradient-to-br from-cyan-400 to-blue-500",
     shadow: "shadow-md shadow-cyan-500/25",
     hoverShadow: "group-hover:shadow-cyan-500/40",
   },
@@ -132,19 +114,21 @@ export function DashboardView() {
 
   return (
     <PageShell>
-      {/* Hero row: balance card + setor CTA (stacked on mobile, 2 cols on desktop) */}
-      <div className="pt-4 sm:pt-6 grid gap-4 md:gap-5 lg:grid-cols-2 lg:items-stretch">
+      <div className="flex flex-col justify-center min-h-[calc(100dvh-10rem)] py-6 sm:py-10">
+        <div className="w-full my-auto space-y-5 sm:space-y-6">
+          {/* Hero row: balance card + setor CTA (stacked on mobile, 2 cols on desktop) */}
+          <div className="grid gap-4 md:gap-5 lg:grid-cols-2 lg:items-stretch">
         {/* Balance card */}
         <Reveal delay={60}>
-          <Card className="relative h-full overflow-hidden">
+          <Card className="relative h-full overflow-hidden border-white/10 bg-[#121217]/85 shadow-2xl backdrop-blur-xl">
             {/* Decorative gradient wash */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-gradient-to-br from-sky-500/15 to-brand-500/10 blur-3xl"
+              className="pointer-events-none absolute -top-24 -right-16 size-56 rounded-full bg-sky-500/10 blur-3xl"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-sky-500/10 blur-3xl"
+              className="pointer-events-none absolute -bottom-28 -left-20 size-56 rounded-full bg-blue-500/10 blur-3xl"
             />
 
             <div className="relative p-5 sm:p-6">
@@ -163,12 +147,12 @@ export function DashboardView() {
                     </p>
                   )}
                 </div>
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-md">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30">
                   <Wallet className="size-5" strokeWidth={2.2} aria-hidden="true" />
                 </span>
               </div>
 
-              {/* Harga / Gmail tanpa ikon dan tanpa badge Min. Tarik */}
+              {/* Harga / Gmail */}
               <div className="mt-3.5 flex items-center">
                 <div className="inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-400">
                   Harga / Gmail: Rp4.500
@@ -179,7 +163,7 @@ export function DashboardView() {
                 <button
                   type="button"
                   onClick={() => setTarikModalOpen(true)}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-4 text-[0.98rem] font-medium text-white shadow-md shadow-sky-500/20 transition-[transform,box-shadow,background-color] duration-300 ease-out hover:from-sky-400 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 active:scale-[0.995]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 px-4 text-[0.98rem] font-medium text-white shadow-md shadow-sky-500/30 transition-[transform,box-shadow,background-color] duration-300 ease-out hover:from-sky-300 hover:to-blue-500 hover:shadow-lg hover:shadow-sky-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/60 active:scale-[0.995]"
                 >
                   <Wallet className="size-4" aria-hidden="true" />
                   Tarik Saldo
@@ -200,15 +184,15 @@ export function DashboardView() {
         <Reveal delay={110}>
           <Link
             href="/setor"
-            className="group relative flex h-full flex-col justify-between gap-4 rounded-3xl border border-sky-500/30 bg-gradient-to-br from-[#121217]/95 via-sky-950/40 to-blue-950/50 p-5 text-white shadow-2xl backdrop-blur-xl transition-[transform,box-shadow,border-color] duration-300 ease-out hover:border-sky-500/50 hover:shadow-sky-500/10 active:scale-[0.99] sm:p-6 overflow-hidden"
+            className="group relative flex h-full flex-col justify-between gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-[#121217]/95 via-[#16161f]/90 to-[#0e0e14]/95 p-5 text-white shadow-2xl backdrop-blur-xl transition-[transform,box-shadow,border-color] duration-300 ease-out hover:border-white/20 hover:shadow-sky-500/10 active:scale-[0.99] sm:p-6 overflow-hidden"
           >
-            {/* Ambient Cyan Glow */}
+            {/* Ambient Sky Glow */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -top-16 -right-12 size-48 rounded-full bg-sky-500/15 blur-3xl"
             />
             <div className="relative min-w-0">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/15 px-2.5 py-1 text-[0.68rem] font-bold tracking-wide uppercase text-sky-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-[0.68rem] font-bold tracking-wide uppercase text-sky-400">
                 <Sparkles className="size-3 text-sky-400" aria-hidden="true" />
                 Aksi Cepat
               </span>
@@ -219,7 +203,7 @@ export function DashboardView() {
                 Generate Gmail dan kirim sekarang. Proses cepat, saldo langsung masuk setelah dicek.
               </p>
             </div>
-            <span className="relative flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-3 text-[0.85rem] font-semibold text-white shadow-lg shadow-sky-500/25 transition-all duration-300 group-hover:from-sky-400 group-hover:to-blue-500">
+            <span className="relative flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 px-4 py-3 text-[0.85rem] font-semibold text-white shadow-lg shadow-sky-500/30 transition-all duration-300 group-hover:from-sky-300 group-hover:to-blue-500">
               Mulai Setor Sekarang
               <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/20 transition-transform duration-300 ease-out group-hover:translate-x-1">
                 <ChevronRight className="size-4" aria-hidden="true" />
@@ -229,12 +213,12 @@ export function DashboardView() {
         </Reveal>
       </div>
 
-      {/* Status summary — sama persis dengan tabel statistik di tab Profil (Total Setoran, Diterima, Ditolak, Pending) */}
+      {/* Status summary */}
       <Reveal delay={140} className="mt-5">
         <SectionHeading
           title="Ringkasan Status"
           subtitle="Pantau aktivitas setoran kamu"
-          icon={<ShieldCheck className="size-4" aria-hidden="true" />}
+          icon={<ShieldCheck className="size-4 text-sky-400" aria-hidden="true" />}
         />
         <StatusSummaryGrid items={dashboardStatusItems} isLoading={isStatsLoading} />
       </Reveal>
@@ -244,11 +228,11 @@ export function DashboardView() {
         <SectionHeading
           title="Menu Cepat"
           subtitle="Akses fitur utama"
-          icon={<Sparkles className="size-4" aria-hidden="true" />}
+          icon={<Sparkles className="size-4 text-sky-400" aria-hidden="true" />}
         />
-        {/* Quick menu card wrapper */}
-        <div className="mt-4 rounded-3xl border border-white/10 bg-[#121215]/80 p-4 sm:p-5 shadow-2xl backdrop-blur-md">
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4">
+        {/* Quick menu card wrapper (Dark Glass Asli) */}
+        <div className="mt-4 rounded-3xl border border-white/10 bg-[#121217]/85 p-4 sm:p-5 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {quickMenuItems.map((item, index) => {
               const Icon = iconMap[item.iconName];
               const theme = quickMenuThemes[item.key] || {
@@ -279,7 +263,7 @@ export function DashboardView() {
               );
               const style = { animationDelay: `${200 + index * 30}ms` };
               const shared =
-                "group flex min-w-0 flex-col items-center justify-center rounded-2xl py-2 px-1 transition-all duration-200 hover:bg-white/5 active:scale-95 animate-fade-up";
+                "group flex flex-1 min-w-0 flex-col items-center justify-center rounded-2xl py-2 px-1 transition-all duration-200 hover:bg-white/5 active:scale-95 animate-fade-up";
 
               if (item.action === "rules") {
                 return (
@@ -315,6 +299,8 @@ export function DashboardView() {
           </div>
         </div>
       </Reveal>
+        </div>
+      </div>
 
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <TarikSaldoModal

@@ -1,11 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Camera,
-  Trash2,
   LogOut,
   User,
   Copy,
@@ -13,31 +11,144 @@ import {
   Mail,
   Calendar,
   KeyRound,
+  Wallet,
+  Smartphone,
+  BanknoteArrowDown,
+  BanknoteArrowUp,
   Gift,
-  UserPlus,
-  BadgeCheck,
-  CircleDollarSign,
-  Ticket,
-  Link2,
-  Info,
-  Users,
+  Save,
+  CircleCheck,
+  ReceiptText,
+  ArrowUpRight,
+  Target,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  type LucideIcon,
 } from "lucide-react";
-import { EmptyState, PageShell, Reveal } from "@/components/layout/page-shell";
-import { Card, CardContent, SectionHeading } from "@/components/ui/card";
-import { StatBox, StatusBadge } from "@/components/ui/status";
-import { Tabs } from "@/components/ui/tabs";
-import { CopyButton } from "@/components/ui/copy-button";
+import { PageShell, Reveal, EmptyState } from "@/components/layout/page-shell";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/ui/status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserProfile } from "@/context/user-profile-context";
-import { supabase } from "@/lib/supabase";
-import { formatIDR, formatDateTime } from "@/lib/utils";
+import { supabase, saveEWalletAccount } from "@/lib/supabase";
+import { cn, formatDateTime, formatIDR } from "@/lib/utils";
+import { TarikSaldoModal } from "@/app/saldo/tarik-saldo-modal";
 import {
-  mockBonusHistory,
-  mockReferralHistory,
-  referralMission,
-  type BonusRecord,
-  type ReferralRecord,
+  EWALLET_CONFIGS,
+  EWALLET_ORDER,
+  IndonesiaFlag,
+  type EWalletMethod,
+} from "@/components/ui/ewallet-logos";
+import { saveStoredEWalletData } from "@/lib/generated-storage";
+import {
+  type TransactionRecord,
+  type WithdrawalStatus,
 } from "@/lib/mock-data";
+
+/* ------------------------------------------------------------------ */
+/* Saldo & E-Wallet Constants & Types                                 */
+/* ------------------------------------------------------------------ */
+
+const withdrawalMeta: Record<
+  WithdrawalStatus,
+  { label: string; tone: "success" | "warning" | "info" | "danger" }
+> = {
+  berhasil: { label: "BERHASIL", tone: "success" },
+  diproses: { label: "DIPROSES", tone: "info" },
+  ditolak: { label: "DITOLAK", tone: "danger" },
+};
+
+const transactionIcons: Record<TransactionRecord["type"], LucideIcon> = {
+  deposit: BanknoteArrowDown,
+  withdrawal: BanknoteArrowUp,
+  bonus: Gift,
+};
+
+const transactionTones: Record<TransactionRecord["type"], string> = {
+  deposit: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  withdrawal: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+  bonus: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+};
+
+const PHONE_MAX_LENGTH = 13;
+
+type UnifiedTransaction = {
+  id: string;
+  type: "deposit" | "withdrawal" | "bonus";
+  amount: number;
+  title: string;
+  description: string;
+  createdAt: string;
+  status?: WithdrawalStatus;
+  method?: string;
+  accountNumber?: string;
+};
+
+function TransactionRow({ record, index }: { record: UnifiedTransaction; index: number }) {
+  const isWithdrawal = record.type === "withdrawal";
+  const methodKey = isWithdrawal ? ((record.method || "DANA").toUpperCase() as EWalletMethod) : null;
+  const config = methodKey ? (EWALLET_CONFIGS[methodKey] || EWALLET_CONFIGS.DANA) : null;
+  const isCredit = record.type === "deposit" || record.type === "bonus";
+
+  const Icon = isWithdrawal ? BanknoteArrowUp : transactionIcons[record.type] || ReceiptText;
+  const toneClass = isWithdrawal
+    ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+    : transactionTones[record.type] || "bg-white/5 text-zinc-300 border border-white/10";
+
+  return (
+    <div
+      className="animate-fade-up flex items-center gap-3 px-4 py-3.5 transition-colors duration-300 hover:bg-white/5 sm:gap-4 sm:px-5 md:px-6 md:py-4"
+      style={{ animationDelay: `${index * 40}ms` }}
+    >
+      {config ? (
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl font-bold text-xs shadow-2xs border"
+          style={{
+            backgroundColor: `${config.brandColor}15`,
+            color: config.brandColor,
+            borderColor: `${config.brandColor}30`,
+          }}
+        >
+          {config.name}
+        </span>
+      ) : (
+        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl shadow-2xs", toneClass)}>
+          <Icon className="size-4" strokeWidth={2.2} aria-hidden="true" />
+        </span>
+      )}
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[0.82rem] font-semibold text-white">{record.title}</p>
+        <p className="mt-0.5 truncate text-[0.7rem] text-zinc-400">
+          {record.description} · {formatDateTime(record.createdAt)}
+        </p>
+      </div>
+
+      <div className="flex flex-col items-end gap-1 shrink-0">
+        <span
+          className={cn(
+            "text-[0.85rem] font-bold tracking-tight tabular-nums",
+            isCredit ? "text-emerald-400" : "text-rose-400",
+          )}
+        >
+          {isCredit ? "+" : "-"}
+          {formatIDR(record.amount)}
+        </span>
+        {record.status && (
+          <StatusBadge
+            tone={withdrawalMeta[record.status]?.tone || "info"}
+            className="text-[0.62rem] py-0 px-2 font-bold"
+          >
+            {withdrawalMeta[record.status]?.label || record.status.toUpperCase()}
+          </StatusBadge>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Copy UID Helper                                                    */
@@ -62,10 +173,10 @@ function CopyValue({ value }: { value: string }) {
       type="button"
       onClick={handleCopy}
       aria-label={`Salin ${value}`}
-      className="flex size-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-sky-50 hover:text-sky-600 active:scale-90"
+      className="flex size-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-sky-500/10 hover:text-sky-400 active:scale-90 cursor-pointer"
     >
       {copied ? (
-        <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
+        <Check className="size-3.5 text-emerald-400" aria-hidden="true" />
       ) : (
         <Copy className="size-3.5" aria-hidden="true" />
       )}
@@ -74,190 +185,157 @@ function CopyValue({ value }: { value: string }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Referral Sub-components                                            */
-/* ------------------------------------------------------------------ */
-
-type ReferralTab = "referral" | "bonus";
-
-const REFERRAL_TABS: { value: ReferralTab; label: string; icon: React.ReactNode }[] = [
-  { value: "referral", label: "Riwayat Referral", icon: <Users className="size-3.5" aria-hidden="true" /> },
-  { value: "bonus", label: "Riwayat Bonus", icon: <Gift className="size-3.5" aria-hidden="true" /> },
-];
-
-function BannerStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl bg-white/5 border border-white/10 px-2.5 py-2.5 text-center backdrop-blur-sm">
-      <dt className="text-[0.6rem] font-semibold tracking-wide text-zinc-400 uppercase">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-[0.82rem] font-bold text-white tabular-nums md:text-[0.9rem]">
-        {value}
-      </dd>
-    </div>
-  );
-}
-
-function CopyField({
-  icon,
-  label,
-  value,
-  mono = false,
-  copyLabel,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  mono?: boolean;
-  copyLabel: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <span className="text-[0.78rem] font-medium text-zinc-300">{label}</span>
-      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 pl-3.5">
-        <span className="shrink-0 text-sky-400">{icon}</span>
-        <span
-          className={`min-w-0 flex-1 truncate text-[0.83rem] font-semibold text-white ${
-            mono ? "font-mono tracking-widest" : ""
-          }`}
-          title={value}
-        >
-          {value}
-        </span>
-        <CopyButton value={value} label={copyLabel} copiedLabel="Tersalin" />
-      </div>
-    </div>
-  );
-}
-
-function ReferralList({ records }: { records: ReferralRecord[] }) {
-  if (records.length === 0) {
-    return (
-      <EmptyState
-        icon={<Users className="size-6" aria-hidden="true" />}
-        title="Belum ada referral"
-        description="Bagikan kode atau link Referralmu untuk mulai mengundang teman."
-        compact
-      />
-    );
-  }
-
-  return (
-    <ul className="space-y-2.5">
-      {records.map((record) => (
-        <li
-          key={record.id}
-          className="flex items-center gap-3 rounded-2xl border border-slate-200/90 p-3.5"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
-            <UserPlus className="size-4" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.82rem] font-semibold text-ink-800">
-              {record.name}
-            </p>
-            <p className="truncate text-[0.68rem] text-ink-500">
-              {record.email} · {formatDateTime(record.joinedAt)}
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[0.8rem] font-bold text-ink-900 tabular-nums">
-              {formatIDR(record.reward)}
-            </p>
-            <StatusBadge tone={record.status === "berhasil" ? "success" : "warning"}>
-              {record.status === "berhasil" ? "Berhasil" : "Menunggu"}
-            </StatusBadge>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function BonusList({ records }: { records: BonusRecord[] }) {
-  if (records.length === 0) {
-    return (
-      <EmptyState
-        icon={<Gift className="size-6" aria-hidden="true" />}
-        title="Belum ada bonus"
-        description="Bonus akan masuk setelah misi referral kamu selesai."
-        compact
-      />
-    );
-  }
-
-  return (
-    <ul className="space-y-2.5">
-      {records.map((record) => (
-        <li
-          key={record.id}
-          className="flex items-center gap-3 rounded-2xl border border-emerald-200/90 bg-emerald-50/50 p-3.5"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white">
-            <CircleDollarSign className="size-4" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.82rem] font-semibold text-ink-800">
-              {record.label}
-            </p>
-            <p className="text-[0.68rem] text-ink-500">
-              {formatDateTime(record.createdAt)}
-            </p>
-          </div>
-          <span className="shrink-0 text-[0.85rem] font-bold text-emerald-700 tabular-nums">
-            +{formatIDR(record.amount)}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* Main ProfilView                                                    */
 /* ------------------------------------------------------------------ */
 
 export function ProfilView() {
-  const router = useRouter();
   const {
     userProfile,
     avatarImage,
     isLoading,
     updateAvatar,
-    deleteAvatar,
+    wallet,
+    persistedAccounts,
+    withdrawals,
+    transactions,
+    isWalletLoading,
+    isHistoryLoading,
+    userId,
+    refreshWallet,
+    refreshHistory,
+    saveEWalletAccountLocally,
   } = useUserProfile();
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [referralTab, setReferralTab] = React.useState<ReferralTab>("referral");
 
-  // Auto-scroll to #referral if navigated with hash
-  React.useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#referral") {
-      const timer = window.setTimeout(() => {
-        const el = document.getElementById("referral");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 150);
-      return () => window.clearTimeout(timer);
+  const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>("DANA");
+  const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>(persistedAccounts);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
+
+  // Gabungkan riwayat transaksi dan riwayat penarikan menjadi satu daftar terpadu
+  const unifiedTransactions: UnifiedTransaction[] = React.useMemo(() => {
+    const list: UnifiedTransaction[] = [];
+
+    // Tambahkan transaksi biasa (deposit, bonus, dll)
+    for (const t of transactions) {
+      list.push({
+        id: t.id,
+        type: t.type,
+        amount: t.amount,
+        title: t.title,
+        description: t.description,
+        createdAt: t.createdAt,
+      });
     }
-  }, []);
+
+    // Tambahkan penarikan
+    for (const w of withdrawals) {
+      const config = EWALLET_CONFIGS[(w.method || "DANA").toUpperCase() as EWalletMethod] || EWALLET_CONFIGS.DANA;
+      list.push({
+        id: `wd-${w.id}`,
+        type: "withdrawal",
+        amount: w.amount,
+        title: `Penarikan ${config.name}`,
+        description: `${w.accountNumber || "-"} · Status: ${w.status}`,
+        createdAt: w.createdAt,
+        status: w.status,
+        method: w.method,
+        accountNumber: w.accountNumber,
+      });
+    }
+
+    // Urutkan berdasarkan tanggal terbaru
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [transactions, withdrawals]);
+
+  // Sync account numbers from persistedAccounts when hydrated or updated
+  React.useEffect(() => {
+    setAccountNumbers((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(persistedAccounts)) {
+        if (v && !prev[k as EWalletMethod]) {
+          next[k as EWalletMethod] = v;
+        }
+      }
+      return next;
+    });
+  }, [persistedAccounts]);
+
+  const config = EWALLET_CONFIGS[selectedMethod];
+  const currentNumber = accountNumbers[selectedMethod] || "";
+  const phoneValid = /^08\d{8,11}$/.test(currentNumber.trim());
+  const persistedNumber = (persistedAccounts[selectedMethod] || "").trim();
+  const isSaved = phoneValid && Boolean(persistedNumber) && currentNumber.trim() === persistedNumber;
+
+  const hasStartedTyping = currentNumber.length > 0;
+  const isPrefixInvalid = hasStartedTyping && !currentNumber.startsWith("08");
+  const isTooShort = hasStartedTyping && currentNumber.startsWith("08") && currentNumber.length < 10;
+
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const digitsOnly = event.target.value.replace(/[^0-9]/g, "");
+    const capped = digitsOnly.slice(0, PHONE_MAX_LENGTH);
+    setAccountNumbers((prev) => ({
+      ...prev,
+      [selectedMethod]: capped,
+    }));
+  };
+
+  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isSaved) {
+      toast.info(`Nomor ${config.name} sudah tersimpan`, {
+        description: `Nomor ${currentNumber} sudah aktif tersimpan di akun Anda.`,
+      });
+      return;
+    }
+
+    if (!currentNumber.startsWith("08")) {
+      toast.error(`Nomor ${config.name} tidak valid`, {
+        description: "Angka depan nomor harus diawali 08 (contoh: 0812xxxxxxxx).",
+      });
+      return;
+    }
+
+    if (currentNumber.length < 10) {
+      toast.error(`Nomor ${config.name} terlalu pendek`, {
+        description: `Nomor akun minimal 10 digit (saat ini ${currentNumber.length} digit).`,
+      });
+      return;
+    }
+
+    if (!phoneValid) {
+      toast.error(`Nomor ${config.name} tidak valid`, {
+        description: "Gunakan format 08xxxxxxxxxx (10–13 digit).",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    saveEWalletAccountLocally(selectedMethod, currentNumber.trim());
+    saveStoredEWalletData({
+      defaultMethod: selectedMethod,
+      accounts: { ...accountNumbers, [selectedMethod]: currentNumber.trim() },
+    });
+
+    (async () => {
+      try {
+        if (userId) {
+          await saveEWalletAccount(userId, selectedMethod, currentNumber.trim(), true);
+        }
+      } catch (err) {
+        console.warn("Supabase save ewallet error:", err);
+      } finally {
+        setIsSaving(false);
+        toast.success(`Pengaturan ${config.name} tersimpan!`, {
+          description: `Nomor: ${currentNumber} ditetapkan sebagai E-Wallet utama.`,
+        });
+      }
+    })();
+  };
 
   const firstLetter = (userProfile.name || "P").trim().charAt(0).toUpperCase() || "P";
-
-  // Derive unique referral code & invite link based on user's profile
-  const userReferralCode =
-    userProfile.uid && userProfile.uid !== "-"
-      ? userProfile.uid.slice(0, 8).toUpperCase()
-      : referralMission.code;
-
-  const userInviteLink =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/login?ref=${userReferralCode}`
-      : referralMission.link;
-
-  const mission = referralMission;
-  const progress = Math.min(100, Math.round((mission.successful / mission.target) * 100));
-  const remaining = Math.max(mission.target - mission.successful, 0);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -266,13 +344,6 @@ export function ProfilView() {
     if (!file.type.startsWith("image/")) {
       toast.error("Format tidak didukung", {
         description: "Harap pilih file gambar (JPG, PNG, WebP).",
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Ukuran terlalu besar", {
-        description: "Maksimal ukuran foto adalah 5MB.",
       });
       return;
     }
@@ -287,13 +358,6 @@ export function ProfilView() {
     e.target.value = "";
   };
 
-  const handleDeletePhoto = async () => {
-    await deleteAvatar();
-    toast.success("Foto profil berhasil dihapus", {
-      description: "Tampilan kembali ke abjad depan nama kamu.",
-    });
-  };
-
   return (
     <PageShell>
       {/* Hidden file input for photo upload */}
@@ -306,7 +370,7 @@ export function ProfilView() {
         aria-label="Upload foto profil"
       />
 
-      <div className="space-y-5 pt-4 sm:pt-6">
+      <div className="space-y-6 pt-4 sm:pt-6">
         {/* Card 1: Main Profile Card */}
         <Reveal delay={40}>
           <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#121217]/85 p-4.5 shadow-2xl backdrop-blur-xl sm:p-5.5">
@@ -320,7 +384,7 @@ export function ProfilView() {
             <div className="relative flex items-center justify-between">
               {/* Corner Kiri: Profil */}
               <div className="flex items-center gap-2">
-                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-xs">
+                <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
                   <User className="size-3.5 stroke-[2.2]" />
                 </span>
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Profil Akun</h3>
@@ -368,8 +432,12 @@ export function ProfilView() {
                 </div>
               ) : (
                 <>
-                  {/* Avatar circle with image or initial fallback & camera button */}
-                  <div className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-white/20 bg-gradient-to-br from-sky-400 to-sky-600 text-white shadow-md ring-3 ring-sky-500/30">
+                  {/* Avatar circle with image or initial fallback & camera button (click anywhere to upload) */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Klik untuk ganti foto profil"
+                    className="relative flex size-16 sm:size-18 items-center justify-center rounded-full border-2 border-sky-400/30 bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 ring-3 ring-sky-500/20 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                  >
                     {avatarImage ? (
                       <img
                         src={avatarImage}
@@ -377,48 +445,21 @@ export function ProfilView() {
                         className="size-full rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                      <span className="text-xl sm:text-2xl font-black tracking-tight text-white select-none">
                         {firstLetter}
                       </span>
                     )}
 
-                    {/* Camera upload icon button */}
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      aria-label="Upload foto profil"
-                      title="Upload / ganti foto profil"
-                      className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-[#121217] bg-sky-500 text-white shadow-xs hover:bg-sky-400 active:scale-90 transition-all cursor-pointer"
-                    >
+                    {/* Camera upload badge */}
+                    <div className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-[#121217] bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-xs">
                       <Camera className="size-3" />
-                    </button>
+                    </div>
                   </div>
 
                   {/* Nama user */}
-                  <h2 className="mt-2 text-base sm:text-lg font-bold tracking-tight text-white">
+                  <h2 className="mt-2.5 text-base sm:text-lg font-bold tracking-tight text-white">
                     {userProfile.name}
                   </h2>
-
-                  {avatarImage && (
-                    <div className="mt-2 flex items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[0.72rem] font-semibold text-zinc-300 shadow-2xs transition-colors hover:bg-white/10 active:scale-95 cursor-pointer"
-                      >
-                        <Camera className="size-3 text-sky-400" />
-                        <span>Ganti Foto</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDeletePhoto}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[0.72rem] font-semibold text-rose-400 shadow-2xs transition-colors hover:bg-rose-500/20 active:scale-95 cursor-pointer"
-                      >
-                        <Trash2 className="size-3 text-rose-400" />
-                        <span>Hapus</span>
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -491,133 +532,263 @@ export function ProfilView() {
           </section>
         </Reveal>
 
-        {/* Section 2: Program Referral (Integrated into Profile) */}
-        <Reveal delay={80} id="referral" className="space-y-4 scroll-mt-20">
-          <SectionHeading
-            title="Program Referral"
-            subtitle="Undang teman dan dapatkan bonus saldo"
-            icon={<Gift className="size-4" aria-hidden="true" />}
-            action={
-              <StatusBadge tone="info" dot pulse>
-                Aktif
-              </StatusBadge>
-            }
-          />
-
-          {/* Misi Referral: Gradient Mission Banner + Progress */}
-          <section className="relative overflow-hidden rounded-3xl border border-sky-500/30 bg-gradient-to-br from-[#121217]/95 via-sky-950/40 to-blue-950/50 p-5 shadow-2xl backdrop-blur-xl md:p-6">
+        {/* Card 2: Saldo & Pengaturan E-Wallet (Dipindahkan ke Bawah Profil Akun) */}
+        <Reveal delay={80}>
+          <Card className="relative overflow-hidden border border-white/10 bg-[#121217]/85 shadow-2xl backdrop-blur-xl rounded-3xl">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-14 -right-12 size-40 rounded-full bg-sky-500/15 blur-3xl"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-16 -left-10 size-36 rounded-full bg-blue-500/10 blur-2xl"
+              className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-sky-500/10 blur-3xl"
             />
 
-            <div className="relative space-y-4">
-              <div className="flex items-start gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm">
-                  <Gift className="size-5" strokeWidth={2.2} aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[0.66rem] font-bold tracking-[0.16em] text-sky-300/80 uppercase">
-                    {mission.headline}
-                  </p>
-                  <h2 className="mt-1 text-base leading-snug font-bold tracking-tight text-white sm:text-lg">
-                    {mission.title}
-                  </h2>
+            <div className="relative p-5 sm:p-6 md:p-7">
+              {/* Baris Atas: Saldo Saat Ini & Tombol Tarik Saldo */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-5">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      <Wallet className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <p className="text-[0.72rem] font-bold tracking-wider text-zinc-400 uppercase">
+                      Saldo Akun
+                    </p>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-baseline gap-3">
+                    {isWalletLoading ? (
+                      <div className="py-1">
+                        <Skeleton className="h-9 w-44 rounded-xl" />
+                      </div>
+                    ) : (
+                      <span className="text-[2.2rem] sm:text-[2.6rem] font-black tracking-tight text-white tabular-nums leading-none">
+                        {formatIDR(wallet.balance)}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-400">
+                      <Target className="size-3 text-sky-400" aria-hidden="true" />
+                      Minimal Penarikan: {formatIDR(wallet.minimumWithdrawal)}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <Button
+                    size="lg"
+                    className="shadow-lg shadow-sky-500/25 bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white font-bold rounded-2xl px-6 py-2.5 cursor-pointer active:scale-95"
+                    onClick={() => setIsWithdrawModalOpen(true)}
+                    leftIcon={<ArrowUpRight className="size-4" aria-hidden="true" />}
+                  >
+                    Tarik Saldo
+                  </Button>
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div className="space-y-2">
-                <div
-                  role="progressbar"
-                  aria-valuenow={progress}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label="Progres misi referral"
-                  className="h-2.5 w-full overflow-hidden rounded-full bg-white/10"
-                >
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-500 transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                    style={{ width: `${Math.max(progress, 4)}%` }}
-                  />
+              {/* Baris Bawah: Pilihan E-Wallet & Form Input Nomor */}
+              <form onSubmit={handleSave} className="mt-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      <Smartphone className="size-3.5" aria-hidden="true" />
+                    </span>
+                    <label className="text-xs sm:text-sm font-bold text-white">
+                      Pilihan E-Wallet Penarikan
+                    </label>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
+                    <span className="size-1.5 rounded-full bg-amber-400" />
+                    Gopay pajak transfer 1000
+                  </span>
                 </div>
 
-                <dl className="grid grid-cols-3 gap-2">
-                  <BannerStat label="Progres Bonus" value={`${mission.successful}/${mission.target}`} />
-                  <BannerStat label="Sisa" value={`${remaining} Teman`} />
-                  <BannerStat label="Bonus" value={formatIDR(mission.reward)} />
-                </dl>
-              </div>
+                {/* 2 E-Wallet Buttons: DANA & GoPay */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {EWALLET_ORDER.map((methodKey) => {
+                    const item = EWALLET_CONFIGS[methodKey];
+                    const isSelected = selectedMethod === methodKey;
+
+                    return (
+                      <button
+                        key={methodKey}
+                        type="button"
+                        onClick={() => setSelectedMethod(methodKey)}
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border text-xs sm:text-sm transition-all cursor-pointer active:scale-98",
+                          isSelected
+                            ? item.activeClass
+                            : item.inactiveClass
+                        )}
+                      >
+                        <span>{item.name}</span>
+                        {isSelected && (
+                          <CheckCircle2 className="size-3.5 ml-0.5 text-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Input Nomor E-Wallet & Tombol Simpan */}
+                <div className="pt-1">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div
+                        className="flex items-center justify-center size-10.5 bg-black/30 border border-white/10 rounded-xl shrink-0 select-none shadow-2xs"
+                        title="Indonesia"
+                      >
+                        <IndonesiaFlag className="w-5.5 h-3.5" />
+                      </div>
+                      <div className="relative flex-1">
+                        <Input
+                          id="profil-ewallet-number"
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          autoComplete="tel"
+                          maxLength={PHONE_MAX_LENGTH}
+                          placeholder={config.placeholder}
+                          value={currentNumber}
+                          onChange={handlePhoneChange}
+                          aria-invalid={hasStartedTyping && !phoneValid}
+                          className={cn(
+                            "font-mono text-xs sm:text-sm h-10.5 rounded-xl border-white/10 bg-black/40 text-white placeholder:text-zinc-500 focus:border-sky-500/50",
+                            hasStartedTyping && !phoneValid && "border-rose-400 focus-visible:ring-rose-400/20"
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      variant={isSaved ? "primary" : "secondary"}
+                      size="md"
+                      isLoading={isSaving}
+                      leftIcon={
+                        isSaved ? (
+                          <CircleCheck className="size-4 text-white" aria-hidden="true" />
+                        ) : (
+                          <Save className="size-4" aria-hidden="true" />
+                        )
+                      }
+                      className={cn(
+                        "shrink-0 h-10.5 font-bold rounded-xl px-5 text-xs sm:text-sm cursor-pointer transition-all",
+                        isSaved
+                          ? "bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 active:scale-98 hover:from-sky-300 hover:to-blue-500"
+                          : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
+                      )}
+                    >
+                      {isSaved ? `Nomor ${config.name} Tersimpan` : `Simpan Akun ${config.name}`}
+                    </Button>
+                  </div>
+
+                  {/* Notifikasi Real-time Validasi Format Nomor */}
+                  {isPrefixInvalid && (
+                    <p className="mt-1.5 text-[0.72rem] text-rose-400 font-semibold flex items-center gap-1.5">
+                      <AlertCircle className="size-3.5 shrink-0" />
+                      Angka depan harus diawali 08
+                    </p>
+                  )}
+                  {isTooShort && (
+                    <p className="mt-1.5 text-[0.72rem] text-amber-400 font-semibold flex items-center gap-1.5">
+                      <AlertTriangle className="size-3.5 shrink-0" />
+                      Nomor kurang dari 10 digit (saat ini {currentNumber.length} digit, minimal 10 digit)
+                    </p>
+                  )}
+                  {phoneValid && (
+                    <p className="mt-1.5 text-[0.68rem] text-emerald-400 font-semibold flex items-center gap-1">
+                      <CircleCheck className="size-3" /> {isSaved ? `Nomor akun ${config.name} valid dan tersimpan.` : `Format nomor ${config.name} valid (${currentNumber.length} digit).`}
+                    </p>
+                  )}
+                  {!hasStartedTyping && (
+                    <p className="mt-1.5 text-[0.7rem] text-zinc-400">
+                      Nomor akun {config.name} harus diawali 08 dan memiliki 10–13 digit angka.
+                    </p>
+                  )}
+                </div>
+              </form>
             </div>
-          </section>
-
-          {/* Statistik Referral */}
-          <div className="grid grid-cols-3 gap-2.5 md:gap-3.5">
-            <StatBox
-              label="Total Diundang"
-              value={mission.invited}
-              tone="info"
-            />
-            <StatBox
-              label="Referral Berhasil"
-              value={mission.successful}
-              tone="success"
-            />
-            <StatBox
-              label="Bonus Diterima"
-              value={formatIDR(mission.bonusReceived)}
-              tone="warning"
-            />
-          </div>
-
-          {/* Kode Referral & Link Undangan */}
-          <Card>
-            <CardContent className="space-y-3.5 p-4 sm:p-5 md:p-6">
-              <div className="flex items-start gap-2.5 rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3.5">
-                <Info className="mt-0.5 size-4 shrink-0 text-sky-400" aria-hidden="true" />
-                <p className="text-[0.73rem] leading-relaxed text-sky-300">
-                  {mission.requirement}
-                </p>
-              </div>
-
-              <CopyField
-                icon={<Ticket className="size-4" aria-hidden="true" />}
-                label="Kode Referral Kamu"
-                value={userReferralCode}
-                mono
-                copyLabel="Salin"
-              />
-              <CopyField
-                icon={<Link2 className="size-4" aria-hidden="true" />}
-                label="Link Undangan Kamu"
-                value={userInviteLink}
-                copyLabel="Salin"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Riwayat Referral & Riwayat Bonus */}
-          <Card>
-            <CardContent className="space-y-4 p-4 sm:p-5 md:p-6">
-              <Tabs
-                items={REFERRAL_TABS}
-                value={referralTab}
-                onValueChange={(val) => setReferralTab(val as ReferralTab)}
-              />
-
-              {referralTab === "referral" ? (
-                <ReferralList records={mockReferralHistory} />
-              ) : (
-                <BonusList records={mockBonusHistory} />
-              )}
-            </CardContent>
           </Card>
         </Reveal>
+
+        {/* Section 3: Riwayat Transaksi (Termasuk Penarikan & Bonus) */}
+        <Reveal delay={120}>
+          <div className="mt-2">
+            {isHistoryLoading ? (
+              <HistorySkeletonList title="Riwayat Transaksi" />
+            ) : (
+              <TransactionList items={unifiedTransactions} />
+            )}
+          </div>
+        </Reveal>
       </div>
+
+      {/* Modal Penarikan Saldo */}
+      <TarikSaldoModal
+        open={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        balance={wallet.balance}
+        minimum={wallet.minimumWithdrawal}
+        initialMethod={selectedMethod}
+        onSuccess={() => {
+          refreshWallet();
+          refreshHistory();
+        }}
+      />
     </PageShell>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Tables                                                              */
+/* ------------------------------------------------------------------ */
+
+function HistorySkeletonList({ title }: { title: string }) {
+  return (
+    <Card className="overflow-hidden border border-white/10 bg-[#121217]/85 shadow-2xl">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-white">{title}</p>
+        <Skeleton className="h-4 w-14 rounded-full" />
+      </div>
+      <div className="divide-y divide-white/5">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5 md:px-6 md:py-4">
+            <Skeleton className="size-10 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-1.5 min-w-0">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function TransactionList({ items }: { items: UnifiedTransaction[] }) {
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        icon={<ReceiptText className="size-7 text-sky-400" strokeWidth={1.8} aria-hidden="true" />}
+        title="Belum ada transaksi"
+        description="Semua aktivitas saldo akan tercatat di sini."
+      />
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden border border-white/10 bg-[#121217]/85 shadow-2xl">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3.5 sm:px-5 md:px-6 md:py-4">
+        <p className="text-[0.8rem] font-semibold text-white">Riwayat Transaksi</p>
+        <span className="rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[0.68rem] font-semibold text-zinc-300 tabular-nums">
+          {items.length} data
+        </span>
+      </div>
+      <div className="divide-y divide-white/5">
+        {items.map((record, index) => (
+          <TransactionRow key={record.id} record={record} index={index} />
+        ))}
+      </div>
+    </Card>
   );
 }

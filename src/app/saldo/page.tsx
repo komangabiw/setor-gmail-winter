@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
-import { SaldoView } from "./saldo-view";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Saldo & Penarikan",
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SaldoPage() {
-  return <SaldoView />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/profil");
+  }, [router]);
+
+  return null;
 }

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import {
   LogIn,
   UserPlus,
-  Mail,
   Zap,
   Banknote,
   ShieldCheck,
@@ -531,14 +530,14 @@ export function CinematicFooter({
 
               {/* 4. Kanan Bawah: 3.5K Member | Aktif sekarang */}
               <div className="animate-float-1 absolute -bottom-9 -right-4 sm:-bottom-11 sm:-right-10 lg:-right-14 z-20 floating-showcase-card rounded-2xl p-2.5 sm:p-3.5 flex items-center gap-2.5 sm:gap-3">
-                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-xs">
+                <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-xs">
                   <Users className="size-4 sm:size-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-xs sm:text-sm font-bold text-white">
                     3.5K Member
                   </div>
-                  <div className="text-[10px] sm:text-[11px] font-semibold text-purple-400">
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-sky-400">
                     Aktif sekarang
                   </div>
                 </div>

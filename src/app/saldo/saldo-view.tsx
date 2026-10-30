@@ -340,12 +340,12 @@ export function SaldoView() {
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
                   <span className="size-1.5 rounded-full bg-amber-400" />
-                  Gopay dan Ovo pajak transfer 1000
+                  Gopay pajak transfer 1000
                 </span>
               </div>
 
-              {/* 4 E-Wallet Buttons: Dana -> ShopeePay -> GoPay -> OVO */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* 2 E-Wallet Buttons: DANA & GoPay */}
+              <div className="grid grid-cols-2 gap-2.5">
                 {EWALLET_ORDER.map((methodKey) => {
                   const item = EWALLET_CONFIGS[methodKey];
                   const isSelected = selectedMethod === methodKey;

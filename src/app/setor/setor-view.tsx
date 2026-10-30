@@ -13,10 +13,9 @@ import {
   RefreshCw,
   ClipboardPaste,
   Clock,
-  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
-import { RulesModal } from "./rules-modal";
 import { defaultPassword } from "@/lib/mock-data";
 import { cn, formatIDR } from "@/lib/utils";
 import {
@@ -115,7 +114,6 @@ export function SetorView() {
   const { refreshDeposits, refreshWallet } = useUserProfile();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
-  const [rulesOpen, setRulesOpen] = React.useState(false);
 
   // Generator State
   const [isMounted, setIsMounted] = React.useState(false);
@@ -151,16 +149,6 @@ export function SetorView() {
     }
   }, []);
 
-  // Set of emails currently typed/pasted in textarea
-  const enteredEmailsSet = React.useMemo(() => {
-    const set = new Set<string>();
-    emails.split("\n").forEach((line) => {
-      const clean = line.trim().toLowerCase();
-      if (clean) set.add(clean);
-    });
-    return set;
-  }, [emails]);
-
   // Count unsubmitted generated emails based on actual submittedSet
   const unsubmittedCount = React.useMemo(() => {
     return generatedList.filter((email) => !submittedSet.has(email.toLowerCase())).length;
@@ -168,7 +156,7 @@ export function SetorView() {
 
   // Handle generating new batch with high-entropy guarantee
   const handleGenerate = (count = customCountInput) => {
-    const validCount = Math.max(1, Math.min(20, count));
+    const validCount = Math.max(1, Math.min(10, count));
     const list = generateBatch(validCount, generatedPool);
     setGeneratedList(list);
     saveStoredGeneratedGmails(list);
@@ -182,14 +170,14 @@ export function SetorView() {
     });
   };
 
-  // Handle Generate Lagi: appends selected count to existing batch (max 20)
+  // Handle Generate Lagi: appends selected count to existing batch (max 10)
   const handleGenerateMore = (count = customCountInput) => {
     const currentCount = generatedList.length;
-    if (currentCount >= 20) {
-      toast.error("Maksimal 20 Gmail telah tercapai!");
+    if (currentCount >= 10) {
+      toast.error("Maksimal 10 Gmail telah tercapai!");
       return;
     }
-    const maxCanAdd = 20 - currentCount;
+    const maxCanAdd = 10 - currentCount;
     const toAdd = Math.min(Math.max(1, count), maxCanAdd);
     const newBatch = generateBatch(toAdd, generatedPool);
     const combined = [...generatedList, ...newBatch];
@@ -202,8 +190,8 @@ export function SetorView() {
       return next;
     });
 
-    if (currentCount + count > 20) {
-      toast.info(`Ditambahkan ${toAdd} Gmail (maksimal 20 tercapai, total: 20 akun).`);
+    if (currentCount + count > 10) {
+      toast.info(`Ditambahkan ${toAdd} Gmail (maksimal 10 tercapai, total: 10 akun).`);
     } else {
       toast.success(`${toAdd} Gmail tambahan berhasil digenerate! Total: ${combined.length} akun.`);
     }
@@ -290,7 +278,7 @@ export function SetorView() {
   /* Real-time Validation for Textarea                                  */
   /* ------------------------------------------------------------------ */
 
-  const { validCount, totalLines, isExceededMax, invalidCount, notGeneratedCount } =
+  const { validCount, totalLines, isExceededMax, notGeneratedCount } =
     React.useMemo(() => {
       const rawLines = emails.split("\n");
       const cleanLines = rawLines.map((l) => l.trim()).filter(Boolean);
@@ -325,7 +313,7 @@ export function SetorView() {
       return {
         validCount: valid,
         totalLines: cleanLines.length,
-        isExceededMax: cleanLines.length > 100,
+        isExceededMax: cleanLines.length > 10,
         invalidCount: invalid,
         notGeneratedCount: notGen,
       };
@@ -541,8 +529,8 @@ export function SetorView() {
       return;
     }
     if (isExceededMax) {
-      toast.error("Maksimal 100 Gmail!", {
-        description: `Saat ini terdapat ${totalLines} Gmail. Harap kurangi hingga maksimal 100 Gmail.`,
+      toast.error("Maksimal 10 Gmail!", {
+        description: `Saat ini terdapat ${totalLines} Gmail. Harap kurangi hingga maksimal 10 Gmail.`,
       });
       return;
     }
@@ -604,90 +592,62 @@ export function SetorView() {
   return (
     <PageShell>
       <div className="space-y-4 pt-2 sm:pt-4">
-        {/* 1. Banner Cek Rules dulu sebelum setor (Ungu) */}
+        {/* 1. Unified Section: Rules & Generate Gmail (Digabung Menjadi 1 Section) */}
         <Reveal delay={20}>
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-purple-500/30 bg-purple-950/30 backdrop-blur-md p-3.5 sm:p-4 shadow-sm">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
-                <ScrollText className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm sm:text-[0.95rem] font-bold text-white truncate">
-                  Cek Rules dulu sebelum setor
-                </p>
-                <p className="text-xs text-zinc-400 truncate">
-                  Wajib dibaca agar Gmail tidak ditolak.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRulesOpen(true)}
-              className="shrink-0 rounded-full bg-purple-600 hover:bg-purple-500 px-4 sm:px-5 py-1.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-            >
-              Buka Rules
-            </button>
-          </div>
-        </Reveal>
-
-        {/* 2. Section Title & Description */}
-        <Reveal delay={40}>
-          <div className="pt-1">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-              Setor Daftar Gmail
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-zinc-400 leading-relaxed">
-              Tempel daftar, satu Gmail per baris. Duplikat otomatis dihapus. Hanya Gmail hasil &quot;Generate Gmail&quot; milik akun ini yang bisa disetor.
-            </p>
-          </div>
-        </Reveal>
-
-        {/* 3. Password Wajib Card */}
-        <Reveal delay={60}>
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-3.5 py-2.5 shadow-2xs backdrop-blur-md">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
-                <span className="text-sm">🔑</span>
-                <span>Password wajib untuk Gmail yang disetor:</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-sm font-black tracking-wider text-emerald-200 shadow-2xs select-all">
-                  {defaultPassword}
-                  <button
-                    type="button"
-                    onClick={handleCopyPassword}
-                    title="Salin password wajib"
-                    className="text-emerald-300 hover:text-white transition-colors cursor-pointer"
-                  >
-                    {copiedPassword ? (
-                      <Check className="size-3 text-emerald-400" />
-                    ) : (
-                      <Copy className="size-3" />
-                    )}
-                  </button>
+          <div className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-2xl divide-y divide-white/10 space-y-6">
+            {/* Bagian 1: Rules Setoran */}
+            <div>
+              {/* Header Rules */}
+              <div className="flex items-center gap-3 border-b border-white/10 pb-3.5">
+                <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25">
+                  <ScrollText className="size-5" />
                 </span>
-                <span className="text-[0.68rem] text-emerald-300/80 font-semibold">
-                  (huruf kecil semua)
-                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                    Cek Rules dulu sebelum setor
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Wajib dibaca agar Gmail diterima admin saat peninjauan.
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-        </Reveal>
 
-        {/* 4. Generate Gmail Card */}
-        <Reveal delay={80}>
-          <div className="rounded-3xl border border-purple-500/30 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
-            {/* Header */}
-            <div className="flex items-center gap-2 text-purple-400 font-bold text-base sm:text-lg">
-              <Sparkles className="size-5 text-purple-400" />
-              <h3 className="text-white">Generate Gmail</h3>
+              {/* List Rules Turun ke Bawah */}
+              <ul className="mt-3.5 space-y-2 text-xs sm:text-sm">
+                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
+                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
+                  <span>Gmail harus <strong>Fresh</strong> (baru dibuat).</span>
+                </li>
+                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
+                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
+                  <span>
+                    Nama Gmail yang didaftarkan <strong>wajib sama persis</strong> dengan nama Gmail hasil Generate di website. Tidak boleh mengubah, menambah, atau mengurangi karakter apa pun.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
+                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
+                  <span>Tanggal lahir akun Gmail wajib <strong>18 tahun ke atas</strong>.</span>
+                </li>
+                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
+                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
+                  <span>Akun <strong>tidak boleh</strong> ditautkan dengan nomor pemulihan maupun Gmail pemulihan.</span>
+                </li>
+              </ul>
             </div>
-            <p className="mt-2 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-              Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom setoran di bagian bawah halaman.
-            </p>
 
-            {/* 4 Steps Instructions */}
-            <ol className="mt-3.5 space-y-1.5 text-xs sm:text-sm text-zinc-400 list-decimal list-inside leading-relaxed">
+            {/* Bagian 2: Generate Gmail */}
+            <div className="pt-6">
+              {/* Header */}
+              <div className="flex items-center gap-2 text-sky-400 font-bold text-base sm:text-lg">
+                <Sparkles className="size-5 text-sky-400" />
+                <h3 className="text-white">Generate Gmail</h3>
+              </div>
+              <p className="mt-2 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom setoran di bagian bawah halaman.
+              </p>
+
+              {/* 4 Steps Instructions */}
+              <ol className="mt-3.5 space-y-1.5 text-xs sm:text-sm text-zinc-400 list-decimal list-inside leading-relaxed">
               <li>
                 Tekan tombol <strong className="font-semibold text-white">Generate Gmail</strong> dan pilih jumlah yang Anda ingin setorkan.
               </li>
@@ -716,15 +676,15 @@ export function SetorView() {
               </span>
             </div>
 
-            {/* Pilih Jumlah Generate Email (Input 1-20 & Presets) */}
-            <div className="mt-5 rounded-2xl border border-purple-500/20 bg-purple-950/20 p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-purple-500/20">
+            {/* Pilih Jumlah Generate Email (Input 1-10 & Presets) */}
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                     Jumlah:
                   </span>
                   {/* Presets */}
-                  {[5, 10, 15, 20].map((num) => (
+                  {[1, 3, 5, 10].map((num) => (
                     <button
                       key={num}
                       type="button"
@@ -737,43 +697,46 @@ export function SetorView() {
                       className={cn(
                         "px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer",
                         customCountInput === num
-                          ? "border-purple-500 bg-purple-600 text-white shadow-xs"
-                          : "border-white/10 bg-white/5 text-purple-300 hover:bg-white/10 hover:text-white"
+                          ? "border-sky-500 bg-sky-500 text-white shadow-xs"
+                          : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
                       )}
                     >
                       {num}
                     </button>
                   ))}
 
-                  {/* Input field 1 - 20 */}
+                  {/* Input field 1 - 10 (Tanpa panah atas bawah / spin button) */}
                   <div className="flex items-center gap-1 ml-1">
                     <input
                       type="number"
                       min={1}
-                      max={20}
+                      max={10}
                       value={customCountInput}
                       onChange={(e) => {
                         const val = parseInt(e.target.value, 10);
                         if (!isNaN(val)) {
-                          setCustomCountInput(Math.max(1, Math.min(20, val)));
+                          setCustomCountInput(Math.max(1, Math.min(10, val)));
                         } else {
                           setCustomCountInput(1);
                         }
                       }}
-                      className="w-16 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-center font-mono text-xs font-bold text-white focus:border-purple-500 focus:outline-none"
+                      className="w-16 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-center font-mono text-xs font-bold text-white focus:border-sky-500/60 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
                     />
-                    <span className="text-[0.72rem] text-purple-300 font-medium">akun</span>
+                    <span className="text-[0.72rem] text-zinc-400 font-medium">akun</span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleGenerate(customCountInput)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-                >
-                  <Sparkles className="size-3.5" />
-                  <span>Generate Gmail</span>
-                </button>
+                {/* Tombol Generate Gmail hilang apabila sudah ada lebih dari 0 email */}
+                {generatedList.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleGenerate(customCountInput)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-sky-500/25 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <Sparkles className="size-3.5" />
+                    <span>Generate Gmail</span>
+                  </button>
+                )}
               </div>
 
               {/* Generated Gmail Box */}
@@ -801,13 +764,13 @@ export function SetorView() {
                   </div>
                 ) : generatedList.length === 0 ? (
                   <div className="py-7 px-4 text-center rounded-2xl border border-white/10 bg-black/40">
-                    <Sparkles className="size-6 text-purple-400 mx-auto mb-2 opacity-70" />
+                    <Sparkles className="size-6 text-sky-400 mx-auto mb-2 opacity-70" />
                     <p className="text-xs sm:text-sm font-semibold text-zinc-200">
                       Belum ada Gmail yang digenerate
                     </p>
                     <p className="text-[0.75rem] text-zinc-400 mt-1 max-w-sm mx-auto">
                       Pilih jumlah di atas lalu klik tombol{" "}
-                      <strong className="text-purple-400">Generate Gmail</strong> untuk membuat nama Gmail baru.
+                      <strong className="text-sky-400">Generate Gmail</strong> untuk membuat nama Gmail baru.
                     </p>
                   </div>
                 ) : (
@@ -913,31 +876,31 @@ export function SetorView() {
                         <span>Salin Gmail Belum Disetor</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleGenerateMore(customCountInput)}
-                        disabled={generatedList.length >= 20}
-                        className={cn(
-                          "w-full flex items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-950/30 hover:bg-purple-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-purple-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer",
-                          generatedList.length >= 20 && "opacity-50 cursor-not-allowed hover:bg-purple-950/30"
-                        )}
-                      >
-                        <Sparkles className="size-4 text-purple-400" />
-                        <span>
-                          Generate Lagi (+{Math.min(customCountInput, Math.max(0, 20 - generatedList.length))})
-                        </span>
-                      </button>
+                      {/* Tombol Generate Lagi: hilang jika sudah mencapai maksimal 10 */}
+                      {generatedList.length < 10 && (
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateMore(customCountInput)}
+                          className="w-full flex items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-950/30 hover:bg-sky-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-sky-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                        >
+                          <Sparkles className="size-4 text-sky-400" />
+                          <span>
+                            Generate Lagi (+{Math.min(customCountInput, Math.max(0, 10 - generatedList.length))})
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
               </div>
             </div>
           </div>
-        </Reveal>
+        </div>
+      </Reveal>
 
-        {/* 5. Form Kolom Setoran dengan Checker Terintegrasi */}
-        <Reveal delay={100}>
-          <form onSubmit={handleSubmit} className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-4 sm:p-5 shadow-xl">
+        {/* 3. Form Kolom Setoran dengan Checker Terintegrasi */}
+        <Reveal delay={60}>
+          <form onSubmit={handleSubmit} className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-4 sm:p-5 shadow-2xl">
             {/* Header Kolom Checker & Setoran */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
@@ -951,10 +914,10 @@ export function SetorView() {
                       "text-[0.7rem] px-2 py-0.5 rounded-full font-semibold tabular-nums border",
                       isExceededMax
                         ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
-                        : "bg-white/10 border-white/10 text-zinc-300"
+                        : "bg-sky-500/10 border-sky-500/30 text-sky-200"
                     )}
                   >
-                    {totalLines} Gmail{isExceededMax ? " (Maks. 100)" : ""}
+                    {totalLines} Gmail{isExceededMax ? " (Maks. 10)" : ""}
                   </span>
                 )}
               </div>
@@ -965,10 +928,10 @@ export function SetorView() {
                   <button
                     type="button"
                     onClick={handlePasteGenerated}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-3 py-1.5 text-xs font-bold text-sky-300 shadow-2xs transition-all active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 px-3 py-1.5 text-xs font-bold text-sky-200 shadow-2xs transition-all active:scale-95 cursor-pointer"
                     title="Tempel Gmail hasil generate ke kolom checker"
                   >
-                    <ClipboardPaste className="size-3.5" />
+                    <ClipboardPaste className="size-3.5 text-sky-300" />
                     <span>Paste Hasil Generate ({generatedList.length})</span>
                   </button>
                 )}
@@ -1007,7 +970,7 @@ export function SetorView() {
               <div className="mt-4 pt-4 border-t border-white/10">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="size-4 text-purple-400" />
+                    <ShieldCheck className="size-4 text-sky-400" />
                     <h4 className="text-xs sm:text-sm font-bold text-white">
                       Hasil Pemeriksaan Kolom Checker
                     </h4>
@@ -1165,14 +1128,16 @@ export function SetorView() {
                   onClick={handleCheckSetoran}
                   disabled={totalLines === 0 || isExceededMax || isCheckingSetoran}
                   className={cn(
-                    "inline-flex items-center justify-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all shadow-xs active:scale-95 cursor-pointer",
-                    (totalLines === 0 || isExceededMax || isCheckingSetoran) && "opacity-60 cursor-not-allowed"
+                    "inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 cursor-pointer",
+                    totalLines > 0 && !isExceededMax && !isCheckingSetoran
+                      ? "bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white shadow-sky-500/25 border border-sky-400/30"
+                      : "bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed opacity-60"
                   )}
                 >
                   {isCheckingSetoran ? (
-                    <RefreshCw className="size-4 animate-spin text-purple-400" />
+                    <RefreshCw className="size-4 animate-spin text-white" />
                   ) : (
-                    <ShieldCheck className="size-4 text-purple-400" />
+                    <ShieldCheck className="size-4 text-sky-200" />
                   )}
                   <span>{isCheckingSetoran ? "Memeriksa..." : "Cek Status"}</span>
                 </button>
@@ -1219,9 +1184,6 @@ export function SetorView() {
           </form>
         </Reveal>
       </div>
-
-      {/* Rules Modal */}
-      <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} />
     </PageShell>
   );
 }

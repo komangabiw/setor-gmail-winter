@@ -347,7 +347,7 @@ export function TarikSaldoModal({
                 value={amountInput}
                 onChange={handleAmountChange}
                 className={cn(
-                  "font-black text-xl h-12 bg-black/40 text-white tabular-nums border-white/10 shadow-2xs focus:bg-black/50 focus:border-sky-500/50 px-4",
+                  "font-black text-xl h-12 bg-black/40 text-white tabular-nums border-white/10 shadow-2xs focus:bg-black/50 focus:border-sky-500/60 px-4",
                   hasStartedAmount && !isAmountValid && "border-rose-500 focus-visible:ring-rose-500/30"
                 )}
               />
@@ -367,7 +367,7 @@ export function TarikSaldoModal({
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
                     isSelected
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
+                      ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
                       : "bg-white/5 text-zinc-300 border-white/10 hover:border-white/20 hover:bg-white/10"
                   )}
                 >
@@ -381,7 +381,7 @@ export function TarikSaldoModal({
               className={cn(
                 "px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer active:scale-95",
                 withdrawAmount === balance && balance > 0
-                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
+                  ? "bg-gradient-to-r from-sky-400 to-blue-600 text-white border-sky-400 shadow-sm shadow-sky-500/20"
                   : "bg-white/5 text-zinc-300 border-white/10 hover:border-white/20 hover:bg-white/10"
               )}
             >
@@ -425,11 +425,11 @@ export function TarikSaldoModal({
             </label>
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
               <span className="size-1.5 rounded-full bg-amber-400" />
-              Gopay dan Ovo dikenakan pajak transfer 1000
+              Gopay dikenakan pajak transfer 1000
             </span>
           </div>
-          {/* Urutan E-Wallet: Dana / ShopeePay / GoPay / OVO */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Urutan E-Wallet: DANA & GoPay */}
+          <div className="grid grid-cols-2 gap-2">
             {EWALLET_ORDER.map((methodKey) => {
               const item = EWALLET_CONFIGS[methodKey];
               const isSelected = selectedMethod === methodKey;
@@ -572,7 +572,7 @@ export function TarikSaldoModal({
             className={cn(
               "font-semibold transition-all",
               canWithdraw
-                ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-md shadow-sky-500/20 cursor-pointer active:scale-98"
+                ? "bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white shadow-md shadow-sky-500/25 cursor-pointer active:scale-98"
                 : "bg-white/5 border border-white/10 text-zinc-500 cursor-not-allowed shadow-none"
             )}
           >

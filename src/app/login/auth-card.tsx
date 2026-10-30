@@ -7,7 +7,6 @@ import {
   Mail,
   Lock,
   User as UserIcon,
-  Hash,
   ShieldCheck,
   Sparkles,
   ArrowRight,
@@ -74,7 +73,6 @@ export function AuthCard({
   const [loginForm, setLoginForm] = React.useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = React.useState({
     name: "",
-    referral: "",
     email: "",
     password: "",
   });
@@ -277,7 +275,6 @@ export function AuthCard({
           options: {
             data: {
               name: registerForm.name.trim(),
-              referral_code_used: registerForm.referral.trim() || null,
             },
           },
         });
@@ -422,20 +419,6 @@ export function AuthCard({
             onChange={(e) =>
               setRegisterForm((f) => ({ ...f, name: e.target.value }))
             }
-          />
-
-          <Input
-            label="Kode Referral"
-            placeholder="Opsional"
-            labelClassName="text-zinc-300 font-medium text-xs"
-            hintClassName="text-zinc-500 text-[0.72rem]"
-            className="!bg-zinc-900/80 !border-zinc-800 focus:!border-sky-500 focus:!bg-zinc-900/95 focus:!ring-sky-500/20 !text-white !placeholder:text-zinc-500 rounded-2xl"
-            leftIcon={<Hash className="size-[1.05rem] text-zinc-400" aria-hidden="true" />}
-            value={registerForm.referral}
-            onChange={(e) =>
-              setRegisterForm((f) => ({ ...f, referral: e.target.value }))
-            }
-            hint="Kosongkan jika tidak punya kode referral"
           />
 
           <Input
