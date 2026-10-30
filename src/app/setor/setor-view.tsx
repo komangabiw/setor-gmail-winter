@@ -14,6 +14,10 @@ import {
   ClipboardPaste,
   Clock,
   CheckCircle2,
+  ChevronDown,
+  Calendar,
+  ShieldAlert,
+  UserCheck,
 } from "lucide-react";
 import { PageShell, Reveal } from "@/components/layout/page-shell";
 import { defaultPassword } from "@/lib/mock-data";
@@ -114,6 +118,7 @@ export function SetorView() {
   const { refreshDeposits, refreshWallet } = useUserProfile();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
+  const [showRulesDetail, setShowRulesDetail] = React.useState(false);
 
   // Generator State
   const [isMounted, setIsMounted] = React.useState(false);
@@ -594,150 +599,239 @@ export function SetorView() {
       <div className="space-y-4 pt-2 sm:pt-4">
         {/* 1. Unified Section: Rules & Generate Gmail (Digabung Menjadi 1 Section) */}
         <Reveal delay={20}>
-          <div className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-2xl divide-y divide-white/10 space-y-6">
-            {/* Bagian 1: Rules Setoran */}
+          <div className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-2xl space-y-6">
+            {/* Bagian 1: Rules Setoran (2x2 Grid Cards + Collapsible Detail Aturan) */}
             <div>
               {/* Header Rules */}
-              <div className="flex items-center gap-3 border-b border-white/10 pb-3.5">
-                <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25">
-                  <ScrollText className="size-5" />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                    Cek Rules dulu sebelum setor
-                  </h3>
-                  <p className="text-xs text-zinc-400">
-                    Wajib dibaca agar Gmail diterima admin saat peninjauan.
-                  </p>
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25">
+                    <ScrollText className="size-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                      Rules Setoran Gmail
+                    </h3>
+                    <p className="text-xs text-zinc-400">
+                      Wajib dibaca agar Gmail diterima admin saat peninjauan.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Collapsible Trigger Button (Desktop) */}
+                <button
+                  type="button"
+                  onClick={() => setShowRulesDetail(!showRulesDetail)}
+                  className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-sky-500/10"
+                >
+                  <span>{showRulesDetail ? "[-] Sembunyikan Detail" : "[+] Detail Aturan"}</span>
+                  <ChevronDown className={cn("size-3.5 transition-transform duration-200", showRulesDetail && "rotate-180")} />
+                </button>
+              </div>
+
+              {/* 2x2 Grid Cards Visual & Ringkas */}
+              <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Rule 1: Status */}
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Sparkles className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Status</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Wajib Fresh (baru dibuat)</p>
+                  </div>
+                </div>
+
+                {/* Rule 2: Nama Akun */}
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    <CheckCircle2 className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Nama Akun</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Wajib sama persis hasil generate</p>
+                  </div>
+                </div>
+
+                {/* Rule 3: Usia Akun */}
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <Calendar className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Usia Akun</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Lahir 18+ tahun</p>
+                  </div>
+                </div>
+
+                {/* Rule 4: Keamanan */}
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <ShieldAlert className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Keamanan</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Tanpa No HP / Email Pemulihan</p>
+                  </div>
                 </div>
               </div>
 
-              {/* List Rules Turun ke Bawah */}
-              <ul className="mt-3.5 space-y-2 text-xs sm:text-sm">
-                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
-                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
-                  <span>Gmail harus <strong>Fresh</strong> (baru dibuat).</span>
-                </li>
-                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
-                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
-                  <span>
-                    Nama Gmail yang didaftarkan <strong>wajib sama persis</strong> dengan nama Gmail hasil Generate di website. Tidak boleh mengubah, menambah, atau mengurangi karakter apa pun.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
-                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
-                  <span>Tanggal lahir akun Gmail wajib <strong>18 tahun ke atas</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/35 p-2.5 sm:p-3 text-zinc-200">
-                  <CheckCircle2 className="size-4 shrink-0 text-sky-400 mt-0.5" />
-                  <span>Akun <strong>tidak boleh</strong> ditautkan dengan nomor pemulihan maupun Gmail pemulihan.</span>
-                </li>
-              </ul>
+              {/* Mobile trigger for Collapsible Detail Aturan */}
+              <div className="mt-2 sm:hidden flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowRulesDetail(!showRulesDetail)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors cursor-pointer py-1 px-2 rounded-lg hover:bg-sky-500/10"
+                >
+                  <span>{showRulesDetail ? "[-] Sembunyikan Detail" : "[+] Detail Aturan"}</span>
+                  <ChevronDown className={cn("size-3.5 transition-transform duration-200", showRulesDetail && "rotate-180")} />
+                </button>
+              </div>
+
+              {/* Collapsible Content */}
+              {showRulesDetail && (
+                <div className="mt-3 rounded-2xl border border-white/10 bg-black/50 p-3.5 text-xs text-zinc-300 space-y-2 leading-relaxed animate-fade-down">
+                  <p>• <strong>Wajib Fresh:</strong> Akun harus baru dibuat secara manual dan belum pernah didaftarkan ke platform/jasa lain.</p>
+                  <p>• <strong>Nama Akun Sama Persis:</strong> Karakter, angka, dan huruf pada Gmail wajib 100% sama dengan hasil yang di-generate di situs ini. Dilarang mengubah atau menambah karakter apa pun.</p>
+                  <p>• <strong>Usia 18+ Tahun:</strong> Atur tanggal dan tahun kelahiran akun Gmail di Google agar umur akun minimal 18 tahun (contoh: tahun 2000–2005).</p>
+                  <p>• <strong>Tanpa Pemulihan:</strong> Akun dilarang menautkan nomor HP pemulihan atau email pemulihan agar peninjauan oleh admin lancar tanpa kendala OTP.</p>
+                </div>
+              )}
             </div>
 
-            {/* Bagian 2: Generate Gmail */}
-            <div className="pt-6">
+            {/* Bagian 2: Generate Gmail (Horizontal Stepper + Unified Password & Control Box) */}
+            <div className="pt-1">
               {/* Header */}
               <div className="flex items-center gap-2 text-sky-400 font-bold text-base sm:text-lg">
                 <Sparkles className="size-5 text-sky-400" />
                 <h3 className="text-white">Generate Gmail</h3>
               </div>
-              <p className="mt-2 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom setoran di bagian bawah halaman.
+              <p className="mt-1.5 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom di bawah.
               </p>
 
-              {/* 4 Steps Instructions */}
-              <ol className="mt-3.5 space-y-1.5 text-xs sm:text-sm text-zinc-400 list-decimal list-inside leading-relaxed">
-              <li>
-                Tekan tombol <strong className="font-semibold text-white">Generate Gmail</strong> dan pilih jumlah yang Anda ingin setorkan.
-              </li>
-              <li>Salin nama Gmail satu per satu, atau salin semuanya sekaligus.</li>
-              <li>Daftarkan akun Gmail dengan nama tersebut dan password wajib di bawah.</li>
-              <li>Tempel Gmail yang sudah jadi ke kolom setoran di bawah, lalu kirim.</li>
-            </ol>
+              {/* Horizontal Stepper Timeline (1 baris di desktop, 2x2 responsive di mobile) */}
+              <div className="mt-3.5 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {[
+                  { step: "01", title: "Pilih & Generate", desc: "Tentukan jumlah akun", icon: Sparkles, tone: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
+                  { step: "02", title: "Salin Data", desc: "Ambil nama & default password", icon: Copy, tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+                  { step: "03", title: "Bikin Akun", desc: "Daftar Gmail asli di Google", icon: UserCheck, tone: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+                  { step: "04", title: "Setor & Submit", desc: "Paste di form setor bawah", icon: Send, tone: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+                ].map((item) => (
+                  <div
+                    key={item.step}
+                    className="relative flex flex-col justify-between rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={cn("flex size-7 items-center justify-center rounded-xl border text-xs font-black", item.tone)}>
+                        <item.icon className="size-3.5" />
+                      </span>
+                      <span className="font-mono text-[0.65rem] font-bold text-zinc-500">
+                        STEP {item.step}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-[0.82rem] font-bold text-white">{item.title}</p>
+                      <p className="text-[0.7rem] text-zinc-400 mt-0.5 leading-tight">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-            {/* Highlighted Password Warning under instructions */}
-            <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-zinc-300 font-medium">
-              <span>Password wajib:</span>
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono font-black text-emerald-200 shadow-2xs">
-                {defaultPassword}
-                <button
-                  type="button"
-                  onClick={handleCopyPassword}
-                  className="text-emerald-300 hover:text-white transition-colors cursor-pointer"
-                  title="Salin password"
-                >
-                  {copiedPassword ? (
-                    <Check className="size-3 text-emerald-400" />
-                  ) : (
-                    <Copy className="size-3" />
-                  )}
-                </button>
-              </span>
-            </div>
+              {/* Generator Box: Jumlah Presets + Password Default Box + Tombol Generate */}
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-4 sm:p-5">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-white/10">
+                  {/* Presets & Input Jumlah */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                      Jumlah:
+                    </span>
+                    {/* Presets */}
+                    {[1, 3, 5, 10].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setCustomCountInput(num);
+                          if (generatedList.length === 0) {
+                            handleGenerate(num);
+                          }
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer",
+                          customCountInput === num
+                            ? "border-sky-500 bg-sky-500 text-white shadow-xs"
+                            : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
+                        )}
+                      >
+                        {num}
+                      </button>
+                    ))}
 
-            {/* Pilih Jumlah Generate Email (Input 1-10 & Presets) */}
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                    Jumlah:
-                  </span>
-                  {/* Presets */}
-                  {[1, 3, 5, 10].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => {
-                        setCustomCountInput(num);
-                        if (generatedList.length === 0) {
-                          handleGenerate(num);
-                        }
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer",
-                        customCountInput === num
-                          ? "border-sky-500 bg-sky-500 text-white shadow-xs"
-                          : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
-                      )}
-                    >
-                      {num}
-                    </button>
-                  ))}
+                    {/* Input field 1 - 10 */}
+                    <div className="flex items-center gap-1 ml-0.5">
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={customCountInput}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val)) {
+                            setCustomCountInput(Math.max(1, Math.min(10, val)));
+                          } else {
+                            setCustomCountInput(1);
+                          }
+                        }}
+                        className="w-14 sm:w-16 rounded-lg border border-white/10 bg-black/60 px-2 py-1 text-center font-mono text-xs font-bold text-white focus:border-sky-500/60 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
+                      />
+                      <span className="text-[0.72rem] text-zinc-400 font-medium">akun</span>
+                    </div>
+                  </div>
 
-                  {/* Input field 1 - 10 (Tanpa panah atas bawah / spin button) */}
-                  <div className="flex items-center gap-1 ml-1">
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={customCountInput}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val)) {
-                          setCustomCountInput(Math.max(1, Math.min(10, val)));
-                        } else {
-                          setCustomCountInput(1);
-                        }
-                      }}
-                      className="w-16 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-center font-mono text-xs font-bold text-white focus:border-sky-500/60 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
-                    />
-                    <span className="text-[0.72rem] text-zinc-400 font-medium">akun</span>
+                  {/* Password Default Box Kontras + Tombol Generate */}
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Badge Password Default Kontras dengan 1-Klik Copy */}
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 shadow-2xs">
+                      <span className="text-[0.68rem] sm:text-xs font-semibold text-emerald-300">
+                        Password Default:
+                      </span>
+                      <span className="font-mono text-xs font-black text-white px-1.5 py-0.5 rounded-md bg-black/60 border border-emerald-500/30 tracking-wide select-all">
+                        {defaultPassword}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyPassword}
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 hover:text-white px-2 py-1 text-[0.68rem] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                        title="Salin password default"
+                      >
+                        {copiedPassword ? (
+                          <>
+                            <Check className="size-3 text-emerald-400" />
+                            <span>Tersalin</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="size-3" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Tombol Generate Gmail hilang apabila sudah ada lebih dari 0 email */}
+                    {generatedList.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleGenerate(customCountInput)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-sky-500/25 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                      >
+                        <Sparkles className="size-3.5" />
+                        <span>Generate Gmail</span>
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                {/* Tombol Generate Gmail hilang apabila sudah ada lebih dari 0 email */}
-                {generatedList.length === 0 && (
-                  <button
-                    type="button"
-                    onClick={() => handleGenerate(customCountInput)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-sky-500/25 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
-                  >
-                    <Sparkles className="size-3.5" />
-                    <span>Generate Gmail</span>
-                  </button>
-                )}
-              </div>
 
               {/* Generated Gmail Box */}
               <div className="mt-4">
