@@ -6,9 +6,28 @@ import { TopBar } from "@/components/layout/top-bar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { UserProfileProvider } from "@/context/user-profile-context";
+import { UserProfileProvider, useUserProfile } from "@/context/user-profile-context";
 
 const PUBLIC_ROUTES = ["/login", "/auth/callback"];
+
+function MaintenanceBanner() {
+  const { siteConfig } = useUserProfile();
+  if (!siteConfig?.is_maintenance_mode) return null;
+
+  return (
+    <div className="sticky top-14 z-40 bg-gradient-to-r from-amber-600 via-rose-600 to-amber-700 text-white px-4 py-2.5 shadow-lg">
+      <div className="mx-auto max-w-5xl flex items-center justify-between gap-3 text-xs sm:text-sm font-bold">
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-white animate-ping" />
+          <span>{siteConfig.maintenance_message || "Platform sedang dalam pemeliharaan berkala untuk peningkatan sistem."}</span>
+        </div>
+        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-black/40 border border-white/20 whitespace-nowrap">
+          Maintenance Mode
+        </span>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Wraps every route, provides route protection, and mounts the top bar
@@ -118,6 +137,7 @@ export function AppChrome({
   return (
     <UserProfileProvider>
       {showNav && <TopBar />}
+      <MaintenanceBanner />
       {children}
       <div
         className={cn(

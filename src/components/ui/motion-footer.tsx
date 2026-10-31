@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
+import { type SiteConfig, DEFAULT_SITE_CONFIG } from "@/lib/supabase";
 import {
   LogIn,
   UserPlus,
@@ -257,16 +258,31 @@ MagneticButton.displayName = "MagneticButton";
 // -------------------------------------------------------------------------
 // 3. MAIN COMPONENT
 // -------------------------------------------------------------------------
-export const MarqueeItem = () => (
-  <div className="flex items-center space-x-10 px-6">
-    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
-    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
-    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
-    <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
-    <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
-    <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
-  </div>
-);
+export const MarqueeItem = ({ text }: { text?: string }) => {
+  if (text) {
+    const parts = text.split("•").map((s) => s.trim()).filter(Boolean);
+    return (
+      <div className="flex items-center space-x-10 px-6">
+        {parts.map((part, i) => (
+          <React.Fragment key={i}>
+            <span>{part}</span>
+            <span className="text-sky-400 font-bold">✦</span>
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center space-x-10 px-6">
+      <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
+      <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
+      <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
+      <span>Pencairan Instan</span> <span className="text-sky-400 font-bold">✦</span>
+      <span>Admin Support 24/7</span> <span className="text-sky-400 font-bold">✦</span>
+      <span>Verifikasi Cepat</span> <span className="text-sky-400 font-bold">✦</span>
+    </div>
+  );
+};
 
 export interface CinematicFooterProps {
   /** If true, renders directly as a full-page 100vh view without scroll-reveal wrapping */
@@ -285,6 +301,8 @@ export interface CinematicFooterProps {
   onOpenRegister?: () => void;
   /** Compatibility alias */
   onOpenLogin?: () => void;
+  /** Dynamic CMS Site Configuration */
+  siteConfig?: SiteConfig;
 }
 
 export function CinematicFooter({
@@ -296,7 +314,9 @@ export function CinematicFooter({
   craftedByText = "Winter",
   onOpenRegister,
   onOpenLogin,
+  siteConfig,
 }: CinematicFooterProps = {}) {
+  const cfg = siteConfig || DEFAULT_SITE_CONFIG;
   const isOnePage = singlePage || directReveal;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
@@ -379,8 +399,8 @@ export function CinematicFooter({
       {/* 1. Diagonal Sleek Marquee (Top of view) */}
       <div className="absolute top-8 sm:top-12 left-0 w-full overflow-hidden border-y border-white/10 bg-black/60 backdrop-blur-md py-3 sm:py-3.5 z-10 -rotate-2 scale-110 shadow-2xl">
         <div className="flex w-max animate-footer-scroll-marquee text-xs md:text-sm font-bold tracking-[0.25em] text-zinc-300 uppercase">
-          <MarqueeItem />
-          <MarqueeItem />
+          <MarqueeItem text={cfg.marquee_text} />
+          <MarqueeItem text={cfg.marquee_text} />
         </div>
       </div>
 
@@ -395,28 +415,26 @@ export function CinematicFooter({
             <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-950/40 px-4 py-1.5 backdrop-blur-md mb-6 shadow-sm">
               <span className="size-2 rounded-full bg-sky-400 animate-ping" />
               <span className="text-xs font-bold text-sky-300 tracking-wide">
-                Platform Setor Gmail Terpercaya 2026
+                {cfg.platform_badge || "Platform Setor Gmail Terpercaya 2026"}
               </span>
             </div>
 
             {/* Headline: Ubah Akun / Gmail Jadi / Penghasilan */}
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] mb-6">
               <span className="block footer-text-glow">
-                Ubah Akun
+                {cfg.hero_headline_1 || "Ubah Akun"}
               </span>
               <span className="block footer-text-glow mt-1 sm:mt-2">
-                Gmail Jadi
+                {cfg.hero_headline_2 || "Gmail Jadi"}
               </span>
               <span className="inline-block mt-1 sm:mt-2 px-1 pb-3 sm:pb-4 leading-[1.2] bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(56,189,248,0.5)]">
-                Penghasilan
+                {cfg.hero_headline_3 || "Penghasilan"}
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-zinc-400 max-w-lg mb-8 leading-relaxed">
-              Buat akun Gmail dan dapatkan saldo.
-              <br className="hidden sm:inline" />
-              {" "}Pencairan instan via E-wallet dan Bank.
+              {cfg.hero_subheadline || "Buat akun Gmail dan dapatkan saldo. Pencairan instan via E-wallet dan Bank."}
             </p>
 
             {/* Tombol Action: Login dan Daftar */}
@@ -470,16 +488,18 @@ export function CinematicFooter({
                 </p>
 
                 {/* Badge Status */}
-                <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 px-4 py-1.5 text-xs font-bold text-amber-300 shadow-[0_0_24px_-3px_rgba(245,158,11,0.4)] backdrop-blur-md">
-                  <span className="relative flex size-2 shrink-0">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-                    <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
-                  </span>
-                  <Wrench className="size-3.5 text-amber-300" />
-                  <span className="tracking-wide text-[11px] sm:text-xs">
-                    Platform sedang dalam tahap pengembangan
-                  </span>
-                </div>
+                {cfg.badge_status_active !== false && (
+                  <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/80 via-amber-900/60 to-amber-950/80 px-4 py-1.5 text-xs font-bold text-amber-300 shadow-[0_0_24px_-3px_rgba(245,158,11,0.4)] backdrop-blur-md">
+                    <span className="relative flex size-2 shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
+                    </span>
+                    <Wrench className="size-3.5 text-amber-300" />
+                    <span className="tracking-wide text-[11px] sm:text-xs">
+                      {cfg.badge_status_text || "Platform sedang dalam tahap pengembangan"}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* 4 FLOATING CARDS - Diposisikan outer orbit agar TIDAK menutupi tulisan */}

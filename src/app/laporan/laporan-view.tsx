@@ -3,9 +3,12 @@
 import * as React from "react";
 import Image from "next/image";
 import { PageShell } from "@/components/layout/page-shell";
+import { useUserProfile } from "@/context/user-profile-context";
 
 export function LaporanView() {
-  const telegramUrl = "https://t.me/winterhere";
+  const { siteConfig } = useUserProfile();
+  const username = siteConfig?.telegram_admin_username || "winterhere";
+  const telegramUrl = `https://t.me/${username}`;
 
   const handleOpenTelegram = () => {
     window.open(telegramUrl, "_blank", "noopener,noreferrer");

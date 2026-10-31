@@ -21,6 +21,9 @@ import {
   fetchUserWithdrawals,
   fetchUserTransactions,
   fetchUserTickets,
+  fetchSiteConfig,
+  type SiteConfig,
+  DEFAULT_SITE_CONFIG,
 } from "@/lib/supabase";
 
 export interface UserStats {
@@ -95,6 +98,10 @@ export interface GlobalDataContextValue {
   tickets: ReportTicket[];
   isTicketsLoading: boolean;
 
+  // CMS Site Config
+  siteConfig: SiteConfig;
+  refreshSiteConfig: () => Promise<void>;
+
   // Mutation & Refresh Methods (Stale-While-Revalidate)
   refreshAll: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -136,6 +143,16 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
   const [withdrawals, setWithdrawals] = React.useState<WithdrawalRecord[]>([]);
   const [transactions, setTransactions] = React.useState<TransactionRecord[]>([]);
   const [tickets, setTickets] = React.useState<ReportTicket[]>([]);
+
+  // CMS Dynamic Site Configuration
+  const [siteConfig, setSiteConfig] = React.useState<SiteConfig>(DEFAULT_SITE_CONFIG);
+
+  const refreshSiteConfig = React.useCallback(async () => {
+    try {
+      const config = await fetchSiteConfig();
+      setSiteConfig(config);
+    } catch {}
+  }, []);
 
   // Granular Loading flags (true only before cache hydration or first network fetch)
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -240,10 +257,13 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
           setIsTicketsLoading(false);
         }
       }
+
+      // Hydrate site config
+      refreshSiteConfig();
     } catch {
       // ignore JSON parse errors
     }
-  }, []);
+  }, [refreshSiteConfig]);
 
   // 2. Refresh All (Full Stale-While-Revalidate network revalidation)
   const refreshAll = React.useCallback(async () => {
@@ -607,6 +627,8 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       isHistoryLoading,
       tickets,
       isTicketsLoading,
+      siteConfig,
+      refreshSiteConfig,
       refreshAll,
       refreshProfile,
       refreshDeposits,
@@ -638,6 +660,8 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       isHistoryLoading,
       tickets,
       isTicketsLoading,
+      siteConfig,
+      refreshSiteConfig,
       refreshAll,
       refreshProfile,
       refreshDeposits,

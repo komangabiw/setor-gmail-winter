@@ -70,6 +70,7 @@ export function DashboardView() {
   const {
     wallet,
     stats: userStats,
+    siteConfig,
     isWalletLoading,
     isStatsLoading,
     refreshWallet,
@@ -155,7 +156,7 @@ export function DashboardView() {
               {/* Harga / Gmail */}
               <div className="mt-3.5 flex items-center">
                 <div className="inline-flex items-center rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1.5 text-[0.75rem] font-semibold text-sky-400">
-                  Harga / Gmail: Rp4.500
+                  Harga / Gmail: {formatIDR(siteConfig.price_per_gmail || 4500)}
                 </div>
               </div>
 
@@ -200,7 +201,7 @@ export function DashboardView() {
                 Siap Setor Gmail?
               </p>
               <p className="mt-1 text-[0.78rem] leading-relaxed text-zinc-300">
-                Generate Gmail dan kirim sekarang. Proses cepat, saldo langsung masuk setelah dicek.
+                Generate Gmail dan setor sekarang. Proses cepat, saldo langsung masuk setelah Gmail diterima.
               </p>
             </div>
             <span className="relative flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 px-4 py-3 text-[0.85rem] font-semibold text-white shadow-lg shadow-sky-500/30 transition-all duration-300 group-hover:from-sky-300 group-hover:to-blue-500">

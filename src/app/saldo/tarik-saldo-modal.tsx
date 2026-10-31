@@ -25,6 +25,7 @@ import {
   saveStoredEWalletData,
 } from "@/lib/generated-storage";
 import { getCurrentAuthUser, insertWithdrawalRequest } from "@/lib/supabase";
+import { useUserProfile } from "@/context/user-profile-context";
 
 const PHONE_MAX_LENGTH = 13;
 
@@ -45,6 +46,8 @@ export function TarikSaldoModal({
   initialMethod = "DANA",
   onSuccess,
 }: TarikSaldoModalProps) {
+  const { siteConfig } = useUserProfile();
+  const effectiveMinimum = siteConfig?.min_withdrawal || minimum || 5000;
   const [selectedMethod, setSelectedMethod] = React.useState<EWalletMethod>(initialMethod);
   const [accountNumbers, setAccountNumbers] = React.useState<Record<EWalletMethod, string>>({
     DANA: "",
@@ -100,19 +103,26 @@ export function TarikSaldoModal({
   const currentNumber = accountNumbers[selectedMethod] || "";
   const phoneValid = /^08\d{8,11}$/.test(currentNumber.trim());
 
-  // Pajak transfer: GoPay & OVO Rp 1.000, DANA & ShopeePay Rp 0
-  const taxFee = config.hasTax ? config.taxFee : 0;
+  // Pajak transfer dinamis dari CMS: GoPay & OVO, DANA & ShopeePay
+  const taxFee = React.useMemo(() => {
+    if (selectedMethod === "GOPAY") return siteConfig?.tax_gopay ?? 1000;
+    if (selectedMethod === "OVO") return siteConfig?.tax_ovo ?? 1000;
+    if (selectedMethod === "DANA") return siteConfig?.tax_dana ?? 0;
+    if (selectedMethod === "SHOPEEPAY") return siteConfig?.tax_shopeepay ?? 0;
+    return config.hasTax ? config.taxFee : 0;
+  }, [selectedMethod, siteConfig, config]);
+
   const netAmount = Math.max(withdrawAmount - taxFee, 0);
-  const reached = balance >= minimum && balance > 0;
-  const remaining = Math.max(minimum - balance, 0);
+  const reached = balance >= effectiveMinimum && balance > 0;
+  const remaining = Math.max(effectiveMinimum - balance, 0);
 
   const hasStartedAmount = amountInput.length > 0;
-  const isBelowMinimum = hasStartedAmount && withdrawAmount < minimum;
+  const isBelowMinimum = hasStartedAmount && withdrawAmount < effectiveMinimum;
   const isExceedingBalance = hasStartedAmount && withdrawAmount > balance;
   const isExceedingMax = hasStartedAmount && withdrawAmount > 5000000;
   const isAmountValid =
     hasStartedAmount &&
-    withdrawAmount >= minimum &&
+    withdrawAmount >= effectiveMinimum &&
     withdrawAmount <= balance &&
     withdrawAmount <= 5000000;
 

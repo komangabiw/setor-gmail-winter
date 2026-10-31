@@ -193,6 +193,7 @@ export function ProfilView() {
     userProfile,
     avatarImage,
     isLoading,
+    siteConfig,
     updateAvatar,
     wallet,
     persistedAccounts,
@@ -564,7 +565,7 @@ export function ProfilView() {
                     )}
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-400">
                       <Target className="size-3 text-sky-400" aria-hidden="true" />
-                      Minimal Penarikan: {formatIDR(wallet.minimumWithdrawal)}
+                      Minimal Penarikan: {formatIDR(siteConfig?.min_withdrawal || wallet.minimumWithdrawal || 5000)}
                     </span>
                   </div>
                 </div>
@@ -594,7 +595,7 @@ export function ProfilView() {
                   </div>
                   <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs sm:text-[0.82rem] font-bold text-amber-300 shadow-2xs">
                     <span className="size-1.5 rounded-full bg-amber-400" />
-                    Gopay pajak transfer 1000
+                    Gopay pajak transfer {siteConfig?.tax_gopay ?? 1000}
                   </span>
                 </div>
 

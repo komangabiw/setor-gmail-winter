@@ -523,6 +523,59 @@ async function handleWithdrawalApi(request: Request, env: Env): Promise<Response
   }
 }
 
+async function handleCheckUserEmail(request: Request, env: Env): Promise<Response> {
+  try {
+    const body: any = await request.json().catch(() => ({}));
+    const email = body?.email;
+    if (!email || typeof email !== "string") {
+      return new Response(JSON.stringify({ exists: false, error: "Email wajib diisi" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || "https://kdjoeeehyahdgwgsfyal.supabase.co";
+    const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!serviceRoleKey) {
+      return new Response(JSON.stringify({ exists: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?email=ilike.${encodeURIComponent(cleanEmail)}&select=id&limit=1`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      return new Response(JSON.stringify({ exists: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const data: any = await res.json().catch(() => []);
+    const exists = Array.isArray(data) && data.length > 0;
+    return new Response(JSON.stringify({ exists }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
+    return new Response(JSON.stringify({ exists: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -539,6 +592,8 @@ const worker = {
     // API Routes
     if (url.pathname === "/api/check-gmail" && request.method === "POST") {
       response = await handleCheckGmail(request);
+    } else if (url.pathname === "/api/auth/check-email" && request.method === "POST") {
+      response = await handleCheckUserEmail(request, env);
     } else if (url.pathname === "/api/telegram-report" && request.method === "POST") {
       response = await handleTelegramReport(request, env);
     } else if (

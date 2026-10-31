@@ -115,7 +115,8 @@ function generateBatch(count: number, existingPool?: Set<string>): string[] {
 
 export function SetorView() {
   const [emails, setEmails] = React.useState("");
-  const { refreshDeposits, refreshWallet } = useUserProfile();
+  const { refreshDeposits, refreshWallet, siteConfig } = useUserProfile();
+  const activePassword = siteConfig?.default_password || defaultPassword;
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
   const [showRulesDetail, setShowRulesDetail] = React.useState(false);
@@ -250,7 +251,7 @@ export function SetorView() {
 
   const handleCopyPassword = async () => {
     try {
-      await navigator.clipboard.writeText(defaultPassword);
+      await navigator.clipboard.writeText(activePassword);
       setCopiedPassword(true);
       toast.success("Password wajib disalin ke clipboard!");
       window.setTimeout(() => setCopiedPassword(false), 2000);
@@ -512,7 +513,8 @@ export function SetorView() {
   }, [setoranCheckResults]);
 
   const liveCount = liveResults.length;
-  const calculatedEarnings = liveCount * 4500;
+  const pricePerGmail = siteConfig?.price_per_gmail || 4500;
+  const calculatedEarnings = liveCount * pricePerGmail;
 
   const lastHoverToastTime = React.useRef(0);
   const handleHoverDisabledSubmit = () => {
@@ -638,7 +640,9 @@ export function SetorView() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Status</p>
-                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Wajib Fresh (baru dibuat)</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">
+                      {siteConfig?.rule_status || "Wajib Fresh (baru dibuat)"}
+                    </p>
                   </div>
                 </div>
 
@@ -649,7 +653,9 @@ export function SetorView() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Nama Akun</p>
-                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Wajib sama persis hasil generate</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">
+                      {siteConfig?.rule_nama || "Wajib sama persis hasil generate"}
+                    </p>
                   </div>
                 </div>
 
@@ -660,7 +666,9 @@ export function SetorView() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Usia Akun</p>
-                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Lahir 18+ tahun</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">
+                      {siteConfig?.rule_usia || "Lahir 18+ tahun"}
+                    </p>
                   </div>
                 </div>
 
@@ -671,7 +679,9 @@ export function SetorView() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[0.68rem] font-semibold text-zinc-400 uppercase tracking-wider">Keamanan</p>
-                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">Tanpa No HP / Email Pemulihan</p>
+                    <p className="text-xs sm:text-[0.82rem] font-bold text-white truncate">
+                      {siteConfig?.rule_keamanan || "Tanpa No HP / Email Pemulihan"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -691,10 +701,17 @@ export function SetorView() {
               {/* Collapsible Content */}
               {showRulesDetail && (
                 <div className="mt-3 rounded-2xl border border-white/10 bg-black/50 p-3.5 text-xs text-zinc-300 space-y-2 leading-relaxed animate-fade-down">
-                  <p>• <strong>Wajib Fresh:</strong> Akun harus baru dibuat secara manual dan belum pernah didaftarkan ke platform/jasa lain.</p>
-                  <p>• <strong>Nama Akun Sama Persis:</strong> Karakter, angka, dan huruf pada Gmail wajib 100% sama dengan hasil yang di-generate di situs ini. Dilarang mengubah atau menambah karakter apa pun.</p>
-                  <p>• <strong>Usia 18+ Tahun:</strong> Atur tanggal dan tahun kelahiran akun Gmail di Google agar umur akun minimal 18 tahun (contoh: tahun 2000–2005).</p>
-                  <p>• <strong>Tanpa Pemulihan:</strong> Akun dilarang menautkan nomor HP pemulihan atau email pemulihan agar peninjauan oleh admin lancar tanpa kendala OTP.</p>
+                  {(siteConfig?.rules_detail_text && siteConfig.rules_detail_text.length > 0
+                    ? siteConfig.rules_detail_text
+                    : [
+                        "Wajib Fresh: Akun harus baru dibuat secara manual.",
+                        "Nama Akun Sama Persis: Huruf dan angka pada Gmail wajib sama dengan hasil yang di-generate.",
+                        "Usia 18+ Tahun: Atur tanggal dan tahun kelahiran akun Gmail di Google agar umur akun minimal 18 tahun (contoh: tahun 2000–2005).",
+                        "Tanpa Pemulihan: Akun dilarang menautkan nomor HP pemulihan atau email pemulihan agar peninjauan oleh admin lancar tanpa kendala OTP.",
+                      ]
+                  ).map((text, idx) => (
+                    <p key={idx}>• {text}</p>
+                  ))}
                 </div>
               )}
             </div>
@@ -794,10 +811,10 @@ export function SetorView() {
                     {/* Badge Password Default Kontras dengan 1-Klik Copy */}
                     <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 shadow-2xs">
                       <span className="text-[0.68rem] sm:text-xs font-semibold text-emerald-300">
-                        Password Default:
+                        Password Gmail:
                       </span>
                       <span className="font-mono text-xs font-black text-white px-1.5 py-0.5 rounded-md bg-black/60 border border-emerald-500/30 tracking-wide select-all">
-                        {defaultPassword}
+                        {activePassword}
                       </span>
                       <button
                         type="button"

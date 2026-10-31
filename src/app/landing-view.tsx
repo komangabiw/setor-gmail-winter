@@ -5,6 +5,7 @@ import { Modal } from "@/components/ui/modal";
 import { AuthCard } from "./login/auth-card";
 import { CinematicFooter } from "@/components/ui/motion-footer";
 import { PlayCircle, X } from "lucide-react";
+import { useUserProfile } from "@/context/user-profile-context";
 
 interface LandingViewProps {
   onAuthSuccess?: () => void;
@@ -15,6 +16,7 @@ export function LandingView({
   onAuthSuccess,
   defaultModalMode = null,
 }: LandingViewProps) {
+  const { siteConfig } = useUserProfile();
   const [authModal, setAuthModal] = React.useState<{
     open: boolean;
     mode: "login" | "register";
@@ -42,6 +44,7 @@ export function LandingView({
         onPill1Click={() => openAuth("login")}
         onPill2Click={() => openAuth("register")}
         craftedByText="Winter"
+        siteConfig={siteConfig}
       />
 
       {/* POPUP MODAL: Masuk & Daftar Akun */}

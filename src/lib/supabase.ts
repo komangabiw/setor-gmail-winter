@@ -772,3 +772,150 @@ export async function insertSupportTicket(
   // Laporan diarahkan langsung ke Telegram admin @winterhere
   return { success: true, id: params.code || `t-${Date.now()}` };
 }
+
+/* ------------------------------------------------------------------ */
+/* 7. CMS Site Configuration Helpers                                  */
+/* ------------------------------------------------------------------ */
+
+export interface SiteConfig {
+  price_per_gmail: number;
+  price_bebas: number;
+  min_withdrawal: number;
+  tax_gopay: number;
+  tax_ovo: number;
+  tax_dana: number;
+  tax_shopeepay: number;
+  default_password: string;
+  rule_status: string;
+  rule_nama: string;
+  rule_usia: string;
+  rule_keamanan: string;
+  rules_detail_text: string[];
+  hero_headline_1: string;
+  hero_headline_2: string;
+  hero_headline_3: string;
+  hero_subheadline: string;
+  platform_badge: string;
+  badge_status_text: string;
+  badge_status_active: boolean;
+  marquee_text: string;
+  whatsapp_channel_url: string;
+  telegram_admin_username: string;
+  is_setor_active: boolean;
+  is_checker_active: boolean;
+  is_withdrawal_active: boolean;
+  is_referral_active: boolean;
+  is_maintenance_mode: boolean;
+  maintenance_message: string;
+  referral_target_friends: number;
+  referral_reward_amount: number;
+}
+
+export const DEFAULT_SITE_CONFIG: SiteConfig = {
+  price_per_gmail: 4500,
+  price_bebas: 2500,
+  min_withdrawal: 5000,
+  tax_gopay: 1000,
+  tax_ovo: 1000,
+  tax_dana: 0,
+  tax_shopeepay: 0,
+  default_password: "winter1212",
+  rule_status: "Wajib Fresh (baru dibuat)",
+  rule_nama: "Wajib sama persis hasil generate",
+  rule_usia: "Lahir 18+ tahun",
+  rule_keamanan: "Tanpa No HP / Email Pemulihan",
+  rules_detail_text: [
+    "Wajib Fresh: Akun harus baru dibuat secara manual.",
+    "Nama Akun Sama Persis: Huruf dan angka pada Gmail wajib sama dengan hasil yang di-generate.",
+    "Usia 18+ Tahun: Atur tanggal dan tahun kelahiran akun Gmail di Google agar umur akun minimal 18 tahun (contoh: tahun 2000–2005).",
+    "Tanpa Pemulihan: Akun dilarang menautkan nomor HP pemulihan atau email pemulihan agar peninjauan oleh admin lancar tanpa kendala OTP.",
+  ],
+  hero_headline_1: "Ubah Akun",
+  hero_headline_2: "Gmail Jadi",
+  hero_headline_3: "Penghasilan",
+  hero_subheadline:
+    "Buat akun Gmail dan dapatkan saldo. Pencairan instan via E-wallet dan Bank.",
+  platform_badge: "Platform Setor Gmail Terpercaya 2026",
+  badge_status_text: "Platform sedang dalam tahap pengembangan",
+  badge_status_active: true,
+  marquee_text:
+    "PROSES CEPAT • AMAN TERPERCAYA • PENCAIRAN INSTAN • SETOR SEKARANG •",
+  whatsapp_channel_url:
+    "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y",
+  telegram_admin_username: "winterhere",
+  is_setor_active: true,
+  is_checker_active: true,
+  is_withdrawal_active: true,
+  is_referral_active: true,
+  is_maintenance_mode: false,
+  maintenance_message:
+    "Platform sedang dalam pemeliharaan berkala untuk peningkatan sistem. Mohon kembali beberapa saat lagi.",
+  referral_target_friends: 10,
+  referral_reward_amount: 10000,
+};
+
+export async function fetchSiteConfig(): Promise<SiteConfig> {
+  // Check local cached config first for instantaneous render
+  if (typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem("setorgmail_cached_site_config_v1");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === "object") {
+          // Asynchronously revalidate in background
+          if (isSupabaseConfigured) {
+            (async () => {
+              try {
+                const { data } = await supabase
+                  .from("app_settings")
+                  .select("value")
+                  .eq("key", "site_config")
+                  .maybeSingle();
+
+                if (data?.value) {
+                  const fresh =
+                    typeof data.value === "string"
+                      ? JSON.parse(data.value)
+                      : data.value;
+                  localStorage.setItem(
+                    "setorgmail_cached_site_config_v1",
+                    JSON.stringify({ ...DEFAULT_SITE_CONFIG, ...fresh })
+                  );
+                }
+              } catch {}
+            })();
+          }
+          return { ...DEFAULT_SITE_CONFIG, ...parsed };
+        }
+      }
+    } catch {}
+  }
+
+  if (isSupabaseConfigured) {
+    try {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "site_config")
+        .maybeSingle();
+
+      if (data?.value) {
+        const fresh =
+          typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+        const merged = { ...DEFAULT_SITE_CONFIG, ...fresh };
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(
+              "setorgmail_cached_site_config_v1",
+              JSON.stringify(merged)
+            );
+          } catch {}
+        }
+        return merged;
+      }
+    } catch {}
+  }
+
+  return DEFAULT_SITE_CONFIG;
+}
+

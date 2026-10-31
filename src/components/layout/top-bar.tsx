@@ -4,8 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
+import { useUserProfile } from "@/context/user-profile-context";
 
 export function TopBar() {
+  const { siteConfig } = useUserProfile();
+  const waUrl = siteConfig?.whatsapp_channel_url || "https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y";
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#09090b]/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-md items-center justify-between px-4 sm:max-w-lg sm:px-6 md:max-w-4xl md:px-8 lg:max-w-5xl xl:px-10">
@@ -41,7 +44,7 @@ export function TopBar() {
         {/* Right action: Saluran WA */}
         <div className="flex items-center gap-2">
           <a
-            href="https://whatsapp.com/channel/0029VbEImqX7j6gFzKU9Qy1Y"
+            href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[0.76rem] font-semibold text-zinc-200 shadow-2xs transition-all hover:bg-white/10 hover:border-white/20 active:scale-95"
