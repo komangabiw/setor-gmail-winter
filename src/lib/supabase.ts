@@ -804,11 +804,8 @@ export interface SiteConfig {
   is_setor_active: boolean;
   is_checker_active: boolean;
   is_withdrawal_active: boolean;
-  is_referral_active: boolean;
   is_maintenance_mode: boolean;
   maintenance_message: string;
-  referral_target_friends: number;
-  referral_reward_amount: number;
 }
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
@@ -846,12 +843,9 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   is_setor_active: true,
   is_checker_active: true,
   is_withdrawal_active: true,
-  is_referral_active: true,
   is_maintenance_mode: false,
   maintenance_message:
     "Platform sedang dalam pemeliharaan berkala untuk peningkatan sistem. Mohon kembali beberapa saat lagi.",
-  referral_target_friends: 10,
-  referral_reward_amount: 10000,
 };
 
 export async function fetchSiteConfig(): Promise<SiteConfig> {
