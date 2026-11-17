@@ -342,16 +342,31 @@ export function ProfilView() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Format tidak didukung", {
-        description: "Harap pilih file gambar (JPG, PNG, WebP).",
+    // A03: Strict raster image allowlist (blocks image/svg+xml stored XSS) & 2MB size cap
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedMimeTypes.includes(file.type)) {
+      toast.error("Format gambar tidak didukung", {
+        description: "Harap pilih foto berformat JPG, PNG, atau WebP.",
       });
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ukuran foto terlalu besar", {
+        description: "Ukuran maksimal foto profil adalah 2MB.",
+      });
+      e.target.value = "";
       return;
     }
 
     const reader = new FileReader();
     reader.onload = async () => {
       const dataUrl = reader.result as string;
+      if (typeof dataUrl !== "string" || !/^data:image\/(jpeg|png|webp);base64,/i.test(dataUrl)) {
+        toast.error("File gambar tidak valid");
+        return;
+      }
       await updateAvatar(dataUrl);
       toast.success("Foto profil berhasil diperbarui");
     };
@@ -365,7 +380,7 @@ export function ProfilView() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleImageUpload}
         className="hidden"
         aria-label="Upload foto profil"

@@ -177,12 +177,14 @@
   }
 
   body {
-    background-color: #09090b;
+    background-color: #07080d;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 100% 100%, 56px 56px, 56px 56px;
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.14) 0%, transparent 65%),
+      radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 15% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 45%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 52px 52px, 52px 52px;
     background-attachment: fixed;
     color: #f8fafc;
     font-family: var(--font-sans);
@@ -207,24 +209,50 @@
 }
 
 @layer components {
-  /* Page background: dark #09090b with grid */
+  /* Page background: dark #07080d with multi-aurora & crisp grid */
   .app-bg {
-    background-color: #09090b;
+    background-color: #07080d;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 100% 100%, 56px 56px, 56px 56px;
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.14) 0%, transparent 65%),
+      radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 15% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 45%),
+      linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 52px 52px, 52px 52px;
     background-attachment: fixed;
   }
 
   .card {
     border-radius: 1.5rem;
-    background-color: rgba(18, 18, 21, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(180deg, rgba(22, 23, 31, 0.88) 0%, rgba(14, 15, 21, 0.92) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+      0 16px 38px -12px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-120%) skewX(-18deg);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.24),
+      transparent
+    );
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .btn-shimmer:hover::after {
+    transform: translateX(120%) skewX(-18deg);
   }
 
   .card-hover {

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { safeDecodeParam } from "@/lib/security";
 import { Loader2 } from "lucide-react";
 
 function CallbackHandler() {
@@ -38,7 +39,12 @@ function CallbackHandler() {
 
         if (error || errorDescription) {
           console.error("[OAuth Error]", error, errorDescription);
-          setErrorMessage(decodeURIComponent(errorDescription || error || "Otentikasi gagal."));
+          setErrorMessage(
+            safeDecodeParam(errorDescription || error, 180) || "Otentikasi gagal."
+          );
+          try {
+            window.history.replaceState(null, "", window.location.pathname);
+          } catch {}
           setTimeout(() => {
             window.location.href = "/login";
           }, 3500);

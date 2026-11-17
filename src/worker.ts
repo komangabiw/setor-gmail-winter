@@ -1,15 +1,75 @@
+import {
+  type GmailProbeItem,
+  generateGmailCandidates,
+  validateGmailForProbe,
+  checkSingleHttpsFallback,
+} from "./lib/gmail-check-shared";
+
 interface Env {
   ASSETS: {
     fetch: (request: Request) => Promise<Response>;
   };
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
+  NEXT_PUBLIC_SUPABASE_URL?: string;
+  NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  FLIP_WEBHOOK_SECRET?: string;
+  FLIP_CALLBACK_TOKEN?: string;
   [key: string]: any;
 }
 
 const TELEGRAM_API = "https://api.telegram.org";
-const DEFAULT_CHAT_ID = "-1003715736899";
-const DEFAULT_BOT_TOKEN = atob("ODg3ODgzOTUxNDpBQUZNR3JMcjNhU09NeGdFWjdLUXdoanh5TkdUdkhXRlhERQ==");
+
+// Edge Worker In-Memory Rate Limit Store (per isolate)
+const edgeRateStore = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown-ip"
+  );
+}
+
+function checkEdgeRateLimit(
+  ip: string,
+  bucket: string,
+  maxRequests: number,
+  windowMs: number
+): boolean {
+  const now = Date.now();
+  // Periodic cleanup to prevent unbounded Map growth
+  if (edgeRateStore.size > 5000) {
+    for (const [k, v] of edgeRateStore.entries()) {
+      if (now > v.resetAt) edgeRateStore.delete(k);
+    }
+  }
+  const key = `${bucket}:${ip}`;
+  const entry = edgeRateStore.get(key);
+  if (!entry || now > entry.resetAt) {
+    edgeRateStore.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (entry.count >= maxRequests) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  if (aBytes.length !== bBytes.length) return false;
+  let diff = 0;
+  for (let i = 0; i < aBytes.length; i++) {
+    diff |= aBytes[i] ^ bBytes[i];
+  }
+  return diff === 0;
+}
 
 function normalizeGmail(email: string): string {
   const lower = email.trim().toLowerCase();
@@ -77,9 +137,17 @@ function isRandomKeyboardSmash(email: string): boolean {
 
 async function handleCheckGmail(request: Request): Promise<Response> {
   try {
+    const clientIp = getClientIp(request);
+    if (!checkEdgeRateLimit(clientIp, "check-gmail", 30, 60_000)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Terlalu banyak permintaan cek email. Tunggu sebentar." }),
+        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
     const body: any = await request.json().catch(() => ({}));
     let emailList: string[] = [];
-    const startIndex: number = typeof body.startIndex === "number" ? body.startIndex : 1;
+    const startIndex: number = typeof body.startIndex === "number" ? Math.max(1, Math.floor(body.startIndex)) : 1;
 
     if (Array.isArray(body.emails)) {
       emailList = body.emails;
@@ -96,7 +164,7 @@ async function handleCheckGmail(request: Request): Promise<Response> {
 
     const clientGeneratedPool = new Set<string>();
     if (Array.isArray(body.storedGenerated)) {
-      for (const item of body.storedGenerated) {
+      for (const item of body.storedGenerated.slice(0, 100)) {
         if (typeof item === "string") {
           clientGeneratedPool.add(item.trim().toLowerCase());
           clientGeneratedPool.add(normalizeGmail(item));
@@ -104,7 +172,7 @@ async function handleCheckGmail(request: Request): Promise<Response> {
       }
     }
 
-    const cappedList = emailList.slice(0, 50);
+    const cappedList = emailList.slice(0, 15);
     const results = cappedList.map((email, i) => {
       const timestamp = new Date().toISOString();
       const syntax = validateGmailSyntax(email);
@@ -179,9 +247,9 @@ async function handleCheckGmail(request: Request): Promise<Response> {
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (err: any) {
+  } catch {
     return new Response(
-      JSON.stringify({ success: false, error: err?.message || "Internal server error" }),
+      JSON.stringify({ success: false, error: "Terjadi kesalahan saat memeriksa email." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -195,13 +263,37 @@ function escapeMarkdown(text: string): string {
   return text.replace(/([_*\[\]`\\])/g, "\\$1");
 }
 
-async function handleTelegramReport(request: Request, env: Env): Promise<Response> {
-  const token = env.TELEGRAM_BOT_TOKEN?.trim() || DEFAULT_BOT_TOKEN;
-  const chatId = env.TELEGRAM_CHAT_ID?.trim() || DEFAULT_CHAT_ID;
+const ALLOWED_REPORT_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+]);
 
-  if (!token) {
+function stripHtmlAndCap(raw: unknown, maxLen: number): string {
+  if (typeof raw !== "string") return "";
+  return raw
+    .trim()
+    .slice(0, maxLen)
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/<[^>]+>/g, "");
+}
+
+async function handleTelegramReport(request: Request, env: Env): Promise<Response> {
+  const clientIp = getClientIp(request);
+  if (!checkEdgeRateLimit(clientIp, "telegram-report", 5, 5 * 60_000)) {
     return new Response(
-      JSON.stringify({ ok: false, error: "Layanan Telegram belum dikonfigurasi." }),
+      JSON.stringify({ ok: false, error: "Batas pengiriman laporan tercapai. Coba lagi dalam beberapa menit." }),
+      { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "300" } }
+    );
+  }
+
+  const token = env.TELEGRAM_BOT_TOKEN?.trim();
+  const chatId = env.TELEGRAM_CHAT_ID?.trim();
+
+  if (!token || !chatId) {
+    return new Response(
+      JSON.stringify({ ok: false, error: "Layanan Telegram belum dikonfigurasi pada server." }),
       { status: 503, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -219,19 +311,25 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   if (contentType.includes("multipart/form-data")) {
     try {
       const formData = await request.formData();
-      kategori = ((formData.get("kategori") as string) || "").trim();
-      judul = ((formData.get("judul") as string) || "").trim();
-      deskripsi = ((formData.get("deskripsi") as string) || "").trim();
-      namaUser = ((formData.get("nama_user") || formData.get("namaUser") || formData.get("nama") || "") as string).trim();
-      emailUser = ((formData.get("email_user") || formData.get("emailUser") || formData.get("email") || "") as string).trim();
-      uidUser = ((formData.get("uid_user") || formData.get("uidUser") || formData.get("uid") || "") as string).trim();
+      kategori = stripHtmlAndCap(formData.get("kategori"), 60);
+      judul = stripHtmlAndCap(formData.get("judul"), 150);
+      deskripsi = stripHtmlAndCap(formData.get("deskripsi"), 2000);
+      namaUser = stripHtmlAndCap(formData.get("nama_user") || formData.get("namaUser") || formData.get("nama"), 100);
+      emailUser = stripHtmlAndCap(formData.get("email_user") || formData.get("emailUser") || formData.get("email"), 120);
+      uidUser = stripHtmlAndCap(formData.get("uid_user") || formData.get("uidUser") || formData.get("uid"), 80);
       const fileEntry = formData.get("file");
       if (fileEntry instanceof File && fileEntry.size > 0) {
-        if (fileEntry.size > 10 * 1024 * 1024) {
-          return new Response(JSON.stringify({ ok: false, error: "Ukuran file bukti maksimal 10MB." }), {
+        if (fileEntry.size > 5 * 1024 * 1024) {
+          return new Response(JSON.stringify({ ok: false, error: "Ukuran file bukti maksimal 5MB." }), {
             status: 400,
             headers: { "Content-Type": "application/json" },
           });
+        }
+        if (!ALLOWED_REPORT_MIME_TYPES.has(fileEntry.type)) {
+          return new Response(
+            JSON.stringify({ ok: false, error: "Format bukti hanya mendukung JPG, PNG, WebP, atau PDF." }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
         }
         attachedFile = fileEntry;
       }
@@ -244,12 +342,12 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   } else {
     try {
       const body: any = await request.json();
-      kategori = (body.kategori || "").trim();
-      judul = (body.judul || "").trim();
-      deskripsi = (body.deskripsi || "").trim();
-      namaUser = (body.nama_user || body.namaUser || body.nama || "").trim();
-      emailUser = (body.email_user || body.emailUser || body.email || "").trim();
-      uidUser = (body.uid_user || body.uidUser || body.uid || "").trim();
+      kategori = stripHtmlAndCap(body.kategori, 60);
+      judul = stripHtmlAndCap(body.judul, 150);
+      deskripsi = stripHtmlAndCap(body.deskripsi, 2000);
+      namaUser = stripHtmlAndCap(body.nama_user || body.namaUser || body.nama, 100);
+      emailUser = stripHtmlAndCap(body.email_user || body.emailUser || body.email, 120);
+      uidUser = stripHtmlAndCap(body.uid_user || body.uidUser || body.uid, 80);
     } catch {
       return new Response(JSON.stringify({ ok: false, error: "JSON tidak valid." }), {
         status: 400,
@@ -269,7 +367,7 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   const isSecurityAlert = kategori.includes("KEAMANAN") || kategori.includes("ALERT");
 
   const userHeader = isSecurityAlert
-    ? `🚨 *ALERT KEAMANAN SISTEM*\n\n`
+    ? `🚨 *LAPORAN PERINGATAN KLIEN (IP: ${escapeMarkdown(clientIp)})*\n\n`
     : `📋 *Laporan User*\n` +
       `👤 *Nama User:* ${escapeMarkdown(namaUser || "-")}\n` +
       `📧 *Email User:* ${escapeMarkdown(emailUser || "-")}\n` +
@@ -278,16 +376,17 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
   const messageText = `${userHeader}` +
     `🏷️ *Kategori:* ${escapeMarkdown(kategori)}\n` +
     `📌 *Judul:* ${escapeMarkdown(judul)}\n\n` +
-    `📝 *Deskripsi:*\n${deskripsi}\n\n` +
+    `📝 *Deskripsi:*\n${escapeMarkdown(deskripsi)}\n\n` +
     `⏰ _Waktu: ${waktuJakarta} WIB_`;
 
   try {
     let response: Response;
 
     if (attachedFile) {
+      const safeFileName = attachedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80) || "bukti";
       const fileForm = new FormData();
       fileForm.append("chat_id", chatId);
-      fileForm.append("document", attachedFile, attachedFile.name);
+      fileForm.append("document", attachedFile, safeFileName);
       fileForm.append("caption", messageText.slice(0, 1024));
       fileForm.append("parse_mode", "Markdown");
 
@@ -296,13 +395,12 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
         body: fileForm,
       });
 
-      // If markdown entity parsing failed on caption, retry without parse_mode
       if (!response.ok) {
         const detail: any = await response.clone().json().catch(() => null);
         if (detail?.description?.includes("can't parse entities")) {
           const retryForm = new FormData();
           retryForm.append("chat_id", chatId);
-          retryForm.append("document", attachedFile, attachedFile.name);
+          retryForm.append("document", attachedFile, safeFileName);
           retryForm.append("caption", messageText.slice(0, 1024).replace(/[*_`[\]\\]/g, ""));
           response = await fetch(`${TELEGRAM_API}/bot${token}/sendDocument`, {
             method: "POST",
@@ -337,11 +435,10 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
     }
 
     if (!response.ok) {
-      const detail: any = await response.json().catch(() => null);
       return new Response(
         JSON.stringify({
           ok: false,
-          error: detail?.description || "Telegram menolak laporan.",
+          error: "Gagal meneruskan laporan ke saluran admin.",
         }),
         { status: 502, headers: { "Content-Type": "application/json" } }
       );
@@ -353,33 +450,56 @@ async function handleTelegramReport(request: Request, env: Env): Promise<Respons
     });
   } catch {
     return new Response(
-      JSON.stringify({ ok: false, error: "Gagal menghubungi Telegram. Coba lagi." }),
+      JSON.stringify({ ok: false, error: "Gagal menghubungi layanan pelaporan. Coba lagi." }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );
   }
 }
 
-
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   "https://setorgmail.com",
   "https://www.setorgmail.com",
   "https://setor-gmail.pages.dev",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-];
+]);
+
+function isTrustedOrigin(origin?: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  // Strictly allow only preview deployments of our own Cloudflare Pages project
+  return /^https:\/\/[a-z0-9-]+\.setor-gmail\.pages\.dev$/.test(origin);
+}
+
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://oauth2.googleapis.com",
+  "frame-src https://accounts.google.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
 
 function applySecurityHeaders(response: Response, origin?: string | null): Response {
   const newHeaders = new Headers(response.headers);
   newHeaders.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   newHeaders.set("X-Content-Type-Options", "nosniff");
   newHeaders.set("X-Frame-Options", "DENY");
-  newHeaders.set("Referrer-Policy", "origin-when-cross-origin");
-  newHeaders.set("X-XSS-Protection", "1; mode=block");
-  newHeaders.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  newHeaders.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  newHeaders.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+  newHeaders.set("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  newHeaders.set("X-DNS-Prefetch-Control", "off");
+  newHeaders.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
 
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".pages.dev"))) {
+  if (origin && isTrustedOrigin(origin)) {
     newHeaders.set("Access-Control-Allow-Origin", origin);
-    newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    newHeaders.set("Vary", "Origin");
+    newHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     newHeaders.set(
       "Access-Control-Allow-Headers",
       "Content-Type, Authorization, x-callback-token, x-flip-token, x-requested-with"
@@ -395,14 +515,14 @@ function applySecurityHeaders(response: Response, origin?: string | null): Respo
 }
 
 async function sendAdminSecurityAlert(env: Env, title: string, details: string) {
-  const token = env.TELEGRAM_BOT_TOKEN || DEFAULT_BOT_TOKEN;
-  const chatId = env.TELEGRAM_CHAT_ID || DEFAULT_CHAT_ID;
+  const token = env.TELEGRAM_BOT_TOKEN?.trim();
+  const chatId = env.TELEGRAM_CHAT_ID?.trim();
   if (!token || !chatId) return;
 
   const text =
     `🚨 *SECURITY ALERT - SETOR GMAIL*\n\n` +
-    `⚠️ *${title}*\n` +
-    `📝 ${details}\n\n` +
+    `⚠️ *${escapeMarkdown(title)}*\n` +
+    `📝 ${escapeMarkdown(details)}\n\n` +
     `⏰ _${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB_`;
 
   try {
@@ -421,13 +541,26 @@ async function sendAdminSecurityAlert(env: Env, title: string, details: string) 
 }
 
 async function handleFlipWebhook(request: Request, env: Env): Promise<Response> {
+  const clientIp = getClientIp(request);
+  if (!checkEdgeRateLimit(clientIp, "flip-webhook", 30, 60_000)) {
+    return new Response(JSON.stringify({ success: false, error: "Too many requests" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const expectedToken = (env.FLIP_WEBHOOK_SECRET || env.FLIP_CALLBACK_TOKEN || "").trim();
+  if (!expectedToken) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Webhook secret is not configured" }),
+      { status: 503, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   const receivedToken =
     request.headers.get("x-callback-token") ||
     request.headers.get("x-flip-token") ||
-    request.headers.get("authorization")?.replace("Bearer ", "");
-
-  const expectedToken =
-    env.FLIP_WEBHOOK_SECRET || env.FLIP_CALLBACK_TOKEN || "flip_secret_webhook_token";
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
 
   let body: any = {};
   try {
@@ -436,14 +569,13 @@ async function handleFlipWebhook(request: Request, env: Env): Promise<Response> 
     body = {};
   }
 
-  const payloadToken = body?.token || body?.secret_token;
-  const tokenToCheck = receivedToken || payloadToken;
+  const payloadToken = typeof body?.token === "string" ? body.token : typeof body?.secret_token === "string" ? body.secret_token : "";
+  const tokenToCheck = (receivedToken || payloadToken || "").trim();
 
-  // Webhook Signature / Token Verification
-  if (!tokenToCheck || tokenToCheck !== expectedToken) {
-    const clientIp = request.headers.get("cf-connecting-ip") || "Unknown IP";
+  // Constant-time Webhook Signature / Token Verification
+  if (!tokenToCheck || !timingSafeEqualStr(tokenToCheck, expectedToken)) {
     console.warn("[WEBHOOK UNAUTHORIZED] Invalid or missing Flip webhook token from IP:", clientIp);
-    
+
     await sendAdminSecurityAlert(
       env,
       "Percobaan Webhook Palsu / Ilegal",
@@ -456,7 +588,6 @@ async function handleFlipWebhook(request: Request, env: Env): Promise<Response> 
     );
   }
 
-  // Valid webhook payload
   const event = body.data || body;
   console.log("[FLIP WEBHOOK SUCCESS] Valid transaction callback:", event?.id, event?.status);
 
@@ -468,9 +599,17 @@ async function handleFlipWebhook(request: Request, env: Env): Promise<Response> 
 
 async function handleWithdrawalApi(request: Request, env: Env): Promise<Response> {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) {
-      const clientIp = request.headers.get("cf-connecting-ip") || "Unknown";
+    const clientIp = getClientIp(request);
+    if (!checkEdgeRateLimit(clientIp, "withdraw", 10, 60_000)) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Terlalu banyak permintaan penarikan. Tunggu sebentar." }),
+        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
+    const authHeader = request.headers.get("authorization") || "";
+    const bearerMatch = authHeader.match(/^Bearer\s+([A-Za-z0-9._-]+)$/);
+    if (!bearerMatch) {
       await sendAdminSecurityAlert(
         env,
         "Akses API Penarikan Tanpa Sesi Sah",
@@ -480,6 +619,24 @@ async function handleWithdrawalApi(request: Request, env: Env): Promise<Response
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Verify JWT token against Supabase Auth if keys are configured
+    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || "https://kdjoeeehyahdgwgsfyal.supabase.co";
+    const anonOrServiceKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+    if (anonOrServiceKey) {
+      const userVerify = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          apikey: anonOrServiceKey,
+          Authorization: `Bearer ${bearerMatch[1]}`,
+        },
+      });
+      if (!userVerify.ok) {
+        return new Response(JSON.stringify({ success: false, error: "Akses ditolak: Token sesi tidak valid." }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     }
 
     const body: any = await request.json().catch(() => ({}));
@@ -494,7 +651,7 @@ async function handleWithdrawalApi(request: Request, env: Env): Promise<Response
       );
     }
 
-    if (!amount || isNaN(amount) || amount < 5000 || amount > 5000000) {
+    if (!Number.isInteger(amount) || amount < 5000 || amount > 5000000) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -525,9 +682,17 @@ async function handleWithdrawalApi(request: Request, env: Env): Promise<Response
 
 async function handleCheckUserEmail(request: Request, env: Env): Promise<Response> {
   try {
+    const clientIp = getClientIp(request);
+    if (!checkEdgeRateLimit(clientIp, "check-email", 8, 60_000)) {
+      return new Response(
+        JSON.stringify({ exists: false, error: "Terlalu banyak percobaan. Silakan tunggu 1 menit." }),
+        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
     const body: any = await request.json().catch(() => ({}));
     const email = body?.email;
-    if (!email || typeof email !== "string") {
+    if (!email || typeof email !== "string" || email.length > 120) {
       return new Response(JSON.stringify({ exists: false, error: "Email wajib diisi" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -535,6 +700,13 @@ async function handleCheckUserEmail(request: Request, env: Env): Promise<Respons
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(cleanEmail)) {
+      return new Response(JSON.stringify({ exists: false, error: "Format email tidak valid" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || "https://kdjoeeehyahdgwgsfyal.supabase.co";
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -576,6 +748,222 @@ async function handleCheckUserEmail(request: Request, env: Env): Promise<Respons
   }
 }
 
+async function handleGmailGenerateEdge(request: Request): Promise<Response> {
+  const clientIp = getClientIp(request);
+  if (!checkEdgeRateLimit(clientIp, "gmail-generate", 30, 60_000)) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Terlalu banyak permintaan generate. Silakan tunggu sebentar.",
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "60",
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  }
+
+  const url = new URL(request.url);
+  const countParam = url.searchParams.get("count");
+  const count = countParam
+    ? Math.max(1, Math.min(10, parseInt(countParam, 10) || 10))
+    : 10;
+
+  const { emails, timestampTail } = generateGmailCandidates(count);
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      count: emails.length,
+      timestamp_tail: timestampTail,
+      emails,
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    }
+  );
+}
+
+async function lookupKnownLiveEdge(
+  normalizedEmails: string[],
+  env: Env
+): Promise<Set<string>> {
+  const known = new Set<string>();
+  if (normalizedEmails.length === 0) return known;
+
+  const supabaseUrl =
+    env.NEXT_PUBLIC_SUPABASE_URL || "https://kdjoeeehyahdgwgsfyal.supabase.co";
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) return known;
+
+  try {
+    const inClause = normalizedEmails.map((e) => encodeURIComponent(e)).join(",");
+    const [depRes, profRes] = await Promise.all([
+      fetch(
+        `${supabaseUrl}/rest/v1/deposits?normalized_gmail=in.(${inClause})&status=in.(diterima,pending,dicek)&select=normalized_gmail`,
+        {
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+        }
+      ),
+      fetch(
+        `${supabaseUrl}/rest/v1/profiles?email=in.(${inClause})&select=email`,
+        {
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+        }
+      ),
+    ]);
+
+    if (depRes.ok) {
+      const depRows: any[] = await depRes.json().catch(() => []);
+      for (const r of depRows) {
+        if (r?.normalized_gmail) known.add(String(r.normalized_gmail).toLowerCase());
+      }
+    }
+    if (profRes.ok) {
+      const profRows: any[] = await profRes.json().catch(() => []);
+      for (const r of profRows) {
+        if (r?.email) {
+          const lower = String(r.email).trim().toLowerCase();
+          const at = lower.lastIndexOf("@");
+          if (at !== -1) {
+            known.add(lower.slice(0, at).replace(/\./g, "") + "@gmail.com");
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore optional DB enrichment failure
+  }
+  return known;
+}
+
+async function handleGmailCheckEdge(request: Request, env: Env): Promise<Response> {
+  const requestStart = Date.now();
+  try {
+    const clientIp = getClientIp(request);
+    if (!checkEdgeRateLimit(clientIp, "gmail-check", 20, 60_000)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Terlalu banyak permintaan cek Gmail. Silakan tunggu 1 menit.",
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
+    const body: any = await request.json().catch(() => ({}));
+    const rawEmails: unknown[] = Array.isArray(body?.emails)
+      ? body.emails
+      : typeof body?.email === "string"
+      ? [body.email]
+      : [];
+
+    if (rawEmails.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Daftar email tidak boleh kosong." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    if (rawEmails.length > 10) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Maksimal 10 email per pemeriksaan." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const invalidResults: GmailProbeItem[] = [];
+    const validTargets: Array<{ index: number; cleanEmail: string; normalizedEmail: string }> = [];
+
+    rawEmails.forEach((raw, idx) => {
+      const check = validateGmailForProbe(raw);
+      if (!check.valid) {
+        invalidResults.push({
+          index: idx + 1,
+          email: check.cleanEmail || String(raw || "").trim().slice(0, 64),
+          status: "INVALID",
+          code: 400,
+          message: check.reason || "Format email tidak valid",
+          elapsed_ms: 0,
+          engine: "SYNTAX",
+        });
+      } else {
+        validTargets.push({
+          index: idx + 1,
+          cleanEmail: check.cleanEmail,
+          normalizedEmail: check.normalizedEmail,
+        });
+      }
+    });
+
+    // Serverless Edge runs HTTPS Port 443 Fallback Probe concurrently via Promise.all
+    let probedResults: GmailProbeItem[] = [];
+    if (validTargets.length > 0) {
+      const knownLive = await lookupKnownLiveEdge(
+        validTargets.map((t) => t.normalizedEmail),
+        env
+      );
+      probedResults = await Promise.all(
+        validTargets.map((target) =>
+          checkSingleHttpsFallback(target.cleanEmail, target.index, knownLive)
+        )
+      );
+    }
+
+    const allResults = [...invalidResults, ...probedResults].sort(
+      (a, b) => a.index - b.index
+    );
+
+    const summary = {
+      total: allResults.length,
+      live: allResults.filter((r) => r.status === "LIVE").length,
+      available: allResults.filter((r) => r.status === "AVAILABLE").length,
+      limit: allResults.filter((r) => r.status === "LIMIT").length,
+      invalid: allResults.filter((r) => r.status === "INVALID").length,
+      error: allResults.filter((r) => r.status === "ERROR").length,
+    };
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        engine: validTargets.length > 0 ? "HTTPS_PORT_443" : "SYNTAX_ONLY",
+        total_elapsed_ms: Date.now() - requestStart,
+        summary,
+        results: allResults,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  } catch {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Terjadi kesalahan saat memproses pengecekan Gmail.",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -590,7 +978,14 @@ const worker = {
     let response: Response;
 
     // API Routes
-    if (url.pathname === "/api/check-gmail" && request.method === "POST") {
+    if (
+      url.pathname === "/api/gmail-generate" &&
+      (request.method === "GET" || request.method === "POST")
+    ) {
+      response = await handleGmailGenerateEdge(request);
+    } else if (url.pathname === "/api/gmail-check" && request.method === "POST") {
+      response = await handleGmailCheckEdge(request, env);
+    } else if (url.pathname === "/api/check-gmail" && request.method === "POST") {
       response = await handleCheckGmail(request);
     } else if (url.pathname === "/api/auth/check-email" && request.method === "POST") {
       response = await handleCheckUserEmail(request, env);

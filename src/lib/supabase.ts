@@ -9,6 +9,9 @@ import {
 import { getStoredEWalletData } from "./generated-storage";
 import {
   sanitizeInputText,
+  sanitizeExternalUrl,
+  isValidStrictGmail,
+  checkRateLimit,
   validateEWalletNumber,
   validateWithdrawalAmount,
   sanitizeErrorMessage,
@@ -432,15 +435,48 @@ export async function insertUserDeposits(
       return { success: false, insertedCount: 0, error: "Akses ditolak: Sesi tidak sah." };
     }
 
+    // Rate Limit: max 6 deposit submissions per minute per user
+    const rate = checkRateLimit(`deposit:${user.id}`, 6, 60000);
+    if (!rate.allowed) {
+      return {
+        success: false,
+        insertedCount: 0,
+        error: "Terlalu banyak permintaan setor dalam waktu singkat. Mohon tunggu sebentar.",
+      };
+    }
+
     if (!Array.isArray(emails) || emails.length === 0) {
       return { success: false, insertedCount: 0, error: "Daftar email tidak boleh kosong." };
     }
 
-    const cleanCategory = sanitizeInputText(categoryId, 50) || "good";
-    const cleanAmount = Math.max(0, Math.floor(Number(amountPerAccount) || 4500));
+    if (emails.length > 10) {
+      return { success: false, insertedCount: 0, error: "Maksimal 10 Gmail per pengiriman setoran." };
+    }
 
-    const records = emails
-      .filter((e) => typeof e === "string" && e.trim().includes("@"))
+    // A04: Fetch authoritative price from server app_settings instead of trusting client param
+    let authoritativePrice = Math.max(1000, Math.min(50000, Math.floor(Number(amountPerAccount) || 4500)));
+    try {
+      const { data: cfgRow } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "site_config")
+        .maybeSingle();
+      if (cfgRow?.value) {
+        const parsed = typeof cfgRow.value === "string" ? JSON.parse(cfgRow.value) : cfgRow.value;
+        const dbPrice = Number(categoryId === "bebas" ? parsed?.price_bebas : parsed?.price_per_gmail);
+        if (Number.isFinite(dbPrice) && dbPrice >= 500 && dbPrice <= 100000) {
+          authoritativePrice = Math.floor(dbPrice);
+        }
+      }
+    } catch {
+      // keep clamped fallback
+    }
+
+    const cleanCategory = categoryId === "bebas" ? "bebas" : "good";
+    const seenNormalized = new Set<string>();
+
+    const candidateRecords = emails
+      .filter((e) => isValidStrictGmail(e))
       .map((email) => {
         const clean = sanitizeInputText(email, 120).toLowerCase();
         const atIdx = clean.lastIndexOf("@");
@@ -455,12 +491,43 @@ export async function insertUserDeposits(
           normalized_gmail: normalized,
           category_id: cleanCategory,
           status: "pending",
-          amount: cleanAmount,
+          amount: authoritativePrice,
         };
+      })
+      .filter((rec) => {
+        if (seenNormalized.has(rec.normalized_gmail)) return false;
+        seenNormalized.add(rec.normalized_gmail);
+        return true;
       });
 
+    if (candidateRecords.length === 0) {
+      return { success: false, insertedCount: 0, error: "Tidak ada email Gmail valid untuk disetor." };
+    }
+
+    // Prevent duplicate submission of already-submitted normalized_gmail by this user
+    const normalizedList = candidateRecords.map((r) => r.normalized_gmail);
+    const { data: existingRows } = await supabase
+      .from("deposits")
+      .select("normalized_gmail")
+      .eq("user_id", user.id)
+      .in("normalized_gmail", normalizedList);
+
+    const existingSet = new Set(
+      (existingRows || []).map((row: { normalized_gmail?: string }) =>
+        (row.normalized_gmail || "").toLowerCase()
+      )
+    );
+
+    const records = candidateRecords.filter(
+      (r) => !existingSet.has(r.normalized_gmail.toLowerCase())
+    );
+
     if (records.length === 0) {
-      return { success: false, insertedCount: 0, error: "Tidak ada email valid untuk disetor." };
+      return {
+        success: false,
+        insertedCount: 0,
+        error: "Semua akun Gmail tersebut sudah pernah disetorkan sebelumnya.",
+      };
     }
 
     const { data, error } = await supabase
@@ -848,6 +915,19 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     "Platform sedang dalam pemeliharaan berkala untuk peningkatan sistem. Mohon kembali beberapa saat lagi.",
 };
 
+function hardenSiteConfig(raw: Record<string, any> | null | undefined): SiteConfig {
+  const merged = { ...DEFAULT_SITE_CONFIG, ...(raw || {}) };
+  merged.whatsapp_channel_url = sanitizeExternalUrl(
+    merged.whatsapp_channel_url,
+    DEFAULT_SITE_CONFIG.whatsapp_channel_url,
+    ["whatsapp.com", "wa.me"]
+  );
+  merged.telegram_admin_username =
+    sanitizeInputText(merged.telegram_admin_username, 40).replace(/[^a-zA-Z0-9_]/g, "") ||
+    DEFAULT_SITE_CONFIG.telegram_admin_username;
+  return merged;
+}
+
 export async function fetchSiteConfig(): Promise<SiteConfig> {
   // Check local cached config first for instantaneous render
   if (typeof window !== "undefined") {
@@ -873,13 +953,13 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
                       : data.value;
                   localStorage.setItem(
                     "setorgmail_cached_site_config_v1",
-                    JSON.stringify({ ...DEFAULT_SITE_CONFIG, ...fresh })
+                    JSON.stringify(hardenSiteConfig(fresh))
                   );
                 }
               } catch {}
             })();
           }
-          return { ...DEFAULT_SITE_CONFIG, ...parsed };
+          return hardenSiteConfig(parsed);
         }
       }
     } catch {}
@@ -896,7 +976,7 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
       if (data?.value) {
         const fresh =
           typeof data.value === "string" ? JSON.parse(data.value) : data.value;
-        const merged = { ...DEFAULT_SITE_CONFIG, ...fresh };
+        const merged = hardenSiteConfig(fresh);
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem(

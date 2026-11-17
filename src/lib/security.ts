@@ -17,10 +17,80 @@ export function sanitizeInputText(input: unknown, maxLength = 1000): string {
     .trim()
     .slice(0, maxLength)
     // Remove null bytes and invisible control characters
-    .replace(/\0/g, "")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
     // Strip script and unsafe HTML tags
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/<[^>]+>/g, "");
+}
+
+/**
+ * 1b. Safe External URL Validator (Prevent javascript:/data: XSS & Open Redirects)
+ */
+export function sanitizeExternalUrl(
+  rawUrl: unknown,
+  fallbackUrl: string,
+  allowedHostSuffixes?: string[]
+): string {
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) return fallbackUrl;
+  try {
+    const parsed = new URL(rawUrl.trim());
+    if (parsed.protocol !== "https:") return fallbackUrl;
+    if (allowedHostSuffixes && allowedHostSuffixes.length > 0) {
+      const host = parsed.hostname.toLowerCase();
+      const allowed = allowedHostSuffixes.some(
+        (suffix) => host === suffix || host.endsWith(`.${suffix}`)
+      );
+      if (!allowed) return fallbackUrl;
+    }
+    return parsed.toString();
+  } catch {
+    return fallbackUrl;
+  }
+}
+
+/**
+ * 1c. Safe URI Parameter Decoder (Prevent URIError crashes & Reflected Phishing Text)
+ */
+export function safeDecodeParam(raw: string | null | undefined, maxLength = 180): string {
+  if (!raw) return "";
+  try {
+    return sanitizeInputText(decodeURIComponent(raw), maxLength);
+  } catch {
+    return sanitizeInputText(raw, maxLength);
+  }
+}
+
+/**
+ * 1d. Cryptographically Secure Random Integer [0, max)
+ */
+export function secureRandomInt(max: number): number {
+  if (max <= 1) return 0;
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const array = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / max) * max;
+    let val = 0;
+    do {
+      crypto.getRandomValues(array);
+      val = array[0];
+    } while (val >= limit);
+    return val % max;
+  }
+  return Math.floor(Math.random() * max);
+}
+
+/**
+ * 1e. Strict Gmail Syntax Validator
+ */
+export function isValidStrictGmail(email: unknown): boolean {
+  if (typeof email !== "string") return false;
+  const lower = email.trim().toLowerCase();
+  if (lower.length > 64) return false;
+  const match = lower.match(/^([a-z0-9.]+)@(gmail\.com|googlemail\.com)$/);
+  if (!match) return false;
+  const local = match[1];
+  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
+  const cleanLocal = local.replace(/\./g, "");
+  return cleanLocal.length >= 6 && cleanLocal.length <= 30;
 }
 
 /**

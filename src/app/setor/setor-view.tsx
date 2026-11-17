@@ -31,6 +31,7 @@ import {
   saveStoredCheckStatusMap,
 } from "@/lib/generated-storage";
 import { getCurrentAuthUser, insertUserDeposits } from "@/lib/supabase";
+import { secureRandomInt } from "@/lib/security";
 import { useUserProfile } from "@/context/user-profile-context";
 
 export interface SetoranCheckItem {
@@ -51,7 +52,7 @@ const PREFIX_CHARS = "abcdefghijklmnopqrstuvwxyz";
 function randomPrefix(length = 4): string {
   let res = "";
   for (let i = 0; i < length; i++) {
-    res += PREFIX_CHARS[Math.floor(Math.random() * PREFIX_CHARS.length)];
+    res += PREFIX_CHARS[secureRandomInt(PREFIX_CHARS.length)];
   }
   return res;
 }
@@ -62,14 +63,14 @@ const DOMAIN = "gmail.com";
 const HISTORY_KEY = "setor_generated_gmails_history_v1";
 
 function randomFrom<T>(list: T[]): T {
-  return list[Math.floor(Math.random() * list.length)];
+  return list[secureRandomInt(list.length)];
 }
 
 function generateSingleGmail(): string {
   const prefix = randomPrefix(4);
   const name1 = randomFrom(FIRST_NAMES);
   const name2 = randomFrom(SECOND_NAMES);
-  const suffix = String(Math.floor(Math.random() * 100)).padStart(2, "0");
+  const suffix = String(secureRandomInt(100)).padStart(2, "0");
   return `${prefix}${name1}${name2}${suffix}@${DOMAIN}`;
 }
 
@@ -424,13 +425,11 @@ export function SetorView() {
 
     if (toQueryViaApi.length > 0) {
       try {
-        const res = await fetch("/api/check-gmail", {
+        const res = await fetch("/api/gmail-check", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            emails: toQueryViaApi.map((q) => q.email),
-            startIndex: 1,
-            storedGenerated: Array.from(allGeneratedSet),
+            emails: toQueryViaApi.slice(0, 10).map((q) => q.email),
           }),
         });
 
@@ -438,11 +437,11 @@ export function SetorView() {
 
         if (res.ok) {
           const data = await res.json();
-          const apiMap = new Map<string, { status: "live" | "die" | "invalid"; message: string }>();
+          const apiMap = new Map<string, { status: string; message: string }>();
           if (Array.isArray(data.results)) {
-            data.results.forEach((r: { email: string; status: "live" | "die" | "invalid"; message: string }) => {
+            data.results.forEach((r: { email: string; status: string; message: string }) => {
               apiMap.set(r.email.toLowerCase(), {
-                status: r.status,
+                status: String(r.status || "").toUpperCase(),
                 message: r.message,
               });
             });
@@ -451,7 +450,7 @@ export function SetorView() {
           toQueryViaApi.forEach((q) => {
             const apiRes = apiMap.get(q.email.toLowerCase());
             const status: "LIVE" | "UNREGISTERED" =
-              apiRes?.status === "live" ? "LIVE" : "UNREGISTERED";
+              apiRes?.status === "LIVE" ? "LIVE" : "UNREGISTERED";
             updatedStatusMap[q.email.toLowerCase()] = status;
             items.push({
               index: q.index,
@@ -461,7 +460,7 @@ export function SetorView() {
                 apiRes?.message ||
                 (status === "LIVE"
                   ? "Akun aktif terdaftar di Google"
-                  : "Akun tidak terdaftar di Google"),
+                  : "Belum pernah dibuat / Tersedia di Google"),
             });
           });
         } else {
@@ -555,19 +554,23 @@ export function SetorView() {
     }
 
     setIsSubmitting(true);
-    const totalEarnings = liveCount * 4500;
+    const totalEarnings = liveCount * pricePerGmail;
     const liveEmailList = liveResults.map((r) => r.email.toLowerCase());
 
     (async () => {
       try {
         const user = await getCurrentAuthUser();
         if (user) {
-          await insertUserDeposits(user.id, liveEmailList, "good", 4500);
+          const res = await insertUserDeposits(user.id, liveEmailList, "good", pricePerGmail);
+          if (!res.success) {
+            toast.error("Gagal menyetor Gmail", {
+              description: res.error || "Terjadi kendala saat menyimpan setoran.",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         }
-      } catch (err) {
-        console.warn("Supabase insert error (fallback used):", err);
-      } finally {
-        setIsSubmitting(false);
+
         refreshDeposits();
         refreshWallet();
 
@@ -592,6 +595,12 @@ export function SetorView() {
         toast.success(`${liveCount} Gmail LIVE berhasil disetor!${partialNote}`, {
           description: `Total ${formatIDR(totalEarnings)} jika di-ACC · Akun telah ditandai 'Sudah Disetor' di atas.`,
         });
+      } catch {
+        toast.error("Gagal menyetor Gmail", {
+          description: "Periksa koneksi internet Anda lalu coba lagi.",
+        });
+      } finally {
+        setIsSubmitting(false);
       }
     })();
   };
@@ -599,21 +608,31 @@ export function SetorView() {
   return (
     <PageShell>
       <div className="space-y-4 pt-2 sm:pt-4">
-        {/* 1. Unified Section: Rules & Generate Gmail (Digabung Menjadi 1 Section) */}
+        {/* 1. Unified Section: Rules & Generate Gmail */}
         <Reveal delay={20}>
-          <div className="rounded-3xl border border-white/10 bg-[#121217]/85 backdrop-blur-xl p-5 sm:p-6 shadow-2xl space-y-6">
+          <div className="relative overflow-hidden rounded-3xl border border-white/12 bg-gradient-to-b from-[#151824]/92 via-[#11131c]/95 to-[#0c0d14]/95 backdrop-blur-2xl p-5 sm:p-6 shadow-2xl space-y-6">
+            {/* Specular Top Line */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-sky-400/50 to-transparent"
+            />
             {/* Bagian 1: Rules Setoran (2x2 Grid Cards + Collapsible Detail Aturan) */}
             <div>
               {/* Header Rules */}
               <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3.5">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25">
+                  <span className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30 ring-1 ring-white/20">
                     <ScrollText className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                      Rules Setoran Gmail
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+                        Rules Setoran Gmail
+                      </h3>
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[0.65rem] font-extrabold text-emerald-300">
+                        {formatIDR(pricePerGmail)} / Akun
+                      </span>
+                    </div>
                     <p className="text-xs text-zinc-400">
                       Wajib dibaca agar Gmail diterima admin saat peninjauan.
                     </p>
@@ -727,24 +746,72 @@ export function SetorView() {
                 Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom di bawah.
               </p>
 
-              {/* Horizontal Stepper Timeline (1 baris di desktop, 2x2 responsive di mobile) */}
+              {/* Horizontal Stepper Timeline (Context-Aware Active Step) */}
               <div className="mt-3.5 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                 {[
-                  { step: "01", title: "Pilih & Generate", desc: "Tentukan jumlah akun", icon: Sparkles, tone: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
-                  { step: "02", title: "Salin Data", desc: "Ambil nama & default password", icon: Copy, tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-                  { step: "03", title: "Bikin Akun", desc: "Daftar Gmail asli di Google", icon: UserCheck, tone: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
-                  { step: "04", title: "Setor & Submit", desc: "Paste di form setor bawah", icon: Send, tone: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+                  {
+                    step: "01",
+                    title: "Pilih & Generate",
+                    desc: "Tentukan jumlah akun",
+                    icon: Sparkles,
+                    tone: "text-sky-400 bg-sky-500/12 border-sky-500/25",
+                    active: isMounted && generatedList.length === 0,
+                    done: isMounted && generatedList.length > 0,
+                  },
+                  {
+                    step: "02",
+                    title: "Salin Data",
+                    desc: "Ambil nama & password Gmail",
+                    icon: Copy,
+                    tone: "text-emerald-400 bg-emerald-500/12 border-emerald-500/25",
+                    active: isMounted && generatedList.length > 0 && totalLines === 0,
+                    done: isMounted && totalLines > 0,
+                  },
+                  {
+                    step: "03",
+                    title: "Bikin Akun",
+                    desc: "Daftar Gmail asli di Google",
+                    icon: UserCheck,
+                    tone: "text-amber-400 bg-amber-500/12 border-amber-500/25",
+                    active: isMounted && generatedList.length > 0 && totalLines === 0,
+                    done: isMounted && totalLines > 0,
+                  },
+                  {
+                    step: "04",
+                    title: "Setor & Submit",
+                    desc: "Paste di form setor bawah",
+                    icon: Send,
+                    tone: "text-blue-400 bg-blue-500/12 border-blue-500/25",
+                    active: isMounted && totalLines > 0,
+                    done: isMounted && hasCheckedSetoran && liveCount > 0,
+                  },
                 ].map((item) => (
                   <div
                     key={item.step}
-                    className="relative flex flex-col justify-between rounded-2xl border border-white/10 bg-black/40 p-3 hover:border-white/20 transition-all"
+                    className={cn(
+                      "relative flex flex-col justify-between rounded-2xl border p-3 transition-all duration-300",
+                      item.active
+                        ? "border-sky-400/50 bg-sky-950/25 shadow-[0_0_24px_-6px_rgba(56,189,248,0.3)]"
+                        : item.done
+                        ? "border-emerald-500/30 bg-emerald-950/15"
+                        : "border-white/10 bg-black/40 hover:border-white/20"
+                    )}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className={cn("flex size-7 items-center justify-center rounded-xl border text-xs font-black", item.tone)}>
                         <item.icon className="size-3.5" />
                       </span>
-                      <span className="font-mono text-[0.65rem] font-bold text-zinc-500">
-                        STEP {item.step}
+                      <span
+                        className={cn(
+                          "font-mono text-[0.63rem] font-extrabold px-1.5 py-0.5 rounded-md",
+                          item.active
+                            ? "bg-sky-500/20 text-sky-300 border border-sky-400/30"
+                            : item.done
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : "text-zinc-500"
+                        )}
+                      >
+                        {item.done ? `✓ STEP ${item.step}` : `STEP ${item.step}`}
                       </span>
                     </div>
                     <div>
