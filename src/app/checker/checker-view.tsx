@@ -112,7 +112,7 @@ export function CheckerView() {
     for (const r of results) {
       if (r.status === "LIVE") live.push(r.email);
       else if (r.status === "AVAILABLE") available.push(r.email);
-      else if (r.status === "LIMIT") limit.push(r.email);
+      else if (r.status === "LIMIT" || r.status === "ERROR") limit.push(r.email);
       else invalid.push(r.email);
     }
 
@@ -133,8 +133,8 @@ export function CheckerView() {
 
   const filteredResults = React.useMemo(() => {
     if (activeFilter === "ALL") return results;
-    if (activeFilter === "INVALID") {
-      return results.filter((r) => r.status === "INVALID" || r.status === "ERROR");
+    if (activeFilter === "LIMIT") {
+      return results.filter((r) => r.status === "LIMIT" || r.status === "ERROR");
     }
     return results.filter((r) => r.status === activeFilter);
   }, [results, activeFilter]);

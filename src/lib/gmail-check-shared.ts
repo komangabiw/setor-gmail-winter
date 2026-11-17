@@ -132,7 +132,6 @@ export function validateGmailForProbe(raw: unknown): {
     };
   }
 
-  // Google requires usernames of < 8 chars or pure digits to contain at least one letter cleanly
   if (/^\d+$/.test(cleanLocal)) {
     return {
       valid: false,
@@ -150,7 +149,9 @@ export function validateGmailForProbe(raw: unknown): {
 }
 
 /**
- * Engine 2: Serverless HTTPS Port 443 Probe (Jalan Tanpa VPS di Vercel / Cloudflare / Edge)
+ * Engine 2: Serverless HTTPS Port 443 Probe (100% Compatible with Cloudflare Workers, Vercel & Node)
+ * IMPORTANT: Do NOT pass `cache: "no-store"` in `RequestInit` because Cloudflare Workers
+ * throws `TypeError: The 'cache' field on 'RequestInitializerDict' is not implemented.`!
  */
 export async function checkSingleHttpsFallback(
   email: string,
@@ -160,60 +161,118 @@ export async function checkSingleHttpsFallback(
   const t0 = Date.now();
   const normalized = email.split("@")[0].replace(/\./g, "") + "@gmail.com";
 
-  try {
-    // 1. Check Google Account Lookup / GXLU over HTTPS Port 443
-    const url = `https://mail.google.com/mail/gxlu?email=${encodeURIComponent(email)}`;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
+  // Fast path if already verified in platform database
+  if (knownLiveNormalized && knownLiveNormalized.has(normalized)) {
+    return {
+      index,
+      email,
+      status: "LIVE",
+      code: 200,
+      message: "Email aktif / sudah terdaftar di Google",
+      elapsed_ms: Math.max(1, Date.now() - t0),
+      engine: "HTTPS",
+    };
+  }
 
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+
+    let status = 0;
+    let locationHeader = "";
     let setCookieHeader = "";
+
     try {
-      const res = await fetch(url, {
+      // Probe Google AccountChooser 302 redirect header over HTTPS Port 443:
+      // - Registered Google account -> redirects with `&passive=1209600` (no `rip=1`)
+      // - Unregistered / available account -> redirects with `&rip=1`
+      const chooserUrl = `https://accounts.google.com/AccountChooser?Email=${encodeURIComponent(
+        email
+      )}&continue=https://mail.google.com`;
+
+      const res = await fetch(chooserUrl, {
         method: "GET",
         redirect: "manual",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-          Accept: "*/*",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
         },
-        cache: "no-store",
         signal: controller.signal,
       });
 
-      const rawSetCookie = res.headers.get("set-cookie") || "";
-      const multiCookies =
-        typeof (res.headers as any).getSetCookie === "function"
-          ? ((res.headers as any).getSetCookie() as string[]).join("; ")
-          : "";
-      setCookieHeader = `${rawSetCookie}; ${multiCookies}`;
+      status = res.status;
+      locationHeader = res.headers.get("location") || "";
+      setCookieHeader = res.headers.get("set-cookie") || "";
     } finally {
       clearTimeout(timer);
     }
 
-    const elapsed = Date.now() - t0;
+    const elapsed = Math.max(1, Date.now() - t0);
 
-    // Jika server Google mengembalikan cookie COMPASS, akun dipastikan LIVE
-    if (setCookieHeader.includes("COMPASS")) {
+    if (status === 429) {
       return {
         index,
         email,
-        status: "LIVE",
-        code: 200,
-        message: "Email aktif / sudah terdaftar di Google (HTTPS)",
+        status: "LIMIT",
+        code: 429,
+        message: "Rate limit Google sementara, coba beberapa saat lagi",
         elapsed_ms: elapsed,
         engine: "HTTPS",
       };
     }
 
-    // Jika tercatat di database setoran/profil terverifikasi
-    if (knownLiveNormalized && knownLiveNormalized.has(normalized)) {
+    if (
+      (locationHeader.includes("passive=") && !locationHeader.includes("rip=1")) ||
+      setCookieHeader.includes("COMPASS")
+    ) {
       return {
         index,
         email,
         status: "LIVE",
         code: 200,
-        message: "Email aktif / terverifikasi terdaftar (HTTPS)",
+        message: "Email aktif / sudah terdaftar di Google",
         elapsed_ms: elapsed,
+        engine: "HTTPS",
+      };
+    }
+
+    if (locationHeader.includes("rip=1")) {
+      return {
+        index,
+        email,
+        status: "AVAILABLE",
+        code: 404,
+        message: "Belum pernah dibuat / Tersedia di Google",
+        elapsed_ms: elapsed,
+        engine: "HTTPS",
+      };
+    }
+
+    // Secondary fallback to GXLU endpoint if AccountChooser redirect format ever changes
+    const gxluRes = await fetch(
+      `https://mail.google.com/mail/gxlu?email=${encodeURIComponent(email)}`,
+      {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
+    const gxluCookie = gxluRes.headers.get("set-cookie") || "";
+    if (gxluCookie.includes("COMPASS")) {
+      return {
+        index,
+        email,
+        status: "LIVE",
+        code: 200,
+        message: "Email aktif / sudah terdaftar di Google",
+        elapsed_ms: Math.max(1, Date.now() - t0),
         engine: "HTTPS",
       };
     }
@@ -223,8 +282,8 @@ export async function checkSingleHttpsFallback(
       email,
       status: "AVAILABLE",
       code: 404,
-      message: "Belum pernah dibuat / Tersedia (HTTPS)",
-      elapsed_ms: elapsed,
+      message: "Belum pernah dibuat / Tersedia di Google",
+      elapsed_ms: Math.max(1, Date.now() - t0),
       engine: "HTTPS",
     };
   } catch (err: unknown) {
@@ -234,8 +293,10 @@ export async function checkSingleHttpsFallback(
       email,
       status: "ERROR",
       code: 500,
-      message: msg.includes("abort") ? "Timeout koneksi HTTPS probe" : "Gagal menghubungi server verifikasi",
-      elapsed_ms: Date.now() - t0,
+      message: msg.toLowerCase().includes("abort")
+        ? "Timeout koneksi ke server Google"
+        : "Gagal menghubungi server verifikasi",
+      elapsed_ms: Math.max(1, Date.now() - t0),
       engine: "HTTPS",
     };
   }
