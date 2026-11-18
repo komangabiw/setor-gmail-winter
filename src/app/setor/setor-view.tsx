@@ -31,7 +31,6 @@ import {
   saveStoredCheckStatusMap,
 } from "@/lib/generated-storage";
 import { getCurrentAuthUser, insertUserDeposits } from "@/lib/supabase";
-import { secureRandomInt } from "@/lib/security";
 import { useUserProfile } from "@/context/user-profile-context";
 
 export interface SetoranCheckItem {
@@ -41,38 +40,7 @@ export interface SetoranCheckItem {
   reason: string;
 }
 
-/* ------------------------------------------------------------------ */
-/* High-entropy Gmail Generator (Matching zero99 pattern)              */
-/* Pattern: [4 random letters][name1][name2][2 digits]@gmail.com      */
-/* Total combinations: > 100,000,000,000 (virtually 0% Google collision) */
-/* ------------------------------------------------------------------ */
-
-const PREFIX_CHARS = "abcdefghijklmnopqrstuvwxyz";
-
-function randomPrefix(length = 4): string {
-  let res = "";
-  for (let i = 0; i < length; i++) {
-    res += PREFIX_CHARS[secureRandomInt(PREFIX_CHARS.length)];
-  }
-  return res;
-}
-
-import { FIRST_NAMES, SECOND_NAMES } from "@/lib/generator-names";
-
-const DOMAIN = "gmail.com";
 const HISTORY_KEY = "setor_generated_gmails_history_v1";
-
-function randomFrom<T>(list: T[]): T {
-  return list[secureRandomInt(list.length)];
-}
-
-function generateSingleGmail(): string {
-  const prefix = randomPrefix(4);
-  const name1 = randomFrom(FIRST_NAMES);
-  const name2 = randomFrom(SECOND_NAMES);
-  const suffix = String(secureRandomInt(100)).padStart(2, "0");
-  return `${prefix}${name1}${name2}${suffix}@${DOMAIN}`;
-}
 
 function getStoredHistory(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -84,34 +52,6 @@ function getStoredHistory(): Set<string> {
   } catch {
     return new Set();
   }
-}
-
-function saveToHistory(newEmails: string[]) {
-  if (typeof window === "undefined") return;
-  try {
-    const history = getStoredHistory();
-    newEmails.forEach((e) => history.add(e.toLowerCase()));
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(Array.from(history).slice(-10000)));
-  } catch {
-    // ignore
-  }
-}
-
-function generateBatch(count: number, existingPool?: Set<string>): string[] {
-  const history = getStoredHistory();
-  const seen = new Set<string>();
-  let attempts = 0;
-  while (seen.size < count && attempts < 2000) {
-    attempts++;
-    const email = generateSingleGmail();
-    const lower = email.toLowerCase();
-    if (!seen.has(lower) && !history.has(lower) && (!existingPool || !existingPool.has(lower))) {
-      seen.add(email);
-    }
-  }
-  const result = Array.from(seen);
-  saveToHistory(result);
-  return result;
 }
 
 export function SetorView() {
@@ -128,7 +68,7 @@ export function SetorView() {
   const [generatedList, setGeneratedList] = React.useState<string[]>([]);
   const [generatedPool, setGeneratedPool] = React.useState<Set<string>>(() => new Set());
   const [copiedEmail, setCopiedEmail] = React.useState<string | null>(null);
-
+  const [isGenerating, setIsGenerating] = React.useState(false);
   // Setoran Checker State
   const [isCheckingSetoran, setIsCheckingSetoran] = React.useState(false);
   const [setoranCheckResults, setSetoranCheckResults] = React.useState<SetoranCheckItem[]>([]);
@@ -161,24 +101,50 @@ export function SetorView() {
     return generatedList.filter((email) => !submittedSet.has(email.toLowerCase())).length;
   }, [generatedList, submittedSet]);
 
-  // Handle generating new batch with high-entropy guarantee
-  const handleGenerate = (count = customCountInput) => {
+  // Handle generating new batch — calls API which Google-verifies AVAILABLE + reserves globally
+  const handleGenerate = async (count = customCountInput) => {
+    if (isGenerating) return;
+    setIsGenerating(true);
     const validCount = Math.max(1, Math.min(10, count));
-    const list = generateBatch(validCount, generatedPool);
-    setGeneratedList(list);
-    saveStoredGeneratedGmails(list);
-    setGeneratedPool((prev) => {
-      const next = new Set(prev);
-      list.forEach((e) => next.add(e.toLowerCase()));
-      return next;
-    });
-    toast.success(`${validCount} nama Gmail unik berhasil digenerate!`, {
-      description: "Pola unik 100% segar & belum pernah didaftarkan di Google.",
-    });
+    try {
+      const user = await getCurrentAuthUser();
+      const existing = getStoredGeneratedGmails();
+      const res = await fetch("/api/gmail-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          count: validCount,
+          userId: user?.id ?? null,
+          exclude: existing,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.success || !Array.isArray(data.emails) || data.emails.length === 0) {
+        throw new Error(data?.error || "Generate gagal, coba lagi.");
+      }
+      const list: string[] = data.emails;
+      setGeneratedList(list);
+      saveStoredGeneratedGmails(list);
+      setGeneratedPool((prev) => {
+        const next = new Set(prev);
+        list.forEach((e) => next.add(e.toLowerCase()));
+        return next;
+      });
+      toast.success(`${list.length} Gmail unik & belum terdaftar berhasil digenerate!`, {
+        description: "Semua email telah diverifikasi belum pernah dibuat di Google.",
+      });
+    } catch (err) {
+      toast.error("Generate gagal", {
+        description: err instanceof Error ? err.message : "Coba lagi beberapa saat.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  // Handle Generate Lagi: appends selected count to existing batch (max 10)
-  const handleGenerateMore = (count = customCountInput) => {
+  // Handle Generate Lagi: appends verified AVAILABLE emails to existing batch (max 10)
+  const handleGenerateMore = async (count = customCountInput) => {
+    if (isGenerating) return;
     const currentCount = generatedList.length;
     if (currentCount >= 10) {
       toast.error("Maksimal 10 Gmail telah tercapai!");
@@ -186,21 +152,41 @@ export function SetorView() {
     }
     const maxCanAdd = 10 - currentCount;
     const toAdd = Math.min(Math.max(1, count), maxCanAdd);
-    const newBatch = generateBatch(toAdd, generatedPool);
-    const combined = [...generatedList, ...newBatch];
-
-    setGeneratedList(combined);
-    saveStoredGeneratedGmails(combined);
-    setGeneratedPool((prev) => {
-      const next = new Set(prev);
-      newBatch.forEach((e) => next.add(e.toLowerCase()));
-      return next;
-    });
-
-    if (currentCount + count > 10) {
-      toast.info(`Ditambahkan ${toAdd} Gmail (maksimal 10 tercapai, total: 10 akun).`);
-    } else {
-      toast.success(`${toAdd} Gmail tambahan berhasil digenerate! Total: ${combined.length} akun.`);
+    setIsGenerating(true);
+    try {
+      const user = await getCurrentAuthUser();
+      const existing = getStoredGeneratedGmails();
+      const res = await fetch("/api/gmail-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          count: toAdd,
+          userId: user?.id ?? null,
+          exclude: existing,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.success || !Array.isArray(data.emails) || data.emails.length === 0) {
+        throw new Error(data?.error || "Generate gagal, coba lagi.");
+      }
+      const newBatch: string[] = data.emails;
+      const combined = [...generatedList, ...newBatch];
+      setGeneratedList(combined);
+      saveStoredGeneratedGmails(combined);
+      setGeneratedPool((prev) => {
+        const next = new Set(prev);
+        newBatch.forEach((e) => next.add(e.toLowerCase()));
+        return next;
+      });
+      toast.success(`${newBatch.length} Gmail tambahan berhasil digenerate! Total: ${combined.length} akun.`, {
+        description: "Semua email telah diverifikasi belum pernah dibuat di Google.",
+      });
+    } catch (err) {
+      toast.error("Generate gagal", {
+        description: err instanceof Error ? err.message : "Coba lagi beberapa saat.",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -743,7 +729,7 @@ export function SetorView() {
                 <h3 className="text-white">Generate Gmail</h3>
               </div>
               <p className="mt-1.5 text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                Ambil nama Gmail dari stok yang sudah disiapkan admin, lalu daftarkan akun Gmail asli memakai nama tersebut sebelum disetorkan pada kolom di bawah.
+                Generate Gmail unik yang sudah diverifikasi belum pernah dibuat di Google sebelum ditampilkan kepada kamu.
               </p>
 
               {/* Horizontal Stepper Timeline (Context-Aware Active Step) */}
@@ -837,9 +823,6 @@ export function SetorView() {
                         type="button"
                         onClick={() => {
                           setCustomCountInput(num);
-                          if (generatedList.length === 0) {
-                            handleGenerate(num);
-                          }
                         }}
                         className={cn(
                           "px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer",
@@ -907,11 +890,24 @@ export function SetorView() {
                     {generatedList.length === 0 && (
                       <button
                         type="button"
+                        disabled={isGenerating}
                         onClick={() => handleGenerate(customCountInput)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-sky-500/25 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                        className={cn(
+                          "inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 hover:from-sky-300 hover:to-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-sky-500/25 transition-all active:scale-95 cursor-pointer whitespace-nowrap",
+                          isGenerating && "opacity-70 cursor-not-allowed active:scale-100"
+                        )}
                       >
-                        <Sparkles className="size-3.5" />
-                        <span>Generate Gmail</span>
+                        {isGenerating ? (
+                          <>
+                            <RefreshCw className="size-3.5 animate-spin" />
+                            <span>Memeriksa Gmail...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="size-3.5" />
+                            <span>Generate Gmail</span>
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -939,6 +935,16 @@ export function SetorView() {
                 {!isMounted ? (
                   <div className="py-8 text-center text-xs text-zinc-400">
                     Memuat daftar Gmail...
+                  </div>
+                ) : isGenerating ? (
+                  <div className="py-8 px-4 text-center rounded-2xl border border-sky-500/20 bg-sky-950/15 animate-pulse">
+                    <RefreshCw className="size-6 text-sky-400 mx-auto mb-2.5 animate-spin" />
+                    <p className="text-xs sm:text-sm font-semibold text-sky-200">
+                      Sedang memverifikasi Gmail ke Google...
+                    </p>
+                    <p className="text-[0.72rem] text-zinc-400 mt-1">
+                      Proses ini memastikan Gmail yang diberikan belum pernah dibuat sebelumnya.
+                    </p>
                   </div>
                 ) : generatedList.length === 0 ? (
                   <div className="py-7 px-4 text-center rounded-2xl border border-white/10 bg-black/40">
@@ -1058,13 +1064,26 @@ export function SetorView() {
                       {generatedList.length < 10 && (
                         <button
                           type="button"
+                          disabled={isGenerating}
                           onClick={() => handleGenerateMore(customCountInput)}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-950/30 hover:bg-sky-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-sky-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                          className={cn(
+                            "w-full flex items-center justify-center gap-2 rounded-xl border border-sky-500/30 bg-sky-950/30 hover:bg-sky-950/50 py-2.5 px-4 font-semibold text-xs sm:text-sm text-sky-300 shadow-2xs transition-all active:scale-[0.99] cursor-pointer",
+                            isGenerating && "opacity-60 cursor-not-allowed active:scale-100"
+                          )}
                         >
-                          <Sparkles className="size-4 text-sky-400" />
-                          <span>
-                            Generate Lagi (+{Math.min(customCountInput, Math.max(0, 10 - generatedList.length))})
-                          </span>
+                          {isGenerating ? (
+                            <>
+                              <RefreshCw className="size-4 text-sky-400 animate-spin" />
+                              <span>Memeriksa Gmail...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="size-4 text-sky-400" />
+                              <span>
+                                Generate Lagi (+{Math.min(customCountInput, Math.max(0, 10 - generatedList.length))})
+                              </span>
+                            </>
+                          )}
                         </button>
                       )}
                     </div>

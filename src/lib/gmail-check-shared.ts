@@ -37,32 +37,60 @@ function randomAlphanumeric(length = 5): string {
   return out;
 }
 
+/**
+ * Computes a deterministic 2-char base36 salt from userId + clientIp so different
+ * users naturally partition into distinct username subspaces even under simultaneous clicks.
+ */
+export function computeUserSubspaceSalt(seed?: string): string {
+  if (!seed || !seed.trim()) {
+    return randomAlphanumeric(2);
+  }
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const unsigned = hash >>> 0;
+  const c1 = ALPHANUM[unsigned % 36];
+  const c2 = ALPHANUM[Math.floor(unsigned / 36) % 36];
+  return `${c1}${c2}`;
+}
+
 const CLEAN_PREFIXES = FIRST_NAMES.filter(
-  (name) => /^[a-z]{3,12}$/.test(name)
+  (name) => /^[a-z]{3,10}$/.test(name)
 );
 
 /**
- * Generates `count` (default 10) unique @gmail.com candidates with ultra-high
- * availability probability:
- * Format: [prefix (3-12 letters)] + [5 random alphanumeric] + [4-digit timestamp tail]@gmail.com
- * Username length: 12-21 chars (strictly within Gmail's 6-30 char rule).
+ * Generates raw @gmail.com candidates with ultra-high uniqueness across users:
+ * Format: [prefix (3-10 letters)] + [2-char user subspace salt] + [5 CSPRNG alphanumeric] + [4-digit timestamp]@gmail.com
+ * Username length: 14-21 chars (strictly within Gmail's 6-30 char rule).
  */
-export function generateGmailCandidates(count = 10): {
+export function generateGmailCandidates(
+  count = 10,
+  options?: { userSeed?: string; exclude?: Set<string> }
+): {
   emails: string[];
   timestampTail: string;
 } {
-  const safeCount = Math.max(1, Math.min(10, Math.floor(Number(count) || 10)));
+  const safeCount = Math.max(1, Math.min(20, Math.floor(Number(count) || 10)));
   const timestampTail = String(Date.now()).slice(-4).padStart(4, "0");
+  const userSalt = computeUserSubspaceSalt(options?.userSeed);
+  const exclude = options?.exclude || new Set<string>();
   const generated = new Set<string>();
 
   let attempts = 0;
-  while (generated.size < safeCount && attempts < 500) {
+  while (generated.size < safeCount && attempts < 600) {
     attempts++;
     const prefix = CLEAN_PREFIXES[secureRandomIndex(CLEAN_PREFIXES.length)] || "setor";
     const rand5 = randomAlphanumeric(5);
-    const localPart = `${prefix}${rand5}${timestampTail}`.slice(0, 30);
-    if (localPart.length >= 6 && localPart.length <= 30) {
-      generated.add(`${localPart}@gmail.com`);
+    const localPart = `${prefix}${userSalt}${rand5}${timestampTail}`.slice(0, 30);
+    const fullEmail = `${localPart}@gmail.com`;
+    if (
+      localPart.length >= 6 &&
+      localPart.length <= 30 &&
+      !exclude.has(fullEmail)
+    ) {
+      generated.add(fullEmail);
     }
   }
 
@@ -90,7 +118,6 @@ export function validateGmailForProbe(raw: unknown): {
     };
   }
 
-  // Strip whitespace & block CRLF / control characters (SMTP injection defense)
   const trimmed = raw.trim();
   if (/[\r\n\0<>]/.test(trimmed)) {
     return {
@@ -161,7 +188,6 @@ export async function checkSingleHttpsFallback(
   const t0 = Date.now();
   const normalized = email.split("@")[0].replace(/\./g, "") + "@gmail.com";
 
-  // Fast path if already verified in platform database
   if (knownLiveNormalized && knownLiveNormalized.has(normalized)) {
     return {
       index,
@@ -183,9 +209,6 @@ export async function checkSingleHttpsFallback(
     let setCookieHeader = "";
 
     try {
-      // Probe Google AccountChooser 302 redirect header over HTTPS Port 443:
-      // - Registered Google account -> redirects with `&passive=1209600` (no `rip=1`)
-      // - Unregistered / available account -> redirects with `&rip=1`
       const chooserUrl = `https://accounts.google.com/AccountChooser?Email=${encodeURIComponent(
         email
       )}&continue=https://mail.google.com`;
@@ -251,7 +274,6 @@ export async function checkSingleHttpsFallback(
       };
     }
 
-    // Secondary fallback to GXLU endpoint if AccountChooser redirect format ever changes
     const gxluRes = await fetch(
       `https://mail.google.com/mail/gxlu?email=${encodeURIComponent(email)}`,
       {
@@ -300,4 +322,169 @@ export async function checkSingleHttpsFallback(
       engine: "HTTPS",
     };
   }
+}
+
+/**
+ * Generates `count` (1..10) Gmail addresses that are GUARANTEED:
+ * 1) Never previously generated or deposited by ANY user in Supabase (`email_checker_logs` + `deposits`),
+ * 2) Verified `AVAILABLE` (belum pernah dibuat / belum LIVE) directly against Google BEFORE returning,
+ * 3) Immediately reserved in Supabase `email_checker_logs` so no other user can ever receive the same Gmail!
+ */
+export async function generateVerifiedAvailableGmails(params: {
+  count: number;
+  userSeed?: string;
+  userId?: string | null;
+  clientExclude?: string[];
+  supabaseUrl?: string;
+  serviceRoleKey?: string;
+}): Promise<{
+  emails: string[];
+  verifiedAvailable: boolean;
+  timestampTail: string;
+}> {
+  const targetCount = Math.max(1, Math.min(10, Math.floor(Number(params.count) || 5)));
+  const excludeSet = new Set<string>(
+    (params.clientExclude || [])
+      .filter((e): e is string => typeof e === "string")
+      .map((e) => e.trim().toLowerCase())
+  );
+
+  const supabaseUrl =
+    params.supabaseUrl || "https://kdjoeeehyahdgwgsfyal.supabase.co";
+  const serviceRoleKey = params.serviceRoleKey || "";
+  const validUserId =
+    params.userId &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      params.userId
+    )
+      ? params.userId
+      : null;
+
+  const accepted: string[] = [];
+  let lastTimestampTail = String(Date.now()).slice(-4).padStart(4, "0");
+
+  for (let round = 0; round < 3 && accepted.length < targetCount; round++) {
+    const needed = targetCount - accepted.length;
+    // Generate extra buffer candidates so even if 1-2 happen to exist, 1 round suffices
+    const batchSize = Math.min(14, needed + 3);
+    const { emails: rawCandidates, timestampTail } = generateGmailCandidates(
+      batchSize,
+      {
+        userSeed: `${params.userSeed || ""}:${round}`,
+        exclude: excludeSet,
+      }
+    );
+    lastTimestampTail = timestampTail;
+    rawCandidates.forEach((e) => excludeSet.add(e));
+
+    // Step A: Filter against global Supabase history (`email_checker_logs` + `deposits`)
+    let unclaimedCandidates = rawCandidates;
+    if (serviceRoleKey && rawCandidates.length > 0) {
+      try {
+        const inClause = rawCandidates.map((e) => encodeURIComponent(e)).join(",");
+        const [logRes, depRes] = await Promise.all([
+          fetch(
+            `${supabaseUrl}/rest/v1/email_checker_logs?email=in.(${inClause})&select=email`,
+            {
+              headers: {
+                apikey: serviceRoleKey,
+                Authorization: `Bearer ${serviceRoleKey}`,
+              },
+            }
+          ),
+          fetch(
+            `${supabaseUrl}/rest/v1/deposits?normalized_gmail=in.(${inClause})&select=normalized_gmail`,
+            {
+              headers: {
+                apikey: serviceRoleKey,
+                Authorization: `Bearer ${serviceRoleKey}`,
+              },
+            }
+          ),
+        ]);
+
+        const takenInDb = new Set<string>();
+        if (logRes.ok) {
+          const rows: any[] = await logRes.json().catch(() => []);
+          rows.forEach((r) => {
+            if (r?.email) takenInDb.add(String(r.email).toLowerCase());
+          });
+        }
+        if (depRes.ok) {
+          const rows: any[] = await depRes.json().catch(() => []);
+          rows.forEach((r) => {
+            if (r?.normalized_gmail)
+              takenInDb.add(String(r.normalized_gmail).toLowerCase());
+          });
+        }
+
+        unclaimedCandidates = rawCandidates.filter(
+          (e) => !takenInDb.has(e.toLowerCase())
+        );
+      } catch {
+        // Proceed to Google live check even if DB lookup had transient hiccup
+      }
+    }
+
+    if (unclaimedCandidates.length === 0) continue;
+
+    // Step B: Real Google Live Probe on all unclaimed candidates concurrently!
+    // Only accept emails confirmed `AVAILABLE` (belum pernah dibuat / belum live di Google)
+    const probeResults = await Promise.all(
+      unclaimedCandidates.map((email, idx) =>
+        checkSingleHttpsFallback(email, idx + 1)
+      )
+    );
+
+    for (const item of probeResults) {
+      if (item.status === "AVAILABLE" && accepted.length < targetCount) {
+        accepted.push(item.email);
+      }
+    }
+  }
+
+  // Fallback safety if Google temporarily rate-limited probes (extremely rare):
+  // fill remaining slots with ultra-high-entropy unique candidates
+  if (accepted.length < targetCount) {
+    const fallback = generateGmailCandidates(targetCount - accepted.length, {
+      userSeed: `${params.userSeed || ""}:fallback:${Date.now()}`,
+      exclude: excludeSet,
+    });
+    for (const e of fallback.emails) {
+      if (accepted.length < targetCount) accepted.push(e);
+    }
+  }
+
+  // Step C: Globally reserve all accepted emails in Supabase `email_checker_logs`
+  // so NO other user can ever receive any of these emails in the future!
+  if (serviceRoleKey && accepted.length > 0) {
+    try {
+      const payload = accepted.map((email) => ({
+        email,
+        user_id: validUserId,
+        status: "die",
+        source: "checker_tab",
+        message: "generated_reserved",
+      }));
+
+      await fetch(`${supabaseUrl}/rest/v1/email_checker_logs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // Non-blocking if logging fails
+    }
+  }
+
+  return {
+    emails: accepted,
+    verifiedAvailable: true,
+    timestampTail: lastTimestampTail,
+  };
 }

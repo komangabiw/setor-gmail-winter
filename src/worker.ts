@@ -1,6 +1,6 @@
 import {
   type GmailProbeItem,
-  generateGmailCandidates,
+  generateVerifiedAvailableGmails,
   validateGmailForProbe,
   checkSingleHttpsFallback,
 } from "./lib/gmail-check-shared";
@@ -748,9 +748,9 @@ async function handleCheckUserEmail(request: Request, env: Env): Promise<Respons
   }
 }
 
-async function handleGmailGenerateEdge(request: Request): Promise<Response> {
+async function handleGmailGenerateEdge(request: Request, env: Env): Promise<Response> {
   const clientIp = getClientIp(request);
-  if (!checkEdgeRateLimit(clientIp, "gmail-generate", 30, 60_000)) {
+  if (!checkEdgeRateLimit(clientIp, "gmail-generate", 25, 60_000)) {
     return new Response(
       JSON.stringify({
         success: false,
@@ -768,17 +768,45 @@ async function handleGmailGenerateEdge(request: Request): Promise<Response> {
   }
 
   const url = new URL(request.url);
-  const countParam = url.searchParams.get("count");
-  const count = countParam
-    ? Math.max(1, Math.min(10, parseInt(countParam, 10) || 10))
-    : 10;
+  let count = 5;
+  let userId: string | null = null;
+  let clientExclude: string[] = [];
 
-  const { emails, timestampTail } = generateGmailCandidates(count);
+  if (request.method === "POST") {
+    const body: any = await request.json().catch(() => ({}));
+    if (body?.count !== undefined) {
+      count = Math.max(1, Math.min(10, parseInt(String(body.count), 10) || 5));
+    }
+    if (typeof body?.userId === "string") {
+      userId = body.userId.trim();
+    }
+    if (Array.isArray(body?.exclude)) {
+      clientExclude = body.exclude.slice(0, 200);
+    }
+  } else {
+    const countParam = url.searchParams.get("count");
+    count = countParam
+      ? Math.max(1, Math.min(10, parseInt(countParam, 10) || 10))
+      : 10;
+  }
+
+  const { emails, verifiedAvailable, timestampTail } =
+    await generateVerifiedAvailableGmails({
+      count,
+      userSeed: `${userId || "anon"}:${clientIp}`,
+      userId,
+      clientExclude,
+      supabaseUrl:
+        env.NEXT_PUBLIC_SUPABASE_URL ||
+        "https://kdjoeeehyahdgwgsfyal.supabase.co",
+      serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY || "",
+    });
 
   return new Response(
     JSON.stringify({
       success: true,
       count: emails.length,
+      verified_available: verifiedAvailable,
       timestamp_tail: timestampTail,
       emails,
     }),
@@ -982,7 +1010,7 @@ const worker = {
       url.pathname === "/api/gmail-generate" &&
       (request.method === "GET" || request.method === "POST")
     ) {
-      response = await handleGmailGenerateEdge(request);
+      response = await handleGmailGenerateEdge(request, env);
     } else if (url.pathname === "/api/gmail-check" && request.method === "POST") {
       response = await handleGmailCheckEdge(request, env);
     } else if (url.pathname === "/api/check-gmail" && request.method === "POST") {

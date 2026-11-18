@@ -12,11 +12,7 @@ import {
   Copy,
   Check,
   ArrowRight,
-  ArrowDownToLine,
-  Sparkles,
   RefreshCw,
-  Zap,
-  Globe,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,34 +20,17 @@ import { StatusBadge } from "@/components/ui/status";
 import { EmptyState, PageShell, Reveal } from "@/components/layout/page-shell";
 import { splitLines } from "@/lib/email";
 import {
-  getStoredGeneratedGmails,
-  saveStoredGeneratedGmails,
   getStoredCheckStatusMap,
   saveStoredCheckStatusMap,
 } from "@/lib/generated-storage";
 import {
   type GmailProbeItem,
   type GmailProbeStatus,
-  generateGmailCandidates,
   validateGmailForProbe,
 } from "@/lib/gmail-check-shared";
 import { cn } from "@/lib/utils";
 
 const MAX_LINES = 10;
-const HISTORY_KEY = "setor_generated_gmails_history_v1";
-
-function appendToGeneratedHistory(emails: string[]) {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    const prev: string[] = raw ? JSON.parse(raw) : [];
-    const merged = new Set(Array.isArray(prev) ? prev.map((e) => e.toLowerCase()) : []);
-    emails.forEach((e) => merged.add(e.toLowerCase()));
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(Array.from(merged).slice(-10000)));
-  } catch {
-    // ignore storage quota errors
-  }
-}
 
 const probeStatusMeta: Record<
   GmailProbeStatus,
@@ -68,30 +47,15 @@ export function CheckerView() {
   const [input, setInput] = React.useState("");
   const [results, setResults] = React.useState<GmailProbeItem[]>([]);
   const [isRunning, setIsRunning] = React.useState(false);
-  const [isGenerating, setIsGenerating] = React.useState(false);
   const [hasRun, setHasRun] = React.useState(false);
-  const [engineUsed, setEngineUsed] = React.useState<string | null>(null);
   const [totalElapsedMs, setTotalElapsedMs] = React.useState<number | null>(null);
   const [copiedLive, setCopiedLive] = React.useState(false);
   const [copiedAvailable, setCopiedAvailable] = React.useState(false);
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
   const [activeFilter, setActiveFilter] = React.useState<"ALL" | GmailProbeStatus>("ALL");
-  const [storedGenerated, setStoredGenerated] = React.useState<string[]>([]);
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
-  const refreshStoredGenerated = React.useCallback(() => {
-    setStoredGenerated(getStoredGeneratedGmails());
-  }, []);
-
-  React.useEffect(() => {
-    refreshStoredGenerated();
-    window.addEventListener("focus", refreshStoredGenerated);
-    return () => {
-      window.removeEventListener("focus", refreshStoredGenerated);
-    };
-  }, [refreshStoredGenerated]);
 
   React.useEffect(() => {
     return () => {
@@ -139,90 +103,11 @@ export function CheckerView() {
     return results.filter((r) => r.status === activeFilter);
   }, [results, activeFilter]);
 
-  /**
-   * Calls GET /api/gmail-generate (with local CSPRNG fallback if offline)
-   */
-  const fetchGeneratedBatchFromApi = async (count = 10): Promise<string[]> => {
-    try {
-      const res = await fetch(`/api/gmail-generate?count=${count}&_t=${Date.now()}`, {
-        method: "GET",
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data?.emails) && data.emails.length > 0) {
-          return data.emails.slice(0, count);
-        }
-      }
-    } catch {
-      // Fallback to local CSPRNG generator if offline
-    }
-    return generateGmailCandidates(count).emails;
-  };
-
-  /**
-   * "Paste Hasil Generate (10)":
-   * - Uses stored generated emails from Setor if 10 already exist;
-   * - Otherwise fetches fresh candidates from GET /api/gmail-generate so user always gets 10 ready-to-check emails!
-   */
-  const handlePasteGeneratedTen = async (forceFresh = false) => {
-    if (isGenerating || isRunning) return;
-    setIsGenerating(true);
-
-    try {
-      const existing = forceFresh ? [] : getStoredGeneratedGmails();
-      let batch: string[] = [];
-
-      if (existing.length >= MAX_LINES) {
-        batch = existing.slice(0, MAX_LINES);
-      } else if (existing.length > 0) {
-        const needed = MAX_LINES - existing.length;
-        const extra = await fetchGeneratedBatchFromApi(needed);
-        const deduped = Array.from(
-          new Set([...existing, ...extra].map((e) => e.trim().toLowerCase()))
-        );
-        batch = deduped.slice(0, MAX_LINES);
-        saveStoredGeneratedGmails(batch);
-        appendToGeneratedHistory(batch);
-        setStoredGenerated(batch);
-      } else {
-        batch = await fetchGeneratedBatchFromApi(MAX_LINES);
-        saveStoredGeneratedGmails(batch);
-        appendToGeneratedHistory(batch);
-        setStoredGenerated(batch);
-      }
-
-      setInput(batch.join("\n"));
-      if (hasRun && !isRunning) {
-        setHasRun(false);
-        setResults([]);
-        setEngineUsed(null);
-        setTotalElapsedMs(null);
-      }
-
-      toast.success(
-        forceFresh
-          ? `${batch.length} Gmail kandidat baru berhasil digenerate & ditempel!`
-          : `${batch.length} Gmail hasil generate berhasil ditempel!`,
-        {
-          description: "Klik 'Mulai Live Checker' untuk mengecek status ketersediaan di Google.",
-        }
-      );
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  /**
-   * Runs Dual-Mode Backend Checker (`POST /api/gmail-check`):
-   * Engine 1: Single-Connection SMTP Port 25 Reuse
-   * Engine 2: Automatic Serverless HTTPS Port 443 Probe
-   */
   const handleStart = async () => {
     const rawLines = splitLines(input);
     if (rawLines.length === 0) {
       toast.error("Tidak ada email untuk dicek", {
-        description: "Masukkan minimal satu alamat @gmail.com atau klik 'Paste Hasil Generate (10)'.",
+        description: "Masukkan minimal satu alamat @gmail.com pada kolom di atas.",
       });
       return;
     }
@@ -241,7 +126,6 @@ export function CheckerView() {
     abortControllerRef.current = controller;
 
     setResults([]);
-    setEngineUsed(null);
     setTotalElapsedMs(null);
     setCopiedLive(false);
     setCopiedAvailable(false);
@@ -267,7 +151,6 @@ export function CheckerView() {
 
       const probeItems: GmailProbeItem[] = Array.isArray(data.results) ? data.results : [];
       setResults(probeItems);
-      setEngineUsed(data.engine || "HTTPS_PORT_443");
       setTotalElapsedMs(typeof data.total_elapsed_ms === "number" ? data.total_elapsed_ms : Date.now() - t0);
       setIsRunning(false);
 
@@ -288,17 +171,14 @@ export function CheckerView() {
         (r) => r.status === "INVALID" || r.status === "ERROR" || r.status === "LIMIT"
       ).length;
 
-      toast.success("Pemeriksaan Gmail Live selesai!", {
-        description: `${liveCount} LIVE · ${availCount} Available · ${invCount} Lainnya (${
-          data.engine === "SMTP_PORT_25" ? "SMTP Port 25" : "HTTPS Port 443"
-        })`,
+      toast.success("Pemeriksaan Gmail selesai!", {
+        description: `${liveCount} LIVE · ${availCount} Available · ${invCount} Lainnya`,
       });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
         return;
       }
 
-      // Offline syntax fallback if API is unreachable
       const fallbackItems: GmailProbeItem[] = rawLines.map((line, idx) => {
         const syntax = validateGmailForProbe(line);
         if (!syntax.valid) {
@@ -337,7 +217,6 @@ export function CheckerView() {
     }
     setInput("");
     setResults([]);
-    setEngineUsed(null);
     setTotalElapsedMs(null);
     setIsRunning(false);
     setHasRun(false);
@@ -477,9 +356,9 @@ export function CheckerView() {
               />
 
               <CardContent className="space-y-4 p-5 sm:p-6">
-                {/* Header & Paste Hasil Generate (10) Action Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-                  <div className="flex items-start sm:items-center gap-3">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-3">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-sky-600 text-white shadow-lg shadow-emerald-500/25 ring-1 ring-white/20">
                       <ShieldCheck className="size-5" />
                     </span>
@@ -502,54 +381,21 @@ export function CheckerView() {
                         )}
                       </div>
                       <p className="text-xs text-zinc-400 mt-0.5">
-                        Dual-Engine otomatis: SMTP Port 25 Reuse &amp; HTTPS 443 Probe
+                        Periksa ketersediaan dan status aktif akun Gmail secara real-time
                       </p>
                     </div>
                   </div>
 
-                  {/* Action Pills: Paste Hasil Generate (10) + Refresh Generate + Clear */}
-                  <div className="flex flex-wrap items-center gap-2">
+                  {input.trim().length > 0 && !isRunning && (
                     <button
                       type="button"
-                      disabled={isGenerating || isRunning}
-                      onClick={() => handlePasteGeneratedTen(false)}
-                      className="btn-shimmer inline-flex items-center gap-1.5 rounded-xl border border-sky-400/40 bg-gradient-to-r from-sky-500/20 to-blue-600/20 hover:from-sky-500/30 hover:to-blue-600/30 px-3.5 py-2 text-xs font-extrabold text-sky-200 shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-                      title={
-                        storedGenerated.length > 0
-                          ? `Tempel hasil generate (${storedGenerated.length} tersimpan, otomatis dilengkapi ke 10)`
-                          : "Generate & tempel 10 kandidat Gmail unik otomatis"
-                      }
+                      onClick={handleReset}
+                      className="inline-flex items-center gap-1 p-2 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl border border-transparent hover:border-rose-500/20 transition-colors cursor-pointer text-xs"
+                      title="Kosongkan kolom"
                     >
-                      {isGenerating ? (
-                        <RefreshCw className="size-3.5 animate-spin text-sky-300" />
-                      ) : (
-                        <ArrowDownToLine className="size-3.5 text-sky-300" />
-                      )}
-                      <span>Paste Hasil Generate (10)</span>
+                      <Trash2 className="size-3.5" />
                     </button>
-
-                    <button
-                      type="button"
-                      disabled={isGenerating || isRunning}
-                      onClick={() => handlePasteGeneratedTen(true)}
-                      className="inline-flex items-center gap-1 rounded-xl border border-white/12 bg-white/[0.05] hover:bg-white/10 hover:border-sky-400/30 px-2.5 py-2 text-xs font-bold text-zinc-200 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-                      title="Generate 10 kandidat Gmail baru dari server (/api/gmail-generate)"
-                    >
-                      <Sparkles className="size-3.5 text-sky-400" />
-                      <span className="hidden sm:inline">Baru</span>
-                    </button>
-
-                    {input.trim().length > 0 && !isRunning && (
-                      <button
-                        type="button"
-                        onClick={handleReset}
-                        className="inline-flex items-center gap-1 p-2 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl border border-transparent hover:border-rose-500/20 transition-colors cursor-pointer text-xs"
-                        title="Kosongkan kolom"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 <textarea
@@ -558,9 +404,7 @@ export function CheckerView() {
                   spellCheck={false}
                   autoCapitalize="off"
                   autoCorrect="off"
-                  placeholder={
-                    "contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com\n\nAtau klik tombol 'Paste Hasil Generate (10)' di kanan atas..."
-                  }
+                  placeholder={"contoh1@gmail.com\ncontoh2@gmail.com\ncontoh3@gmail.com"}
                   value={input}
                   onChange={handleTextareaChange}
                   onKeyDown={handleKeyDown}
@@ -637,7 +481,7 @@ export function CheckerView() {
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-100">
                       <RefreshCw className="size-4 animate-spin text-sky-400" aria-hidden="true" />
-                      <span>Menghubungi server Google untuk {lineCount} alamat Gmail...</span>
+                      <span>Memeriksa {lineCount} alamat Gmail ke server Google...</span>
                     </span>
                     <span className="text-xs font-mono font-bold text-sky-300 animate-pulse">
                       PROSES LIVE
@@ -649,7 +493,7 @@ export function CheckerView() {
                   </div>
 
                   <p className="text-[0.72rem] text-zinc-400 text-center">
-                    Mencoba Single-Connection SMTP Port 25 dengan fallback otomatis HTTPS Port 443
+                    Mengecek status aktif akun secara real-time
                   </p>
                 </CardContent>
               </Card>
@@ -673,32 +517,11 @@ export function CheckerView() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      {engineUsed && (
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.68rem] font-extrabold tracking-wide",
-                            engineUsed === "SMTP_PORT_25"
-                              ? "border-emerald-500/35 bg-emerald-500/12 text-emerald-300"
-                              : "border-sky-400/35 bg-sky-500/12 text-sky-300"
-                          )}
-                        >
-                          {engineUsed === "SMTP_PORT_25" ? (
-                            <>
-                              <Zap className="size-3 text-emerald-400" />
-                              <span>SMTP Port 25 Reuse</span>
-                            </>
-                          ) : (
-                            <>
-                              <Globe className="size-3 text-sky-400" />
-                              <span>HTTPS Port 443</span>
-                            </>
-                          )}
-                          {totalElapsedMs !== null && (
-                            <span className="font-mono opacity-80">· {totalElapsedMs}ms</span>
-                          )}
+                      {totalElapsedMs !== null && (
+                        <span className="rounded-full bg-sky-500/10 border border-sky-400/25 px-3 py-1 font-mono text-xs font-bold text-sky-300 tabular-nums">
+                          {totalElapsedMs}ms
                         </span>
                       )}
-
                       <span className="rounded-full bg-white/5 border border-white/10 px-3 py-1 font-mono text-xs font-bold text-zinc-300 tabular-nums">
                         {summary.total} diperiksa
                       </span>
@@ -811,7 +634,7 @@ export function CheckerView() {
                       Detail Hasil Per Alamat
                     </h3>
                     <p className="text-xs text-zinc-400">
-                      Status ketersediaan, kode respons, dan waktu eksekusi
+                      Status ketersediaan dan waktu eksekusi tiap email
                     </p>
                   </div>
 
@@ -951,7 +774,7 @@ export function CheckerView() {
                 className="border-white/10 bg-[#11131c]/85"
                 icon={<Inbox className="size-5 text-sky-400" aria-hidden="true" />}
                 title="Belum ada hasil pemeriksaan"
-                description="Klik 'Paste Hasil Generate (10)' atau tempel daftar @gmail.com lalu tekan 'Mulai Live Checker'."
+                description="Masukkan daftar alamat @gmail.com di atas lalu klik tombol 'Mulai Live Checker'."
               />
             </Reveal>
           )}
@@ -980,7 +803,7 @@ function SummaryStat({
       : "border-emerald-500/25 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50",
     info: active
       ? "border-sky-500/60 bg-sky-950/60 text-sky-200 ring-2 ring-sky-500/40"
-      : "border-sky-500/25 bg-sky-950/30 text-sky-300 hover:bg-sky-950/50",
+      : "border-sky-500/25 bg-sky-950/30 text-sky-300 hover:bg-sky-500/50",
     warning: active
       ? "border-amber-500/60 bg-amber-950/60 text-amber-200 ring-2 ring-amber-500/40"
       : "border-amber-500/25 bg-amber-950/25 text-amber-300 hover:bg-amber-950/45",
